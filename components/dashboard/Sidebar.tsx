@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -9,111 +8,85 @@ import { useAuth } from '@/components/auth/AuthProvider';
 type NavItem = {
   name: string;
   href: string;
-  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 };
 
-// Sidebar navigation items
+// Sidebar navigation items - ensure all paths have /dashboard/ prefix
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Workouts', href: '/workouts', icon: DumbbellIcon },
-  { name: 'Diary', href: '/diary', icon: BookIcon },
-  { name: 'Measurements', href: '/measurements', icon: RulerIcon },
-  { name: 'Profile', href: '/profile', icon: UserIcon },
+  { name: 'Workouts', href: '/dashboard/workouts', icon: DumbbellIcon },
+  { name: 'Diary', href: '/dashboard/diary', icon: BookIcon },
+  { name: 'Measurements', href: '/dashboard/measurements', icon: RulerIcon },
+  { name: 'Profile', href: '/dashboard/profile', icon: UserIcon },
+  // Test route to verify navigation
+  { name: 'Test Route', href: '/dashboard/test', icon: GoalIcon },
 ];
 
+// Simplified props - removed mobile handling
 type SidebarProps = {
-  isMobile?: boolean;
   onClose?: () => void;
 };
 
-export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
+export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, isLoading } = useAuth();
   
   // Function to check if a link is active
   const isActiveLink = (href: string) => {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  // Handle sign out with preventDefault to avoid full page refresh
-  const handleSignOut = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    await signOut();
-  };
-
-  return (
-    <div className={`flex flex-col h-full bg-indigo-800 text-white ${isCollapsed && !isMobile ? 'w-20' : 'w-64'} transition-width duration-300`}>
-      {/* Logo */}
-      <div className={`p-6 flex items-center ${isCollapsed && !isMobile ? 'justify-center' : 'justify-between'}`}>
-        <Link href="/dashboard" className="flex items-center">
-          <span className={`text-xl font-bold ${isCollapsed && !isMobile ? 'hidden' : 'block'}`}>FitSage</span>
-          <span className={`text-xl font-bold ${isCollapsed && !isMobile ? 'block' : 'hidden'}`}>FS</span>
-        </Link>
-        
-        {!isMobile && (
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-indigo-300 hover:text-white p-1 rounded-full"
-          >
-            {isCollapsed ? <ChevronRightIcon className="h-5 w-5" /> : <ChevronLeftIcon className="h-5 w-5" />}
-          </button>
-        )}
-      </div>
-      
-      {/* User info */}
-      <div className={`px-6 py-4 border-b border-indigo-700 ${isCollapsed && !isMobile ? 'text-center' : ''}`}>
-        <div className={`flex ${isCollapsed && !isMobile ? 'justify-center' : 'items-center'}`}>
-          <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
-            {user?.email?.charAt(0).toUpperCase() || 'U'}
+  // If auth is still loading, show minimal sidebar
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full bg-indigo-800 text-white w-64">
+        <div className="p-6">
+          <div className="text-xl font-bold">FitSage</div>
+        </div>
+        <div className="flex-1 px-4 py-6 space-y-2">
+          <div className="animate-pulse">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-12 bg-indigo-700 rounded-md mb-2 opacity-60"></div>
+            ))}
           </div>
-          {(!isCollapsed || isMobile) && (
-            <div className="ml-3">
-              <p className="text-sm font-medium truncate">{user?.email || 'User'}</p>
-            </div>
-          )}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-indigo-800 text-white w-64">
+      {/* Logo */}
+      <div className="p-6 flex items-center">
+        <Link href="/dashboard" className="flex items-center">
+          <span className="text-xl font-bold">FitSage</span>
+        </Link>
+      </div>
       
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      {/* Navigation - simplified to focus on links */}
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const active = isActiveLink(item.href);
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+              onClick={onClose} // Only close mobile menu if needed
+              className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
                 active
                   ? 'bg-indigo-900 text-white'
                   : 'text-indigo-100 hover:bg-indigo-700'
-              } ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
-              onClick={isMobile ? onClose : undefined}
-              title={isCollapsed && !isMobile ? item.name : undefined}
+              }`}
               prefetch={true}
             >
               <item.icon
-                className={`h-5 w-5 ${
-                  active ? 'text-white' : 'text-indigo-300 group-hover:text-white'
-                } ${!isCollapsed || isMobile ? 'mr-3' : ''}`}
+                className="h-5 w-5 mr-3 text-indigo-300"
               />
-              {(!isCollapsed || isMobile) && <span>{item.name}</span>}
+              <span>{item.name}</span>
             </Link>
           );
         })}
       </nav>
-      
-      {/* Logout button */}
-      <div className={`p-4 border-t border-indigo-700 ${isCollapsed && !isMobile ? 'text-center' : ''}`}>
-        <button
-          onClick={handleSignOut}
-          className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-700 ${isCollapsed && !isMobile ? 'justify-center w-full' : 'w-full'}`}
-          title={isCollapsed && !isMobile ? 'Sign Out' : undefined}
-        >
-          <LogoutIcon className={`h-5 w-5 text-indigo-300 ${!isCollapsed || isMobile ? 'mr-3' : ''}`} />
-          {(!isCollapsed || isMobile) && <span>Sign Out</span>}
-        </button>
-      </div>
     </div>
   );
 }

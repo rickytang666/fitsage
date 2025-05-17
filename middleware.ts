@@ -4,7 +4,11 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 // Paths that require authentication
 const PROTECTED_PATHS = [
   '/dashboard',
-  '/profile',
+  '/dashboard/profile',
+  '/dashboard/workouts',
+  '/dashboard/diary',
+  '/dashboard/measurements',
+  '/profile', // Keep old paths for backward compatibility
   '/workouts',
   '/diary',
   '/measurements',
