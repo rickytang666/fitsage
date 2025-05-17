@@ -1,4 +1,4 @@
-// Note: No 'use client' directive - this is a server component for simple routing test
+'use client';
 
 export default function DiaryPage() {
   // Static date for display
