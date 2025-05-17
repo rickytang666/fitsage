@@ -1,25 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Header from '@/components/dashboard/Header';
 import Sidebar from '@/components/dashboard/Sidebar';
-import { Suspense } from 'react';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-// Loading fallback component
-function LoadingSkeleton() {
-  return (
-    <div className="py-6">
-      <div className="h-8 bg-gray-200 rounded w-1/4 mb-6 animate-pulse"></div>
-      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="bg-gray-200 h-28 rounded-lg animate-pulse"></div>
-        ))}
-      </div>
-      <div className="h-64 bg-gray-200 rounded-lg mt-8 animate-pulse"></div>
-    </div>
-  );
-}
+// Memoized components to prevent unnecessary rerenders
+const MemoizedSidebar = memo(Sidebar);
+const MemoizedHeader = memo(Header);
+
+// Simple version of dashboard layout with only essential functionality
 
 export default function DashboardLayout({
   children,
@@ -28,9 +18,9 @@ export default function DashboardLayout({
 }>) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  return (
-    <ProtectedRoute>
-      <div className="h-screen flex overflow-hidden bg-gray-50">
+  // We'll create a nested layout structure for better state isolation
+  const content = (
+    <div className="h-screen flex overflow-hidden bg-gray-50">
         {/* Mobile sidebar */}
         {sidebarOpen && (
           <div className="md:hidden fixed inset-0 flex z-40">
@@ -67,7 +57,7 @@ export default function DashboardLayout({
               </button>
             </div>
             
-            <Sidebar isMobile={true} onClose={() => setSidebarOpen(false)} />
+            <MemoizedSidebar isMobile={true} onClose={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}
@@ -75,25 +65,29 @@ export default function DashboardLayout({
       {/* Desktop sidebar */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <Sidebar />
+          <MemoizedSidebar />
         </div>
       </div>
       
       {/* Main content */}
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <Header onMobileMenuClick={() => setSidebarOpen(true)} />
+        <MemoizedHeader onMobileMenuClick={() => setSidebarOpen(true)} />
         
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Suspense fallback={<LoadingSkeleton />}>
-                {children}
-              </Suspense>
+              {children}
             </div>
           </div>
         </main>
       </div>
     </div>
+  );
+  
+  // Wrap everything in the ProtectedRoute at the top level
+  return (
+    <ProtectedRoute preventRedirectsDuringNavigation={true}>
+      {content}
     </ProtectedRoute>
   );
 }

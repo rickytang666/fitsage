@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/components/auth/AuthProvider';
 
 // Navigation item type definition
 type NavItem = {
@@ -29,30 +28,11 @@ type SidebarProps = {
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, isLoading } = useAuth();
   
   // Function to check if a link is active
   const isActiveLink = (href: string) => {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
-
-  // If auth is still loading, show minimal sidebar
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full bg-indigo-800 text-white w-64">
-        <div className="p-6">
-          <div className="text-xl font-bold">FitSage</div>
-        </div>
-        <div className="flex-1 px-4 py-6 space-y-2">
-          <div className="animate-pulse">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-12 bg-indigo-700 rounded-md mb-2 opacity-60"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-indigo-800 text-white w-64">
@@ -67,11 +47,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {navigation.map((item) => {
           const active = isActiveLink(item.href);
+          
           return (
             <Link
               key={item.name}
               href={item.href}
-              onClick={onClose} // Only close mobile menu if needed
               className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
                 active
                   ? 'bg-indigo-900 text-white'

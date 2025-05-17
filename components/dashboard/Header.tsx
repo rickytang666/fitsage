@@ -82,27 +82,36 @@ export default function Header({ onMobileMenuClick }: HeaderProps) {
               >
                 <div className="py-1">
                   <Link
-                    href="/profile"
+                    href="/dashboard/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsProfileOpen(false);
+                    }}
                   >
                     Your Profile
                   </Link>
                   <Link
-                    href="/settings"
+                    href="/dashboard/settings"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
-                    onClick={() => setIsProfileOpen(false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsProfileOpen(false);
+                    }}
                   >
                     Settings
                   </Link>
                   <button
                     className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
-                    onClick={() => {
-                      signOut();
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setIsProfileOpen(false);
+                      // Separate the signOut to prevent accidental triggering
+                      setTimeout(() => signOut(), 100);
                     }}
                   >
                     Sign out
