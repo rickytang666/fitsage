@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export default function DiaryPage() {
   const [entry, setEntry] = useState('');
-  const [summary, setSummary] = useState('');
+  const [summary, setSummary] = useState<{ exercise: string[], injuries: string[], notes: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -26,11 +26,30 @@ export default function DiaryPage() {
       const data = await res.json();
       setSummary(data.summary);
     } catch (err) {
-      setSummary('Error generating summary.');
+      setSummary({
+        exercise: [],
+        injuries: [],
+        notes: ['Error generating summary.']
+      });
     } finally {
       setEntry('');
       setLoading(false);
     }
+  };
+
+  const renderCategory = (title: string, items: string[], color: string) => {
+    if (!items?.length) return null;
+
+    return (
+      <div className={`border-l-4 pl-4 py-2 mb-4 bg-${color}-50 border-${color}-400 rounded`}>
+        <h3 className={`text-${color}-700 font-semibold mb-2`}>{title}</h3>
+        <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+          {items.map((item, idx) => (
+            <li key={idx}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   return (
@@ -59,22 +78,13 @@ export default function DiaryPage() {
         </div>
 
         {summary && (
-          <div className="bg-red-50 border border-red-300 p-4 rounded-md">
-            <h2 className="text-red-700 font-bold mb-2">AI Summary</h2>
-            <p className="text-red-600 whitespace-pre-wrap">{summary}</p>
+          <div className="bg-gray-50 p-4 rounded-md border border-gray-300">
+            <h2 className="text-lg font-bold mb-4 text-gray-800">Summary for {currentDate}</h2>
+            {renderCategory('Exercise', summary.exercise, 'blue')}
+            {renderCategory('Injuries / Symptoms', summary.injuries, 'red')}
+            {renderCategory('Important Notes', summary.notes, 'yellow')}
           </div>
         )}
-
-        <div className="mt-8 p-4 border-2 border-green-500 bg-green-50 rounded-lg">
-          <div className="flex items-center">
-            <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <h3 className="text-lg font-bold text-green-700">Routing Success!</h3>
-          </div>
-          <p className="mt-2 text-green-600">If you can see this message, the routing to the diary page is working correctly.</p>
-          <p className="mt-1 text-sm text-green-500">Path: /dashboard/diary</p>
-        </div>
       </div>
     </div>
   );

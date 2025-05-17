@@ -1,15 +1,27 @@
 import { NextResponse } from 'next/server';
 
+type Summary = {
+  exercise: string[];
+  injuries: string[];
+  notes: string[];
+};
+
 export async function POST(req: Request) {
   const { text } = await req.json();
 
   const prompt = `
-Please summarize the following diary entry into clear bullet points focusing on:
-- workout (what exercises and how long for each)
-- injury
-- any important notes that may affect future workout plans suggestions
+Summarize the following fitness diary entry as a JSON object.
 
-Text:
+Your response must use this format exactly:
+{
+  "exercise": ["activity — duration/sets/reps"],
+  "injuries": ["description — what caused it or during what activity"],
+  "notes": ["mood, hydration, sleep, or any other important note"]
+}
+
+Only return valid JSON. No commentary or headings.
+
+Diary entry:
 ${text}
 `;
 
@@ -29,20 +41,40 @@ ${text}
 
     const data = await response.json();
 
-    // 🔍 This is the most important part to debug:
-    console.log('=== GEMINI RAW RESPONSE ===');
-    console.dir(data, { depth: null });
+    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    let summary: Summary = {
+      exercise: [],
+      injuries: [],
+      notes: [],
+    };
 
-    // Try several fallback paths:
-    const summary =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      data?.candidates?.[0]?.content?.text ??
-      data?.candidates?.[0]?.output ??
-      'No summary available.';
+    try {
+        // Clean the raw Gemini response
+        const cleaned = rawText.trim()
+        .replace(/^```json/, '')  // remove opening ```json
+        .replace(/^```/, '')      // fallback if just ```
+        .replace(/```$/, '')      // remove closing ```
+        .trim();
+
+        summary = JSON.parse(cleaned);
+
+    } catch (err) {
+      console.error('❌ Failed to parse Gemini JSON:', err);
+      summary.notes = ['⚠️ AI returned invalid JSON.'];
+    }
 
     return NextResponse.json({ summary });
   } catch (error) {
     console.error('Gemini API error:', error);
-    return NextResponse.json({ summary: 'Failed to generate summary.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        summary: {
+          exercise: [],
+          injuries: [],
+          notes: ['❌ Failed to generate summary.'],
+        },
+      },
+      { status: 500 }
+    );
   }
 }
