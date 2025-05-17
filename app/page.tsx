@@ -1,35 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/components/auth/AuthProvider';
+
+// DEVELOPMENT MODE: Auth checks bypassed
+// TODO: Restore auth checks before production
 
 export default function HomePage() {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
+  // Development mode - no auth checks
 
-  useEffect(() => {
-    // If the user is authenticated, redirect to dashboard
-    if (!isLoading && user) {
-      setRedirecting(true);
-      router.push('/dashboard');
-    }
-  }, [user, isLoading, router]);
-
-  // Loading state or during redirection
-  if (isLoading || redirecting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  // Landing page for non-authenticated users
+  // Landing page with development mode banner
   return (
     <div className="bg-white">
+      {/* Development mode banner */}
+      <div className="bg-yellow-100 border-b border-yellow-300 p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <p className="text-yellow-800">
+            <span className="font-bold">DEVELOPMENT MODE:</span> Auth checks bypassed for easier navigation.
+          </p>
+          <Link 
+            href="/dashboard" 
+            className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-md font-medium shadow-sm"
+          >
+            Go to Dashboard →
+          </Link>
+        </div>
+      </div>
+      
       <div className="relative overflow-hidden">
         <div className="relative pt-6 pb-16 sm:pb-24">
           {/* Header */}
