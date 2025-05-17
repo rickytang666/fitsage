@@ -31,9 +31,12 @@ export default function DiaryPage() {
 
       // 🟡 Get the user ID
       const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      const user = session?.user;
+      const userError = sessionError;
 
       if (!user || userError) {
         console.error('User not authenticated:', userError);
@@ -43,7 +46,7 @@ export default function DiaryPage() {
       // 🟢 Save diary + summary to Supabase
       const { error: insertError } = await supabase.from('diary_entries').insert({
         user_id: user.id,
-        content: entry,
+        entry_text: entry,
         summary: data.summary, // optional: only if your table supports it
         created_at: new Date().toISOString(),
       });
