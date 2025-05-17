@@ -24,6 +24,13 @@ export async function middleware(request: NextRequest) {
   try {
     const path = request.nextUrl.pathname;
     
+    // DEVELOPMENT ONLY: Bypass auth for all dashboard routes during development
+    // TODO: Remove this before production deployment
+    if (path.startsWith('/dashboard')) {
+      console.log('MIDDLEWARE: Development mode - bypassing auth for dashboard route:', path);
+      return NextResponse.next();
+    }
+    
     // Special case: always allow direct access to dashboard after login
     // This prevents redirect loops during authentication
     const fromAuth = request.headers.get('referer')?.includes('/auth/');
@@ -50,6 +57,9 @@ export async function middleware(request: NextRequest) {
     // Handle protected routes - redirect to login if not authenticated
     if (PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath))) {
       if (!session) {
+        // Debug logging
+        console.log('MIDDLEWARE: Redirecting to login from protected path:', path);
+        
         const redirectUrl = new URL('/auth/login', request.url);
         redirectUrl.searchParams.set('redirect', path);
         return NextResponse.redirect(redirectUrl);

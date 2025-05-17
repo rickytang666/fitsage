@@ -2,263 +2,148 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
-// Navigation item type definition
-type NavItem = {
-  name: string;
-  href: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-};
-
-// Sidebar navigation items - ensure all paths have /dashboard/ prefix
-const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Workouts', href: '/dashboard/workouts', icon: DumbbellIcon },
-  { name: 'Diary', href: '/dashboard/diary', icon: BookIcon },
-  { name: 'Measurements', href: '/dashboard/measurements', icon: RulerIcon },
-  { name: 'Profile', href: '/dashboard/profile', icon: UserIcon },
-  // Test route to verify navigation
-  { name: 'Test Route', href: '/dashboard/test', icon: GoalIcon },
+// Navigation items definition
+const navigationItems = [
+  { name: 'Dashboard', href: '/dashboard', color: '#0070f3' },
+  { name: 'Workouts', href: '/dashboard/workouts', color: '#34c759' },
+  { name: 'Diary', href: '/dashboard/diary', color: '#5e5ce6' },
+  { name: 'Measurements', href: '/dashboard/measurements', color: '#ff9500' },
+  { name: 'Profile', href: '/dashboard/profile', color: '#ff3b30' },
+  { name: 'Test Page', href: '/dashboard/test', color: '#64748b' },
 ];
 
-// Simplified props - removed mobile handling
-type SidebarProps = {
-  onClose?: () => void;
-};
-
-export default function Sidebar({ onClose }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname();
   
-  // Function to check if a link is active
-  const isActiveLink = (href: string) => {
-    return pathname === href || pathname.startsWith(`${href}/`);
+  // Debug state
+  const [showDebug, setShowDebug] = useState(false);
+  const [mountTime] = useState(new Date().toISOString());
+  const [lastRender, setLastRender] = useState(new Date().toISOString());
+  const [debugMessage, setDebugMessage] = useState<string[]>([]);
+  
+  // Add debug message
+  const addDebug = (message: string) => {
+    console.log(`SIDEBAR: ${message}`);
+    setDebugMessage(prev => [message, ...prev].slice(0, 5));
+    setLastRender(new Date().toISOString());
   };
+  
+  // Track renders
+  useEffect(() => {
+    addDebug('Component mounted/updated');
+  }, []);
 
+  // Check if a link is active
+  const isActiveLink = (href: string) => {
+    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+  };
+  
   return (
-    <div className="flex flex-col h-full bg-indigo-800 text-white w-64">
-      {/* Logo */}
-      <div className="p-6 flex items-center">
-        <Link href="/dashboard" className="flex items-center">
-          <span className="text-xl font-bold">FitSage</span>
-        </Link>
-      </div>
+    <div style={{ 
+      width: '250px', 
+      padding: '20px', 
+      backgroundColor: '#f8f9fa',
+      height: '100%',
+      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      <h1 style={{ 
+        marginBottom: '30px', 
+        fontSize: '24px', 
+        color: '#333',
+        borderBottom: '1px solid #eee',
+        paddingBottom: '15px'
+      }}>
+        FitSage
+      </h1>
       
-      {/* Navigation - simplified to focus on links */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        {navigation.map((item) => {
+      {/* Navigation Links */}
+      <nav style={{ marginBottom: '20px', flex: 1 }}>
+        {navigationItems.map((item) => {
           const active = isActiveLink(item.href);
           
           return (
-            <Link
+            <Link 
               key={item.name}
-              href={item.href}
-              className={`flex items-center px-3 py-3 text-sm font-medium rounded-md ${
-                active
-                  ? 'bg-indigo-900 text-white'
-                  : 'text-indigo-100 hover:bg-indigo-700'
-              }`}
-              prefetch={true}
+              href={item.href} 
+              onClick={() => addDebug(`Navigation to: ${item.href}`)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px 16px',
+                marginBottom: '8px',
+                backgroundColor: active ? item.color : 'transparent',
+                color: active ? 'white' : '#333',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                fontWeight: active ? 'bold' : 'normal',
+                transition: 'all 0.2s ease',
+                border: active ? 'none' : '1px solid #eee'
+              }}
             >
-              <item.icon
-                className="h-5 w-5 mr-3 text-indigo-300"
-              />
-              <span>{item.name}</span>
+              <span style={{ 
+                width: '10px', 
+                height: '10px', 
+                borderRadius: '50%', 
+                backgroundColor: item.color,
+                marginRight: '10px',
+                opacity: active ? 0.5 : 1
+              }}></span>
+              {item.name}
             </Link>
           );
         })}
       </nav>
+      
+      {/* Collapsible Debug section */}
+      <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
+        <button 
+          onClick={() => setShowDebug(!showDebug)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#666',
+            fontSize: '12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            justifyContent: 'space-between',
+            padding: '5px 0'
+          }}
+        >
+          Debug Panel
+          <span>{showDebug ? '▲' : '▼'}</span>
+        </button>
+        
+        {showDebug && (
+          <div style={{ 
+            marginTop: '10px', 
+            fontSize: '12px',
+            border: '1px solid #ddd',
+            padding: '10px',
+            borderRadius: '4px',
+            backgroundColor: '#f8f8f8'
+          }}>
+            <p><strong>Current pathname:</strong> {pathname}</p>
+            <p><strong>Window location:</strong> {typeof window !== 'undefined' ? window.location.pathname : ''}</p>
+            <p><strong>Component mounted:</strong> {mountTime}</p>
+            <p><strong>Last render:</strong> {lastRender}</p>
+            
+            <div style={{ marginTop: '10px' }}>
+              <strong>Debug log:</strong>
+              <ul style={{ margin: '5px 0', padding: '0 0 0 20px' }}>
+                {debugMessage.map((msg, i) => (
+                  <li key={i}>{msg}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
-}
-
-// Icon components
-function HomeIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-      />
-    </svg>
-  );
-}
-
-function DumbbellIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125h-17.25Z"
-      />
-    </svg>
-  );
-}
-
-function FoodIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0L3 16.5m3.75 3.75v-7.5a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v7.5m3-9-3 3m0 0-3-3m3 3V4.5"
-      />
-    </svg>
-  );
-}
-
-function GoalIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"
-      />
-    </svg>
-  );
-}
-
-function RulerIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"
-      />
-    </svg>
-  );
-}
-
-function UserIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-      />
-    </svg>
-  );
-}
-
-// Book icon for diary
-function BookIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-      />
-    </svg>
-  );
-}
-
-function LogoutIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-      />
-    </svg>
-  );
-}
-
-function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 19.5L8.25 12l7.5-7.5"
-      />
-    </svg>
-  );
-}
-
-function ChevronRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-      />
-    </svg>
   );
 }
