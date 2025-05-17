@@ -6,8 +6,7 @@ const PROTECTED_PATHS = [
   '/dashboard',
   '/profile',
   '/workouts',
-  '/nutrition',
-  '/goals',
+  '/diary',
   '/measurements',
 ];
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Header from '@/components/dashboard/Header';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { Suspense } from 'react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Loading fallback component
 function LoadingSkeleton() {
@@ -28,10 +29,11 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-50">
-      {/* Mobile sidebar */}
-      {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 flex z-40">
+    <ProtectedRoute>
+      <div className="h-screen flex overflow-hidden bg-gray-50">
+        {/* Mobile sidebar */}
+        {sidebarOpen && (
+          <div className="md:hidden fixed inset-0 flex z-40">
           {/* Overlay */}
           <div
             className="fixed inset-0 bg-gray-600 bg-opacity-75"
@@ -92,5 +94,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

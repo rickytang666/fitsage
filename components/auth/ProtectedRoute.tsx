@@ -20,25 +20,29 @@ type ProtectedRouteProps = {
 
 // HOC for protecting routes that require authentication
 export default function ProtectedRoute({ 
-  children, 
-  redirectTo = '/auth/login' 
+  children,
+  redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // If auth has been checked and user is not authenticated, redirect
+    // Only redirect after we confirm user is not authenticated (and not still loading)
     if (!isLoading && !user) {
       router.push(redirectTo);
     }
-  }, [isLoading, user, router, redirectTo]);
+  }, [user, isLoading, router, redirectTo]);
 
   // Show loading screen while checking auth state
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // If the user is authenticated, render the children
-  return user ? <>{children}</> : <LoadingScreen />;
-}
+  // If user is not authenticated, show loading until redirect happens
+  if (!user) {
+    return <LoadingScreen />;
+  }
 
+  // If the user is authenticated, render the children
+  return <>{children}</>;
+}

@@ -8,8 +8,6 @@ import { useAuth } from '@/components/auth/AuthProvider';
 interface DashboardStats {
   workoutsThisWeek: number;
   totalWorkouts: number;
-  caloriesBurned: number;
-  activeGoals: number;
 }
 
 interface RecentWorkout {
@@ -26,11 +24,17 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     workoutsThisWeek: 0,
-    totalWorkouts: 0,
-    caloriesBurned: 0,
-    activeGoals: 0
+    totalWorkouts: 0
   });
   const [recentWorkouts, setRecentWorkouts] = useState<RecentWorkout[]>([]);
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
 
   // Simulate fetching dashboard data
   useEffect(() => {
@@ -43,9 +47,7 @@ export default function Dashboard() {
         // Mock data
         setStats({
           workoutsThisWeek: 3,
-          totalWorkouts: 12,
-          caloriesBurned: 1250,
-          activeGoals: 2
+          totalWorkouts: 12
         });
         
         setRecentWorkouts([
@@ -140,7 +142,7 @@ export default function Dashboard() {
     <div className="py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Welcome back, {user?.email?.split('@')[0] || 'User'}</p>
+        <p className="text-gray-500">{greeting}, {user?.email?.split('@')[0] || 'User'}</p>
       </div>
       
       {/* Stats Overview */}
@@ -169,29 +171,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Calories burned */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Calories burned
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-indigo-600">
-              {stats.caloriesBurned}
-            </dd>
-          </div>
-        </div>
-
-        {/* Active goals */}
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              Active goals
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-indigo-600">
-              {stats.activeGoals}
-            </dd>
-          </div>
-        </div>
       </div>
 
       {/* Quick Actions */}
@@ -223,55 +202,6 @@ export default function Dashboard() {
             </span>
           </Link>
 
-          <Link
-            href="/nutrition/new"
-            className="relative block rounded-lg border border-gray-300 bg-white p-6 text-center hover:border-indigo-400 hover:ring-1 hover:ring-indigo-400"
-          >
-            <span className="text-indigo-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="mx-auto h-10 w-10"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-            </span>
-            <span className="mt-2 block text-sm font-medium text-gray-900">
-              Log a Meal
-            </span>
-          </Link>
-
-          <Link
-            href="/goals/new"
-            className="relative block rounded-lg border border-gray-300 bg-white p-6 text-center hover:border-indigo-400 hover:ring-1 hover:ring-indigo-400"
-          >
-            <span className="text-indigo-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="mx-auto h-10 w-10"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </span>
-            <span className="mt-2 block text-sm font-medium text-gray-900">
-              Set a New Goal
-            </span>
-          </Link>
         </div>
       </div>
 
@@ -356,25 +286,21 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Activity Feed - Placeholder */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900">Activity Feed</h2>
-        </div>
-        <div className="mt-4 bg-white shadow rounded-lg p-6">
-          <p className="text-center text-gray-500">
-            Your activity feed will show your recent progress and achievements.
+      {/* Call to action - for users with no data */}
+      {recentWorkouts.length === 0 && (
+        <div className="mt-8 bg-white shadow rounded-lg p-6 text-center">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Start Your Fitness Journey</h2>
+          <p className="text-gray-600 mb-6">
+            Begin tracking your workouts, meals, and progress to reach your fitness goals.
           </p>
-          <div className="mt-4 flex justify-center">
-            <Link 
-              href="/workouts/new" 
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Start Tracking
-            </Link>
-          </div>
+          <Link 
+            href="/workouts/new" 
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Start Tracking
+          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

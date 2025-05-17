@@ -16,8 +16,7 @@ type NavItem = {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Workouts', href: '/workouts', icon: DumbbellIcon },
-  { name: 'Nutrition', href: '/nutrition', icon: FoodIcon },
-  { name: 'Goals', href: '/goals', icon: GoalIcon },
+  { name: 'Diary', href: '/diary', icon: BookIcon },
   { name: 'Measurements', href: '/measurements', icon: RulerIcon },
   { name: 'Profile', href: '/profile', icon: UserIcon },
 ];
@@ -35,6 +34,12 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
   // Function to check if a link is active
   const isActiveLink = (href: string) => {
     return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  // Handle sign out with preventDefault to avoid full page refresh
+  const handleSignOut = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    await signOut();
   };
 
   return (
@@ -85,6 +90,7 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
               } ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
               onClick={isMobile ? onClose : undefined}
               title={isCollapsed && !isMobile ? item.name : undefined}
+              prefetch={true}
             >
               <item.icon
                 className={`h-5 w-5 ${
@@ -100,7 +106,7 @@ export default function Sidebar({ isMobile = false, onClose }: SidebarProps) {
       {/* Logout button */}
       <div className={`p-4 border-t border-indigo-700 ${isCollapsed && !isMobile ? 'text-center' : ''}`}>
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-700 ${isCollapsed && !isMobile ? 'justify-center w-full' : 'w-full'}`}
           title={isCollapsed && !isMobile ? 'Sign Out' : undefined}
         >
@@ -222,6 +228,26 @@ function UserIcon(props: React.SVGProps<SVGSVGElement>) {
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+      />
+    </svg>
+  );
+}
+
+// Book icon for diary
+function BookIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      {...props}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
       />
     </svg>
   );
