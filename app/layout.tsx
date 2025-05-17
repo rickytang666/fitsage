@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+// Temporarily removed AuthProvider and ErrorBoundary for routing test
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +32,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
-        <ErrorBoundary>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </ErrorBoundary>
+        {/* Temporarily removed wrappers for basic routing test */}
+        {children}
       </body>
     </html>
   );
