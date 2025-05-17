@@ -10,6 +10,7 @@ type AuthContextType = {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{
     error: Error | null;
+    session: Session | null;
   }>;
   signUp: (email: string, password: string) => Promise<{
     error: Error | null;
@@ -26,7 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isLoading: true,
-  signIn: async () => ({ error: null }),
+  signIn: async () => ({ error: null, session: null }),
   signUp: async () => ({ error: null, user: null }),
   signOut: async () => {},
   resetPassword: async () => ({ error: null }),
@@ -82,27 +83,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log(`AuthProvider: Attempting to sign in with email: ${email}`);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      return { error };
+      if (error) {
+        console.error('AuthProvider: Sign in error:', error);
+        return { error, session: null };
+      }
+      
+      console.log('AuthProvider: Sign in successful, session:', data.session ? 'present' : 'missing');
+      
+      // Manually update the state for immediate access
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+      }
+      
+      return { error: null, session: data.session };
     } catch (error) {
-      console.error('Error signing in:', error);
-      return { error: error as Error };
+      console.error('AuthProvider: Error signing in:', error);
+      return { error: error as Error, session: null };
     }
   };
 
-  // Sign up with email and password
+  // Sign up with email and password and immediately log in
   const signUp = async (email: string, password: string) => {
     try {
+      // Sign up with auto-confirm enabled (no email verification)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // Skip email confirmation
+          emailRedirectTo: undefined,
+          data: {
+            signupSource: 'web',
+          }
+        }
       });
+
+      if (error) {
+        return { error, user: null };
+      }
+
+      if (data?.user) {
+        // Immediately sign in the user after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          console.error('Error signing in after signup:', signInError);
+          return { error: signInError, user: data.user };
+        }
+      }
       
-      return { error, user: data?.user || null };
+      return { error: null, user: data?.user || null };
     } catch (error) {
       console.error('Error signing up:', error);
       return { error: error as Error, user: null };

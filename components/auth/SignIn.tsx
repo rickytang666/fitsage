@@ -10,6 +10,7 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
 
@@ -17,21 +18,29 @@ export default function SignIn() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
+    setLoginSuccess(false);
+    
     try {
+      // Simplified login - use only the auth context approach
       const { error } = await signIn(email, password);
       
       if (error) {
-        setError(error.message || 'Failed to sign in. Please check your credentials.');
+        console.error('Sign in failed:', error);
+        setError(error.message || 'Invalid credentials. Please try again.');
+        setIsLoading(false);
         return;
       }
       
-      // Redirect to dashboard on successful login
-      router.push('/dashboard');
+      // Login successful - show success message
+      setLoginSuccess(true);
+      
+      // Use window.location for a full page refresh instead of client navigation
+      // This ensures the auth state is fully recognized by the server
+      window.location.href = '/dashboard';
+      
     } catch (err) {
+      console.error('Unexpected error during login:', err);
       setError('An unexpected error occurred. Please try again.');
-      console.error(err);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -43,6 +52,20 @@ export default function SignIn() {
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
           <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+      
+      {loginSuccess && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+          <span className="block sm:inline">Sign in successful! Redirecting to dashboard...</span>
+          <div className="mt-2">
+            <Link 
+              href="/dashboard" 
+              className="text-sm font-medium text-green-700 underline"
+            >
+              Click here if you are not redirected automatically
+            </Link>
+          </div>
         </div>
       )}
       

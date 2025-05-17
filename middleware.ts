@@ -11,7 +11,7 @@ const PROTECTED_PATHS = [
   '/measurements',
 ];
 
-// Paths that should redirect to dashboard if user is already authenticated
+// Auth paths - redirect to dashboard if user is already authenticated
 const AUTH_PATHS = [
   '/auth/login',
   '/auth/signup',
@@ -19,24 +19,47 @@ const AUTH_PATHS = [
 
 export async function middleware(request: NextRequest) {
   try {
+    const path = request.nextUrl.pathname;
+    
+    // Special case: always allow direct access to dashboard after login
+    // This prevents redirect loops during authentication
+    const fromAuth = request.headers.get('referer')?.includes('/auth/');
+    if (path === '/dashboard' && fromAuth) {
+      return NextResponse.next();
+    }
+    
     // Create supabase middleware client
     const response = NextResponse.next();
     const supabase = createMiddlewareClient({ req: request, res: response });
 
-    // Get session
-    const { data: { session }} = await supabase.auth.getSession();
-    const path = request.nextUrl.pathname;
-
-    // Check if the path is protected and user is not authenticated
-    if (PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath)) && !session) {
-      const redirectUrl = new URL('/auth/login', request.url);
-      redirectUrl.searchParams.set('redirect', path);
-      return NextResponse.redirect(redirectUrl);
+    // Get session with error handling
+    let session = null;
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (!error && data) {
+        session = data.session;
+      }
+    } catch (sessionError) {
+      console.error('Session fetch error:', sessionError);
+      // Continue without session on error
     }
 
-    // Check if the path is auth and user is already authenticated
-    if (AUTH_PATHS.some(authPath => path.startsWith(authPath)) && session) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Handle protected routes - redirect to login if not authenticated
+    if (PROTECTED_PATHS.some(protectedPath => path.startsWith(protectedPath))) {
+      if (!session) {
+        const redirectUrl = new URL('/auth/login', request.url);
+        redirectUrl.searchParams.set('redirect', path);
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+
+    // Handle auth routes - redirect to dashboard if already authenticated
+    // Skip this check for POST requests or if coming from dashboard
+    const isGetRequest = request.method.toLowerCase() === 'get';
+    if (isGetRequest && AUTH_PATHS.some(authPath => path.startsWith(authPath))) {
+      if (session) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
     }
 
     return response;

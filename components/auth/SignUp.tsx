@@ -11,7 +11,6 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
 
@@ -38,17 +37,18 @@ export default function SignUp() {
       const { error, user } = await signUp(email, password);
       
       if (error) {
-        setError(error.message || 'Failed to sign up. Please try again.');
+        if (error.message?.includes('already registered')) {
+          setError('This email is already registered. Please try signing in instead.');
+        } else {
+          setError(error.message || 'Failed to sign up. Please try again.');
+        }
         return;
       }
 
       if (user) {
-        // Supabase usually sends a confirmation email by default,
-        // so we show a success message
-        setIsSuccess(true);
-        
-        // For magic link auth, you might want to redirect to a confirmation page
-        // router.push('/auth/check-email');
+        // User is automatically logged in after signup
+        // Redirect to dashboard
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -58,42 +58,7 @@ export default function SignUp() {
     }
   };
 
-  // If sign up was successful, show confirmation message
-  if (isSuccess) {
-    return (
-      <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <svg 
-            className="mx-auto h-12 w-12 text-green-500" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M5 13l4 4L19 7" 
-            />
-          </svg>
-          <h2 className="text-2xl font-bold text-center mt-4 mb-2">Check your email</h2>
-          <p className="mb-4 text-gray-600">
-            We've sent you a confirmation link to <strong>{email}</strong>.
-            Please check your email to complete the sign up process.
-          </p>
-          <div className="mt-6">
-            <Link 
-              href="/auth/login" 
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              Return to sign in
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // No email confirmation screen needed
 
   return (
     <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
