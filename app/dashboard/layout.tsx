@@ -18,9 +18,9 @@ export default function DashboardLayout({
 }>) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // We'll create a nested layout structure for better state isolation
-  const content = (
-    <div className="h-screen flex overflow-hidden bg-gray-50">
+  return (
+    <ProtectedRoute>
+      <div className="h-screen flex overflow-hidden bg-gray-50">
         {/* Mobile sidebar */}
         {sidebarOpen && (
           <div className="md:hidden fixed inset-0 flex z-40">
@@ -82,12 +82,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
-  );
-  
-  // Wrap everything in the ProtectedRoute at the top level
-  return (
-    <ProtectedRoute preventRedirectsDuringNavigation={true}>
-      {content}
     </ProtectedRoute>
   );
 }

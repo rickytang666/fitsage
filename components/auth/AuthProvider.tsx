@@ -4,19 +4,20 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/utils/supabase';
 
+// Simplified auth context with minimal state
 type AuthContextType = {
-  user: User | null;
-  session: Session | null;
+  isAuthenticated: boolean;
+  email: string | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{
     error: Error | null;
-    session: Session | null;
+    success: boolean;
   }>;
   signUp: (email: string, password: string) => Promise<{
     error: Error | null;
-    user: User | null;
+    success: boolean;
   }>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
   resetPassword: (email: string) => Promise<{
     error: Error | null;
   }>;
@@ -24,100 +25,81 @@ type AuthContextType = {
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
+  isAuthenticated: false,
+  email: null,
   isLoading: true,
-  signIn: async () => ({ error: null, session: null }),
-  signUp: async () => ({ error: null, user: null }),
-  signOut: async () => {},
+  signIn: async () => ({ error: null, success: false }),
+  signUp: async () => ({ error: null, success: false }),
+  signOut: () => {},
   resetPassword: async () => ({ error: null }),
 });
 
 // Custom hook to use the auth context
 export const useAuth = () => useContext(AuthContext);
 
+// Local storage keys
+const AUTH_KEY = 'fitsage_auth';
+const EMAIL_KEY = 'fitsage_email';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [email, setEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Initialize auth state on component mount
+  // Initialize auth state on component mount - only once
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Get session data
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
-        }
-
-        if (data?.session) {
-          setSession(data.session);
-          setUser(data.session.user);
-        }
-      } catch (error) {
-        console.error('Error loading auth session:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
-
-    // Clean up the subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Check localStorage for auth state
+    const storedAuth = localStorage.getItem(AUTH_KEY);
+    const storedEmail = localStorage.getItem(EMAIL_KEY);
+    
+    if (storedAuth === 'true' && storedEmail) {
+      setIsAuthenticated(true);
+      setEmail(storedEmail);
+    }
+    
+    // Always mark loading as complete
+    setIsLoading(false);
   }, []);
 
-  // Sign in with email and password
+  // Simplified sign in - verify credentials once and set localStorage
   const signIn = async (email: string, password: string) => {
     try {
-      console.log(`AuthProvider: Attempting to sign in with email: ${email}`);
+      console.log(`Attempting to sign in with email: ${email}`);
+      
+      // Still use Supabase to verify credentials - but only once
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error('AuthProvider: Sign in error:', error);
-        return { error, session: null };
+        console.error('Sign in error:', error);
+        return { error, success: false };
       }
       
-      console.log('AuthProvider: Sign in successful, session:', data.session ? 'present' : 'missing');
+      // Store auth state in localStorage
+      localStorage.setItem(AUTH_KEY, 'true');
+      localStorage.setItem(EMAIL_KEY, email);
       
-      // Manually update the state for immediate access
-      if (data.session) {
-        setSession(data.session);
-        setUser(data.session.user);
-      }
+      // Update state
+      setIsAuthenticated(true);
+      setEmail(email);
       
-      return { error: null, session: data.session };
+      return { error: null, success: true };
     } catch (error) {
-      console.error('AuthProvider: Error signing in:', error);
-      return { error: error as Error, session: null };
+      console.error('Error signing in:', error);
+      return { error: error as Error, success: false };
     }
   };
 
-  // Sign up with email and password and immediately log in
+  // Simplified sign up and immediate login
   const signUp = async (email: string, password: string) => {
     try {
-      // Sign up with auto-confirm enabled (no email verification)
+      // Sign up with auto-confirm enabled
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Skip email confirmation
           emailRedirectTo: undefined,
           data: {
             signupSource: 'web',
@@ -126,36 +108,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { error, user: null };
+        return { error, success: false };
       }
 
-      if (data?.user) {
-        // Immediately sign in the user after signup
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError) {
-          console.error('Error signing in after signup:', signInError);
-          return { error: signInError, user: data.user };
-        }
-      }
+      // Store auth state in localStorage
+      localStorage.setItem(AUTH_KEY, 'true');
+      localStorage.setItem(EMAIL_KEY, email);
       
-      return { error: null, user: data?.user || null };
+      // Update state
+      setIsAuthenticated(true);
+      setEmail(email);
+      
+      return { error: null, success: true };
     } catch (error) {
       console.error('Error signing up:', error);
-      return { error: error as Error, user: null };
+      return { error: error as Error, success: false };
     }
   };
 
-  // Sign out
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+  // Simplified sign out - just clear localStorage
+  const signOut = () => {
+    // Remove auth state from localStorage
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    
+    // Update state
+    setIsAuthenticated(false);
+    setEmail(null);
+    
+    // Optionally notify Supabase (but don't wait for response)
+    supabase.auth.signOut().catch(error => {
+      console.error('Error notifying Supabase of signout:', error);
+    });
+    
+    // Force reload to clear any cached state
+    window.location.href = '/auth/login';
   };
 
   // Reset password (sends password reset email)
@@ -174,8 +161,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Auth context value
   const value = {
-    user,
-    session,
+    isAuthenticated,
+    email,
     isLoading,
     signIn,
     signUp,

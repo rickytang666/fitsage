@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from './AuthProvider';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-// Loading component to show while auth state is being checked
+// Local storage keys - must match AuthProvider
+const AUTH_KEY = 'fitsage_auth';
+
+// Simple loading component
 function LoadingScreen() {
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -16,79 +18,43 @@ function LoadingScreen() {
 type ProtectedRouteProps = {
   children: React.ReactNode;
   redirectTo?: string;
-  preventRedirectsDuringNavigation?: boolean;
 };
 
-// HOC for protecting routes that require authentication
+// Simplified protected route component
 export default function ProtectedRoute({ 
   children,
   redirectTo = '/auth/login',
-  preventRedirectsDuringNavigation = false
 }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const isNavigatingRef = useRef(false);
-  const lastPathRef = useRef(pathname);
-
-  // First useEffect just to mark initial load as complete after delay
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
+  // One-time check on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setInitialLoadComplete(true);
-    }, 500); // Allow time for auth to initialize
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Track navigation between dashboard pages
-  useEffect(() => {
-    if (lastPathRef.current !== pathname) {
-      isNavigatingRef.current = true;
-      // Reset navigation state after a delay
-      const timer = setTimeout(() => {
-        isNavigatingRef.current = false;
-        lastPathRef.current = pathname;
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [pathname]);
-
-  // Handle auth state changes and redirects
-  useEffect(() => {
-    // Skip redirect if explicitly prevented by props or if user is navigating
-    if (preventRedirectsDuringNavigation || isNavigatingRef.current) {
-      console.log("Skipping redirect during navigation");
-      return;
-    }
-
-    // Only redirect after initial load and when we confirm user is not authenticated
-    if (initialLoadComplete && !isLoading && !user) {
-      // Don't redirect if we're already at the login page
-      if (!pathname.startsWith(redirectTo)) {
-        console.log("Redirecting to login");
+    // Check localStorage for auth state
+    const checkAuth = () => {
+      const storedAuth = localStorage.getItem(AUTH_KEY);
+      
+      if (storedAuth === 'true') {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
         router.push(redirectTo);
       }
-    }
-  }, [user, isLoading, router, redirectTo, initialLoadComplete, pathname, preventRedirectsDuringNavigation]);
+    };
+    
+    checkAuth();
+  }, [redirectTo, router]);
 
   // Show loading screen while checking auth state
-  if (isLoading) {
+  if (isAuthenticated === null) {
     return <LoadingScreen />;
   }
-
-  // If user is not authenticated but we're deliberately preventing redirects during navigation,
-  // render the children anyway to avoid disrupting the navigation flow
-  if (!user && preventRedirectsDuringNavigation) {
+  
+  // If the user is authenticated, render the children
+  if (isAuthenticated) {
     return <>{children}</>;
   }
   
-  // If user is not authenticated, show loading until redirect happens
-  if (!user) {
-    return <LoadingScreen />;
-  }
-
-  // If the user is authenticated, render the children
-  return <>{children}</>;
+  // Otherwise show loading while redirect happens
+  return <LoadingScreen />;
 }
