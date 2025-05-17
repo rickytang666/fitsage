@@ -1,11 +1,14 @@
 'use client';
 
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
 import { useState } from 'react';
 
 export default function DiaryPage() {
   const [entry, setEntry] = useState('');
   const [summary, setSummary] = useState<{ exercise: string[], injuries: string[], notes: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const supabase = createClientComponentClient();
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -25,6 +28,29 @@ export default function DiaryPage() {
 
       const data = await res.json();
       setSummary(data.summary);
+
+      // 🟡 Get the user ID
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (!user || userError) {
+        console.error('User not authenticated:', userError);
+        return;
+      }
+
+      // 🟢 Save diary + summary to Supabase
+      const { error: insertError } = await supabase.from('diary_entries').insert({
+        user_id: user.id,
+        content: entry,
+        summary: data.summary, // optional: only if your table supports it
+        created_at: new Date().toISOString(),
+      });
+
+      if (insertError) {
+        console.error('Error saving diary:', insertError);
+      }
     } catch (err) {
       setSummary({
         exercise: [],
@@ -36,6 +62,7 @@ export default function DiaryPage() {
       setLoading(false);
     }
   };
+
 
   const renderCategory = (title: string, items: string[], color: string) => {
     if (!items?.length) return null;
