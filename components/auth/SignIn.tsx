@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './AuthProvider';
 // Development mode flag - set to false before production
-const DEVELOPMENT_MODE = true;
+const DEVELOPMENT_MODE = false;
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
