@@ -52,7 +52,7 @@ export default function Dashboard() {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
                   label: 'Workout Intensity',
-                  data: [4, 1, 0, 2.5, 1, 1, 0.5],
+                  data: [0.5, 1, 0, 2.5, 2, 2.5, 3.5],
                   borderColor: 'orange',
                   borderWidth: 2,
                   backgroundColor: 'rgba(255,165,0,0.1)',

@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     template: '%s | FitSage',
-    default: 'FitSage - Your Personal Fitness Companion',
+    default: 'FitSage - Your Fitness Buddy',
   },
   description: 'Track your workouts, nutrition, and fitness goals with FitSage, your personal fitness companion.',
   keywords: ['fitness', 'workout', 'tracking', 'health', 'nutrition', 'exercise'],
