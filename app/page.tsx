@@ -12,7 +12,7 @@ export default function HomePage() {
   return (
     <div className="bg-white">
       {/* Development mode banner */}
-      <div className="bg-yellow-100 border-b border-yellow-300 p-4">
+      {/* <div className="bg-yellow-100 border-b border-yellow-300 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <p className="text-yellow-800">
             <span className="font-bold">DEVELOPMENT MODE:</span> Auth checks bypassed for easier navigation.
@@ -24,7 +24,7 @@ export default function HomePage() {
             Go to Dashboard →
           </Link>
         </div>
-      </div>
+      </div> */}
       
       <div className="relative overflow-hidden">
         <div className="relative pt-6 pb-16 sm:pb-24">
