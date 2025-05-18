@@ -59,7 +59,7 @@ export default function HomePage() {
                 <span className="block text-indigo-600">with FitSage</span>
               </h1>
               <p className="mx-auto mt-3 max-w-md text-base text-gray-500 sm:text-lg md:mt-5 md:max-w-3xl md:text-xl">
-                Log workouts, track nutrition, and achieve your fitness goals with your personal fitness companion.
+                Log every workout. Unlock AI-powered insights. Crush your fitness goals with your ultimate training partner.
               </p>
               <div className="mx-auto mt-5 max-w-md sm:flex sm:justify-center md:mt-8">
                 <div className="rounded-md shadow">
@@ -103,10 +103,10 @@ export default function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Set and track goals</p>
+                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">AI-powered genius</p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Define your fitness goals and track your progress over time.
+                  Instant, laser-sharp summaries and killer suggestions tailored just for you.
                 </dd>
               </div>
 
@@ -131,10 +131,10 @@ export default function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
-                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Track nutrition</p>
+                  <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Smart workout memory</p>
                 </dt>
                 <dd className="mt-2 ml-16 text-base text-gray-500">
-                  Monitor your daily calorie and nutrient intake to support your fitness goals.
+                  Never lose momentum. Your workout diary builds habits that stick and progress that lasts.
                 </dd>
               </div>
 
