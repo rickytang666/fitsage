@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   },
   description: 'Track your workouts, nutrition, and fitness goals with FitSage, your personal fitness companion.',
   keywords: ['fitness', 'workout', 'tracking', 'health', 'nutrition', 'exercise'],
+  icons: {
+    icon: '/fitsage_icon.svg',
+  },
 };
 
 export default function RootLayout({
