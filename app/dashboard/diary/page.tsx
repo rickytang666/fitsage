@@ -8,6 +8,7 @@ export default function DiaryPage() {
   const [entry, setEntry] = useState('');
   const [summary, setSummary] = useState<{ exercise: string[], injuries: string[], notes: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'summary' | 'diary'>('summary');
   const [currentEntryDate, setCurrentEntryDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [allSummaries, setAllSummaries] = useState<Array<{
     date: string;
@@ -89,6 +90,12 @@ export default function DiaryPage() {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setCurrentEntryDate(today);
+    
+    // Load user's view preference
+    const savedViewMode = localStorage.getItem('diary-view-mode');
+    if (savedViewMode === 'diary' || savedViewMode === 'summary') {
+      setViewMode(savedViewMode);
+    }
     
     // Try to load today's entry from localStorage
     const savedEntry = localStorage.getItem(`diary-entry-${today}`);
@@ -253,9 +260,37 @@ export default function DiaryPage() {
         </div>
 
         <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
-            Diary Summaries <span className="text-sm font-normal text-gray-500"></span>
-          </h2>
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-xl font-bold text-gray-800">
+              {viewMode === 'summary' ? 'Diary Summaries' : 'Full Diary Entries'}
+            </h2>
+            <div className="flex items-center space-x-3">
+              <span className={`text-sm ${viewMode === 'diary' ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>Diary</span>
+              <button 
+                className="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+                onClick={() => {
+                  const newMode = viewMode === 'summary' ? 'diary' : 'summary';
+                  setViewMode(newMode);
+                  localStorage.setItem('diary-view-mode', newMode);
+                }}
+                aria-checked={viewMode === 'summary'}
+                role="switch"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`${
+                    viewMode === 'summary' ? 'bg-indigo-600 translate-x-5' : 'bg-gray-300 translate-x-0'
+                  } pointer-events-none inline-block h-5 w-5 rounded-full shadow transform ring-0 transition ease-in-out duration-200 border border-white`}
+                />
+                <span
+                  className={`${
+                    viewMode === 'summary' ? 'bg-indigo-600' : 'bg-gray-300'
+                  } absolute h-6 w-11 mx-auto rounded-full transition-colors duration-200 ease-in-out`}
+                />
+              </button>
+              <span className={`text-sm ${viewMode === 'summary' ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>Summary</span>
+            </div>
+          </div>
           
           {/* Display all summaries in a list (newest to oldest) */}
           <div className="space-y-6">
@@ -279,17 +314,31 @@ export default function DiaryPage() {
                     </button>
                   </div>
                   
-                  <div className="space-y-2">
-                    {item.entry && (
-                      <div className="mb-3 text-sm text-gray-600 line-clamp-2">
-                        <strong className="mr-2">Entry:</strong>
-                        {item.entry.length > 100 ? item.entry.substring(0, 100) + '...' : item.entry}
-                      </div>
-                    )}
-                    {renderCategory('Exercise', item.summary.exercise, 'blue')}
-                    {renderCategory('Injuries / Symptoms', item.summary.injuries, 'red')}
-                    {renderCategory('Important Notes', item.summary.notes, 'yellow')}
-                  </div>
+                  {viewMode === 'summary' ? (
+                    <div className="space-y-2">
+                      {item.entry && (
+                        <div className="mb-3 text-sm text-gray-600 line-clamp-2">
+                          <strong className="mr-2">Entry:</strong>
+                          {item.entry.length > 100 ? item.entry.substring(0, 100) + '...' : item.entry}
+                        </div>
+                      )}
+                      {renderCategory('Exercise', item.summary.exercise, 'blue')}
+                      {renderCategory('Injuries / Symptoms', item.summary.injuries, 'red')}
+                      {renderCategory('Important Notes', item.summary.notes, 'yellow')}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {item.entry ? (
+                        <div className="text-sm text-gray-700 whitespace-pre-wrap bg-white p-4 rounded-md border border-gray-200">
+                          {item.entry}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500 italic">
+                          No diary content available for this entry.
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
