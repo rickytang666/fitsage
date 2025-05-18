@@ -11,10 +11,10 @@ export default function ProfilePage() {
 
       {/* Glassmorphism profile card */}
       <div className="mx-auto max-w-2xl bg-white/60 backdrop-blur-md border border-gray-200 rounded-2xl shadow-md p-8">
-        <h2 className="text-2xl font-medium text-gray-800 mb-4">🔥 Fitness Profile Under Construction</h2>
+        <h2 className="text-2xl font-medium text-gray-800 mb-4">🔥 Your Fitness Profile is Heating Up!</h2>
         <p className="text-gray-600">
-          We're building your ultimate fitness profile — tracking workouts, nutrition, progress,
-          and goals. Stay tuned for personalized insights and motivational stats!
+          You’re cooking with real power — tracking your workouts, progress, and goals like a champ. 
+          Stay tuned for next-level insights coming your way!
         </p>
       </div>
 
