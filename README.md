@@ -1,4 +1,6 @@
 # 💪 FitSage — Your Smart Fitness Diary & Workout Companion
+![image](https://github.com/user-attachments/assets/9ad93e46-65d5-416d-91b0-54ca71f3a8e6)
+
 FitSage is a next-generation fitness web hub designed to make workout tracking simple, insightful, and personalized — especially for casual exercisers who want more than just numbers. By seamlessly blending a personal diary with advanced workout tracking, FitSage transforms your daily exercise and reflections into clear, actionable insights using the power of AI. 🤖✨
 
 ## 🔍 How FitSage Works:
