@@ -2,7 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/utils/supabase';
+import { createSupabaseClient } from '@/utils/supabase-client';
+
+// Create Supabase client instance
+const supabase = createSupabaseClient();
 
 // Improved auth context with proper Supabase integration
 type AuthContextType = {
@@ -35,7 +38,13 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 // Custom hook to use the auth context
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -76,20 +85,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔑 AuthProvider: Attempting sign in with Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error('Sign in error:', error);
+        console.error('❌ AuthProvider: Sign in error:', error);
         return { error, success: false };
       }
+      
+      console.log('✅ AuthProvider: Sign in successful, session:', data.session?.user?.email);
+      
+      // Force a session refresh to ensure middleware sees the session
+      await supabase.auth.getSession();
       
       // Session will be updated automatically by the auth state listener
       return { error: null, success: true };
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('💥 AuthProvider: Error signing in:', error);
       return { error: error as Error, success: false };
     }
   };
