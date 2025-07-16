@@ -7,10 +7,10 @@ import { useState, useEffect } from 'react';
 // Navigation items definition
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', color: '#0070f3' },
-  { name: 'Workouts', href: '/dashboard/workouts', color: '#34c759' },
-  { name: 'Diary', href: '/dashboard/diary', color: '#5e5ce6' },
-  { name: 'Measurements', href: '/dashboard/measurements', color: '#ff9500' },
-  { name: 'Profile', href: '/dashboard/profile', color: '#ff3b30' },
+  { name: 'Workouts', href: '/workouts', color: '#34c759' },
+  { name: 'Diary', href: '/diary', color: '#5e5ce6' },
+  { name: 'Measurements', href: '/measurements', color: '#ff9500' },
+  { name: 'Profile', href: '/profile', color: '#ff3b30' },
 ];
 
 export default function Sidebar() {

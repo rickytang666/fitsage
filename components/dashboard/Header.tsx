@@ -9,7 +9,7 @@ type HeaderProps = {
 };
 
 export default function Header({ onMobileMenuClick }: HeaderProps) {
-  const { user, signOut } = useAuth();
+  const { email, signOut } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
@@ -67,7 +67,7 @@ export default function Header({ onMobileMenuClick }: HeaderProps) {
               >
                 <span className="sr-only">Open user menu</span>
                 <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                  {email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               </button>
             </div>
@@ -82,7 +82,7 @@ export default function Header({ onMobileMenuClick }: HeaderProps) {
               >
                 <div className="py-1">
                   <Link
-                    href="/dashboard/profile"
+                    href="/profile"
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                     onClick={(e) => {
