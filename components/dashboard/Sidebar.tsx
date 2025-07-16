@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 // Navigation items definition
 const navigationItems = [
@@ -15,24 +15,7 @@ const navigationItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  
-  // Debug state
-  const [showDebug, setShowDebug] = useState(false);
-  const [mountTime] = useState(new Date().toISOString());
-  const [lastRender, setLastRender] = useState(new Date().toISOString());
-  const [debugMessage, setDebugMessage] = useState<string[]>([]);
-  
-  // Add debug message
-  const addDebug = (message: string) => {
-    console.log(`SIDEBAR: ${message}`);
-    setDebugMessage(prev => [message, ...prev].slice(0, 5));
-    setLastRender(new Date().toISOString());
-  };
-  
-  // Track renders
-  useEffect(() => {
-    addDebug('Component mounted/updated');
-  }, []);
+  const { user, signOut } = useAuth();
 
   // Check if a link is active
   const isActiveLink = (href: string) => {
@@ -67,8 +50,7 @@ export default function Sidebar() {
           return (
             <Link 
               key={item.name}
-              href={item.href} 
-              onClick={() => addDebug(`Navigation to: ${item.href}`)}
+              href={item.href}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -97,50 +79,53 @@ export default function Sidebar() {
         })}
       </nav>
       
-      {/* Collapsible Debug section */}
-      <div style={{ borderTop: '1px solid #eee', paddingTop: '15px' }}>
-        <button 
-          onClick={() => setShowDebug(!showDebug)}
+      {/* Logout Button */}
+      <div style={{ marginBottom: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+        <button
+          onClick={() => {
+            signOut();
+          }}
           style={{
-            background: 'none',
+            width: '100%',
+            padding: '14px 16px',
+            backgroundColor: '#ef4444',
+            color: 'white',
             border: 'none',
-            color: '#666',
-            fontSize: '12px',
+            borderRadius: '8px',
             cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
-            width: '100%',
-            justifyContent: 'space-between',
-            padding: '5px 0'
+            justifyContent: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#dc2626';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.3)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = '#ef4444';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)';
           }}
         >
-          Debug Panel
-          <span>{showDebug ? '▲' : '▼'}</span>
+          🚪 Sign Out
         </button>
         
-        {showDebug && (
-          <div style={{ 
-            marginTop: '10px', 
-            fontSize: '12px',
-            border: '1px solid #ddd',
-            padding: '10px',
-            borderRadius: '4px',
-            backgroundColor: '#f8f8f8'
+        {user && (
+          <p style={{ 
+            marginTop: '12px', 
+            fontSize: '13px', 
+            color: '#666', 
+            textAlign: 'center',
+            fontWeight: '500'
           }}>
-            <p><strong>Current pathname:</strong> {pathname}</p>
-            <p><strong>Window location:</strong> {typeof window !== 'undefined' ? window.location.pathname : ''}</p>
-            <p><strong>Component mounted:</strong> {mountTime}</p>
-            <p><strong>Last render:</strong> {lastRender}</p>
-            
-            <div style={{ marginTop: '10px' }}>
-              <strong>Debug log:</strong>
-              <ul style={{ margin: '5px 0', padding: '0 0 0 20px' }}>
-                {debugMessage.map((msg, i) => (
-                  <li key={i}>{msg}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+            {user.email}
+          </p>
         )}
       </div>
     </div>
