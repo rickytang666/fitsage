@@ -13,8 +13,12 @@ export default function Header({ onMobileMenuClick }: HeaderProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b border-gray-200 z-10">
+    <header className="bg-red-100 border-b-2 border-red-300 shadow-sm z-20 sticky top-0">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+        {/* Debug: Make header very visible */}
+        <div className="bg-red-500 text-white px-2 py-1 rounded text-sm">
+          HEADER IS HERE
+        </div>
         {/* Mobile menu button */}
         <button
           type="button"
