@@ -11,7 +11,6 @@ const navigationItems = [
   { name: 'Diary', href: '/dashboard/diary', color: '#5e5ce6' },
   { name: 'Measurements', href: '/dashboard/measurements', color: '#ff9500' },
   { name: 'Profile', href: '/dashboard/profile', color: '#ff3b30' },
-  { name: 'Test Page', href: '/dashboard/test', color: '#64748b' },
 ];
 
 export default function Sidebar() {
