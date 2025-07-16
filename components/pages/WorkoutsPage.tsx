@@ -1,14 +1,37 @@
 'use client';
 
+import styles from './WorkoutsPage.module.css';
+
 export default function WorkoutsPage() {
   return (
-    <div className="py-6">
-      <h1 className="text-3xl font-bold text-center mb-8">Workouts</h1>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>💪 Workouts</h1>
+        <p className={styles.subtitle}>Choose your fitness journey</p>
+      </div>
+
+      <div className={styles.statsCard}>
+        <h2 className={styles.statsTitle}>This Week's Progress</h2>
+        <div className={styles.statsGrid}>
+          <div className={styles.statItem}>
+            <div className={styles.statValue}>5</div>
+            <div className={styles.statLabel}>Workouts</div>
+          </div>
+          <div className={styles.statItem}>
+            <div className={styles.statValue}>2.5h</div>
+            <div className={styles.statLabel}>Total Time</div>
+          </div>
+          <div className={styles.statItem}>
+            <div className={styles.statValue}>850</div>
+            <div className={styles.statLabel}>Calories</div>
+          </div>
+        </div>
+      </div>
 
       {/* Workout Cards */}
       <div className="mt-8">
         <h2 className="text-lg font-medium text-gray-900">Featured Workouts</h2>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={styles.workoutGrid}>
 
           {/* Cardio Workout */}
           <WorkoutCard
@@ -170,11 +193,11 @@ function WorkoutCard({ title, duration, intensity, benefit, level, levelColor, i
   iconPath: string;
 }) {
   return (
-    <div className="rounded-lg border border-gray-300 bg-white p-6">
-      <div className="text-indigo-600">
+    <div className={styles.workoutCard}>
+      <div className={styles.workoutIcon}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="mx-auto h-10 w-10"
+          className="mx-auto h-10 w-10 text-indigo-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -187,7 +210,7 @@ function WorkoutCard({ title, duration, intensity, benefit, level, levelColor, i
           />
         </svg>
       </div>
-      <h3 className="mt-2 text-center text-lg font-medium text-gray-900">
+      <h3 className={styles.workoutTitle}>
         {title}
       </h3>
       <div className="mt-3 text-center text-sm text-gray-500">
