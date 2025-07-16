@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import SignIn from '@/components/auth/SignIn';
+import styles from './LoginPage.module.css';
 
 export const metadata: Metadata = {
   title: 'Sign In',
@@ -8,18 +9,20 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-2xl font-bold tracking-tight text-gray-900">
-          FitSage
-        </h1>
-        <h2 className="mt-2 text-center text-sm text-gray-600">
-          Your personal fitness companion
-        </h2>
-      </div>
-      
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <SignIn />
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>
+            🏋️‍♂️ FitSage
+          </h1>
+          <h2 className={styles.subtitle}>
+            Your personal fitness companion
+          </h2>
+        </div>
+        
+        <div className={styles.formContainer}>
+          <SignIn />
+        </div>
       </div>
     </div>
   );
