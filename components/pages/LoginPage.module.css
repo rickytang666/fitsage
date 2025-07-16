@@ -1,12 +1,12 @@
 /* LoginPage.module.css */
 
 .container {
-  display: flex;
   min-height: 100vh;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 3rem 1.5rem;
-  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
 }
 
 .content {
@@ -17,99 +17,103 @@
 
 .header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: #1f2937;
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0f4c75;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form {
+.subtitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1565c0;
+  letter-spacing: 0.025em;
+}
+
+.formContainer {
   background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 0;
+  overflow: hidden;
 }
 
-.field {
+/* Override the form component styles to fit our design */
+.formContainer :global(.max-w-md) {
+  max-width: none;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 2rem;
+}
+
+.formContainer :global(h2) {
+  font-size: 1.5rem;
+  color: #1f2937;
   margin-bottom: 1.5rem;
 }
 
-.label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  color: #1f2937;
+/* Style form inputs with blue theme */
+.formContainer :global(input) {
+  border: 1px solid #e5e7eb;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.input:focus {
-  outline: none;
+.formContainer :global(input:focus) {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.button {
-  width: 100%;
+.formContainer :global(button) {
   background-color: #3b82f6;
-  color: white;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
   transition: background-color 0.2s ease;
-  margin-bottom: 1rem;
 }
 
-.button:hover {
+.formContainer :global(button:hover) {
   background-color: #2563eb;
 }
 
-.button:disabled {
+.formContainer :global(button:disabled) {
   background-color: #9ca3af;
   cursor: not-allowed;
 }
 
-.link {
+/* Style links with blue theme */
+.formContainer :global(a) {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 500;
 }
 
-.link:hover {
+.formContainer :global(a:hover) {
   color: #2563eb;
   text-decoration: underline;
 }
 
-.footer {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.error {
-  color: #dc2626;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
-}
-
-.success {
-  color: #059669;
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
+/* Responsive design */
+@media (max-width: 640px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .container {
+    padding: 2rem 1rem;
+  }
+  
+  .formContainer {
+    border-radius: 0.5rem;
+  }
+  
+  .formContainer :global(.max-w-md) {
+    padding: 1.5rem;
+  }
 }

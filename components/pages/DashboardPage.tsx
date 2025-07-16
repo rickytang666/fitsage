@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import Script from 'next/script';
 
 export default function DashboardPage() {
-  const { email } = useAuth();
+  const { user } = useAuth();
   const [greeting, setGreeting] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,7 +25,7 @@ export default function DashboardPage() {
         <div className="px-6 py-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">
-              {greeting}, {email?.split('@')[0] || 'Fitness Enthusiast'}!
+              {greeting}, {user?.email?.split('@')[0] || 'Fitness Enthusiast'}!
             </h1>
             <p className="text-indigo-100 mt-2">Ready for your daily fitness journey?</p>
           </div>
