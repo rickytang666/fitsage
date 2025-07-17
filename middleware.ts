@@ -20,7 +20,6 @@ const AUTH_PATHS = [
 export async function middleware(request: NextRequest) {
   try {
     const path = request.nextUrl.pathname;
-    console.log('🔒 Middleware checking path:', path);
     
     // Handle root path redirect
     if (path === '/') {
@@ -45,31 +44,21 @@ export async function middleware(request: NextRequest) {
     );
     
     // Get session
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    console.log('🔐 Session check:', {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userId: session?.user?.id,
-      error: error?.message,
-    });
+    const { data: { session } } = await supabase.auth.getSession();
     
     const isAuthPath = AUTH_PATHS.includes(path);
     const isProtectedPath = PROTECTED_PATHS.includes(path);
     
     // If user is authenticated and on auth page, redirect to dashboard
     if (session && isAuthPath) {
-      console.log('✅ Authenticated user on auth page, redirecting to dashboard');
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     
     // If user is not authenticated and on protected path, redirect to login
     if (!session && isProtectedPath) {
-      console.log('❌ Unauthenticated user on protected path, redirecting to login');
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     
-    console.log('➡️ Allowing request to proceed');
     return response;
   } catch (error) {
     console.error('Middleware error:', error);
