@@ -2,13 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
-import dynamic from 'next/dynamic';
-import Script from 'next/script';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
 
   // Set greeting based on time of day
   useEffect(() => {
@@ -17,6 +37,72 @@ export default function DashboardPage() {
     else if (hour < 18) setGreeting('Good afternoon');
     else setGreeting('Good evening');
   }, []);
+
+  // Chart data
+  const chartData = {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Workout Intensity',
+        data: [0.5, 1, 0, 2.5, 2, 2.5, 3.5],
+        borderColor: 'rgb(249, 115, 22)',
+        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        pointBackgroundColor: 'rgb(249, 115, 22)',
+        pointBorderColor: 'white',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        fill: true,
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgb(249, 115, 22)',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 4,
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#666',
+          stepSize: 1,
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        ticks: {
+          color: '#666',
+        },
+      },
+    },
+    elements: {
+      line: {
+        tension: 0.1,
+      },
+    },
+  };
 
   return (
     <div className="py-6">
@@ -35,77 +121,10 @@ export default function DashboardPage() {
       {/* Workout Chart */}
       <div className="bg-white p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Weekly Workout Intensity</h2>
-        <div className="chart-container" style={{ height: "600px" }}>
-          <canvas id="workoutChart"></canvas>
+        <div className="h-80">
+          <Line data={chartData} options={chartOptions} />
         </div>
       </div>
-
-      {/* Load Chart.js from CDN */}
-      <Script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"
-        onLoad={() => {
-          const ctx = document.getElementById('workoutChart');
-          if (ctx) {
-            const chart = new (window as any).Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                  label: 'Workout Intensity',
-                  data: [0.5, 1, 0, 2.5, 2, 2.5, 3.5],
-                  borderColor: 'orange',
-                  borderWidth: 2,
-                  backgroundColor: 'rgba(255,165,0,0.1)',
-                  pointBackgroundColor: 'orange',
-                  pointRadius: 6,
-                  pointHoverRadius: 8,
-                  pointBorderWidth: 1,
-                  pointBorderColor: 'white',
-                  fill: false
-                }]
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                  legend: {
-                    display: false
-                  },
-                  tooltip: {
-                    intersect: false,
-                  }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    grid: {
-                      display: false,
-                      drawBorder: false
-                    },
-                    ticks: {
-                      color: '#666'
-                    }
-                  },
-                  x: {
-                    grid: {
-                      display: false,
-                      drawBorder: false
-                    },
-                    ticks: {
-                      color: '#666'
-                    }
-                  }
-                },
-                 elements: {
-                  line: {
-                    tension: 0.1
-                  }
-                }
-              }
-            });
-          }
-        }}
-      />
 
       {/* Motivational Quote */}
       <div className="mt-8 bg-gray-50 p-6 rounded-lg shadow border-l-4 border-indigo-500">
