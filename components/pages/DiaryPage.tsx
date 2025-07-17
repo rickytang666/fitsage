@@ -1,8 +1,8 @@
 'use client';
 
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-
 import { useState, useEffect } from 'react';
+import styles from './DiaryPage.module.css';
 
 export default function DiaryPage() {
   const [entry, setEntry] = useState('');
@@ -189,15 +189,15 @@ export default function DiaryPage() {
   };
 
   return (
-    <div className="py-6">
-      <h1 className="text-3xl font-bold text-center mb-8">Fitness Diary</h1>
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="text-center mb-4">
-          <p className="text-lg font-medium text-gray-900">{currentDate}</p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Fitness Diary</h1>
+      <div className={styles.card}>
+        <div className={styles.dateSelector}>
+          <p className={styles.dateText}>{currentDate}</p>
           <p className="text-sm text-gray-500 mt-2">AI-Powered Diary Summarizer</p>
         </div>
         
-        <div className="mb-4">
+        <div className={styles.tabContainer}>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select date for this diary entry:
           </label>

@@ -1,0 +1,119 @@
+/* LoginPage.module.css */
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+}
+
+.content {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0f4c75;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #1565c0;
+  letter-spacing: 0.025em;
+}
+
+.formContainer {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Override the form component styles to fit our design */
+.formContainer :global(.max-w-md) {
+  max-width: none;
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 2rem;
+}
+
+.formContainer :global(h2) {
+  font-size: 1.5rem;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+/* Style form inputs with blue theme */
+.formContainer :global(input) {
+  border: 1px solid #e5e7eb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formContainer :global(input:focus) {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formContainer :global(button) {
+  background-color: #3b82f6;
+  transition: background-color 0.2s ease;
+}
+
+.formContainer :global(button:hover) {
+  background-color: #2563eb;
+}
+
+.formContainer :global(button:disabled) {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Style links with blue theme */
+.formContainer :global(a) {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.formContainer :global(a:hover) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+  }
+  
+  .container {
+    padding: 2rem 1rem;
+  }
+  
+  .formContainer {
+    border-radius: 0.5rem;
+  }
+  
+  .formContainer :global(.max-w-md) {
+    padding: 1.5rem;
+  }
+}
