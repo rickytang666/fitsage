@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import Sidebar from '@/components/dashboard/Sidebar';
@@ -8,7 +9,7 @@ type LayoutWrapperProps = {
   children: React.ReactNode;
 };
 
-export default function LayoutWrapper({ children }: LayoutWrapperProps) {
+function LayoutWrapperInner({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, isLoading } = useAuth();
@@ -44,5 +45,22 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     <div className="min-h-screen bg-gray-50">
       {children}
     </div>
+  );
+}
+
+export default function LayoutWrapper({ children }: LayoutWrapperProps) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LayoutWrapperInner>
+        {children}
+      </LayoutWrapperInner>
+    </Suspense>
   );
 }
