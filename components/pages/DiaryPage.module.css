@@ -19,6 +19,8 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border-radius: 0.5rem;
   padding: 1.5rem;
+  /* Force light mode styling to prevent browser dark mode interference */
+  color-scheme: light;
 }
 
 .dateSelector {
@@ -187,4 +189,48 @@
   background-color: #fef2f2;
   border-radius: 0.375rem;
   margin-bottom: 1rem;
+}
+
+/* Dark Mode Protection for DiaryPage */
+.card *,
+.card *::before,
+.card *::after {
+  color-scheme: light !important;
+}
+
+/* Override any browser dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: white !important;
+    color: #1f2937 !important;
+  }
+  
+  .title {
+    color: #1f2937 !important;
+  }
+  
+  .dateText {
+    color: #1f2937 !important;
+  }
+  
+  /* Fix date input in dark mode */
+  .card input[type="date"] {
+    background-color: white !important;
+    color: #1f2937 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  .card input[type="date"]:focus {
+    border-color: #6366f1 !important;
+  }
+  
+  .card textarea {
+    background-color: white !important;
+    color: #1f2937 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  .card textarea:focus {
+    border-color: #6366f1 !important;
+  }
 }

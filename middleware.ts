@@ -26,15 +26,30 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
     
-    // Skip middleware for API routes and auth callback
-    if (path.startsWith('/api/') || path === '/auth/callback') {
+    // Skip middleware for API routes, auth callback, and static files
+    if (path.startsWith('/api/') || 
+        path === '/auth/callback' ||
+        path.startsWith('/_next/') ||
+        path.startsWith('/static/') ||
+        path.includes('.')) {
       return NextResponse.next();
     }
     
     // Create response first
     const response = NextResponse.next();
     
-    // Create supabase client - ensure we're using the same session storage
+    // Only check auth for protected paths to reduce API calls
+    const isAuthPath = AUTH_PATHS.includes(path);
+    const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
+      path === protectedPath || (protectedPath !== '/dashboard' && path.startsWith(protectedPath))
+    );
+    
+    // Skip auth check for non-auth, non-protected paths
+    if (!isAuthPath && !isProtectedPath) {
+      return response;
+    }
+    
+    // Create supabase client - only when needed
     const supabase = createMiddlewareClient(
       { req: request, res: response },
       {
@@ -43,11 +58,8 @@ export async function middleware(request: NextRequest) {
       }
     );
     
-    // Get session
+    // Get session - only for auth/protected paths
     const { data: { session } } = await supabase.auth.getSession();
-    
-    const isAuthPath = AUTH_PATHS.includes(path);
-    const isProtectedPath = PROTECTED_PATHS.includes(path);
     
     // If user is authenticated and on auth page, redirect to dashboard
     if (session && isAuthPath) {

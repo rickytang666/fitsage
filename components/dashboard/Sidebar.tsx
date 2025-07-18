@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
+import styles from './Sidebar.module.css';
 
 // Navigation items definition
 const navigationItems = [
@@ -23,27 +24,13 @@ export default function Sidebar() {
   };
   
   return (
-    <div style={{ 
-      width: '250px', 
-      padding: '20px', 
-      backgroundColor: '#f8f9fa',
-      height: '100%',
-      boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <h1 style={{ 
-        marginBottom: '30px', 
-        fontSize: '24px', 
-        color: '#333',
-        borderBottom: '1px solid #eee',
-        paddingBottom: '15px'
-      }}>
+    <div className={styles.sidebar}>
+      <h1 className={styles.brand}>
         FitSage
       </h1>
       
       {/* Navigation Links */}
-      <nav style={{ marginBottom: '20px', flex: 1 }}>
+      <nav className={styles.nav}>
         {navigationItems.map((item) => {
           const active = isActiveLink(item.href);
           
@@ -51,28 +38,10 @@ export default function Sidebar() {
             <Link 
               key={item.name}
               href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '12px 16px',
-                marginBottom: '8px',
-                backgroundColor: active ? item.color : 'transparent',
-                color: active ? 'white' : '#333',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontWeight: active ? 'bold' : 'normal',
-                transition: 'all 0.2s ease',
-                border: active ? 'none' : '1px solid #eee'
-              }}
+              className={`${styles.navLink} ${active ? styles.navLinkActive : ''}`}
+              style={active ? { '--link-color': item.color } as React.CSSProperties : { '--link-color': item.color } as React.CSSProperties}
             >
-              <span style={{ 
-                width: '10px', 
-                height: '10px', 
-                borderRadius: '50%', 
-                backgroundColor: item.color,
-                marginRight: '10px',
-                opacity: active ? 0.5 : 1
-              }}></span>
+              <span className={`${styles.navIcon} ${active ? styles.navIconActive : ''}`}></span>
               {item.name}
             </Link>
           );
@@ -80,50 +49,18 @@ export default function Sidebar() {
       </nav>
       
       {/* Logout Button */}
-      <div style={{ marginBottom: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+      <div className={styles.signOutSection}>
         <button
           onClick={() => {
             signOut();
           }}
-          style={{
-            width: '100%',
-            padding: '14px 16px',
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '15px',
-            fontWeight: '600',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            transition: 'all 0.2s',
-            boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#dc2626';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 8px rgba(239, 68, 68, 0.3)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#ef4444';
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 2px 4px rgba(239, 68, 68, 0.2)';
-          }}
+          className={styles.signOutButton}
         >
           🚪 Sign Out
         </button>
         
         {user && (
-          <p style={{ 
-            marginTop: '12px', 
-            fontSize: '13px', 
-            color: '#666', 
-            textAlign: 'center',
-            fontWeight: '500'
-          }}>
+          <p className={styles.userEmail}>
             {user.email}
           </p>
         )}

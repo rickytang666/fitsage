@@ -93,13 +93,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ AuthProvider: Sign in error:', error);
+        
+        // Handle specific error types without retry to prevent loops
+        if (error.message?.includes('rate limit') || error.message?.includes('Request rate limit reached')) {
+          const rateLimitError = new Error('Too many requests. Please wait a few minutes and try again.');
+          return { error: rateLimitError, success: false };
+        }
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          const credentialsError = new Error('Invalid email or password. Please check your credentials and try again.');
+          return { error: credentialsError, success: false };
+        }
+        
         return { error, success: false };
       }
       
       console.log('✅ AuthProvider: Sign in successful, session:', data.session?.user?.email);
-      
-      // Force a session refresh to ensure middleware sees the session
-      await supabase.auth.getSession();
       
       // Session will be updated automatically by the auth state listener
       return { error: null, success: true };
@@ -125,6 +134,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Sign up error:', error);
+        
+        // Handle specific error types
+        if (error.message?.includes('rate limit') || error.message?.includes('Request rate limit reached')) {
+          const rateLimitError = new Error('Too many sign-up attempts. Please wait a moment and try again.');
+          return { error: rateLimitError, success: false };
+        }
+        
+        if (error.message?.includes('already registered')) {
+          const existingUserError = new Error('This email is already registered. Please try signing in instead.');
+          return { error: existingUserError, success: false };
+        }
+        
         return { error, success: false };
       }
 
