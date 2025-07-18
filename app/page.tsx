@@ -1,6 +1,6 @@
-import HomePage from '@/components/pages/HomePage';
+import IntroPage from '@/components/pages/IntroPage';
 
 export default function Page() {
-  return <HomePage />;
+  return <IntroPage />;
 }
 

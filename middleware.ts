@@ -20,11 +20,6 @@ export async function middleware(request: NextRequest) {
   try {
     const path = request.nextUrl.pathname;
     
-    // Handle root path redirect
-    if (path === '/') {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
-    
     // Skip middleware for API routes, auth callback, and static files
     if (path.startsWith('/api/') || 
         path === '/auth/callback' ||
@@ -37,14 +32,15 @@ export async function middleware(request: NextRequest) {
     // Create response first
     const response = NextResponse.next();
     
-    // Only check auth for protected paths to reduce API calls
+    // Only check auth for protected paths, auth paths, and root path to reduce API calls
     const isAuthPath = AUTH_PATHS.includes(path);
     const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
       path === protectedPath || (protectedPath !== '/dashboard' && path.startsWith(protectedPath))
     );
+    const isRootPath = path === '/';
     
-    // Skip auth check for non-auth, non-protected paths
-    if (!isAuthPath && !isProtectedPath) {
+    // Skip auth check for non-auth, non-protected, non-root paths
+    if (!isAuthPath && !isProtectedPath && !isRootPath) {
       return response;
     }
     
@@ -57,11 +53,16 @@ export async function middleware(request: NextRequest) {
       }
     );
     
-    // Get session - only for auth/protected paths
+    // Get session - only for auth/protected/root paths
     const { data: { session } } = await supabase.auth.getSession();
     
     // If user is authenticated and on auth page, redirect to dashboard
     if (session && isAuthPath) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    
+    // If user is authenticated and on root path, redirect to dashboard
+    if (session && isRootPath) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     

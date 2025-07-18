@@ -166,8 +166,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Session will be updated automatically by the auth state listener
-      // Force navigation to login page
-      window.location.href = '/auth/login';
+      // Force navigation to intro page
+      window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
     }
