@@ -180,13 +180,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       
-      // Wait a brief moment to ensure session is cleared
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Forcefully clear all browser storage (especially for Chrome)
+      try {
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear specific Supabase keys (in case localStorage.clear() doesn't work)
+        const supabaseKeys = Object.keys(localStorage).filter(key => 
+          key.startsWith('supabase') || key.startsWith('sb-')
+        );
+        supabaseKeys.forEach(key => localStorage.removeItem(key));
+        
+        // Clear cookies - iterate through all cookies and remove Supabase-related ones
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name.includes('supabase') || name.includes('sb-') || name.includes('auth')) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+            // For Chrome, also try with dot domain
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+          }
+        });
+        
+        // Chrome-specific: Clear IndexedDB if available
+        if (typeof window !== 'undefined' && /Chrome/.test(navigator.userAgent) && 'indexedDB' in window) {
+          try {
+            const databases = await indexedDB.databases();
+            await Promise.all(databases.map(db => {
+              if (db.name && db.name.includes('supabase')) {
+                return new Promise((resolve, reject) => {
+                  const deleteReq = indexedDB.deleteDatabase(db.name!);
+                  deleteReq.onsuccess = () => resolve(void 0);
+                  deleteReq.onerror = () => reject(deleteReq.error);
+                });
+              }
+            }));
+          } catch (idbError) {
+            console.warn('Could not clear IndexedDB:', idbError);
+          }
+        }
+        
+        console.log('✅ All browser storage cleared');
+      } catch (storageError) {
+        console.error('Error clearing browser storage:', storageError);
+      }
+      
+      // Wait a brief moment to ensure everything is cleared
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Force navigation to intro page with a query parameter to bypass any caching
-      window.location.href = '/?signedOut=true';
+      // Use window.location.replace instead of href to prevent back button issues
+      window.location.replace('/?signedOut=true');
     } catch (error) {
       console.error('Error signing out:', error);
+      // If there's an error, still try to redirect to clean up the UI
+      window.location.replace('/?signedOut=true');
     }
   };
 
