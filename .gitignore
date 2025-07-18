@@ -76,4 +76,6 @@ next-env.d.ts
 .env
 .env.local
 
-DEVELOPMENT_TIPS.md
+# markdown files
+*.md
+!README.md
