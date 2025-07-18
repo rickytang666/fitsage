@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return { error: rateLimitError, success: false };
         }
         
-        if (error.message?.includes('already registered')) {
+        if (error.message?.includes('already registered') || error.message?.includes('User already registered')) {
           const existingUserError = new Error('This email is already registered. Please try signing in instead.');
           return { error: existingUserError, success: false };
         }
@@ -149,6 +149,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error, success: false };
       }
 
+      // Check if user was created or if they already exist
+      if (data.user && !data.user.email_confirmed_at && data.user.identities?.length === 0) {
+        // User already exists - identities array is empty for existing users
+        const existingUserError = new Error('An account with this email already exists. Please try signing in instead.');
+        return { error: existingUserError, success: false };
+      }
+
+      console.log('✅ AuthProvider: Sign up successful, user:', data.user?.email);
+      console.log('User confirmation status:', data.user?.email_confirmed_at);
+      console.log('User identities:', data.user?.identities?.length);
+      
       // For email confirmation flow, user needs to check email
       return { error: null, success: true };
     } catch (error) {

@@ -95,7 +95,7 @@ export default function SignIn() {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
         <div className={styles.formGroup}>
           <label htmlFor="email" className={styles.label}>
             Email Address
@@ -104,7 +104,7 @@ export default function SignIn() {
             id="email"
             name="email"
             type="email"
-            autoComplete="email"
+            autoComplete="off"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -129,7 +129,7 @@ export default function SignIn() {
             id="password"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete="off"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
