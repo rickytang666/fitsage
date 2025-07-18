@@ -165,9 +165,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error signing out:', error);
       }
       
-      // Session will be updated automatically by the auth state listener
-      // Force navigation to intro page
-      window.location.href = '/';
+      // Clear any remaining session data
+      setUser(null);
+      setSession(null);
+      
+      // Wait a brief moment to ensure session is cleared
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Force navigation to intro page with a query parameter to bypass any caching
+      window.location.href = '/?signedOut=true';
     } catch (error) {
       console.error('Error signing out:', error);
     }

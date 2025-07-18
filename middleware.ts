@@ -19,6 +19,7 @@ const AUTH_PATHS = [
 export async function middleware(request: NextRequest) {
   try {
     const path = request.nextUrl.pathname;
+    const searchParams = request.nextUrl.searchParams;
     
     // Skip middleware for API routes, auth callback, and static files
     if (path.startsWith('/api/') || 
@@ -41,6 +42,11 @@ export async function middleware(request: NextRequest) {
     
     // Skip auth check for non-auth, non-protected, non-root paths
     if (!isAuthPath && !isProtectedPath && !isRootPath) {
+      return response;
+    }
+    
+    // If user just signed out, allow them to see intro page
+    if (isRootPath && searchParams.get('signedOut') === 'true') {
       return response;
     }
     
