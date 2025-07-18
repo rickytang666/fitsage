@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './AuthProvider';
 import styles from './Auth.module.css';
@@ -14,6 +14,15 @@ export default function SignIn() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for error parameters in URL
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    if (urlError === 'confirmation_failed') {
+      setError('Email confirmation failed. Please try again or contact support.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

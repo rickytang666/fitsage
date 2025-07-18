@@ -7,12 +7,20 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const token_hash = requestUrl.searchParams.get('token_hash');
   const type = requestUrl.searchParams.get('type');
+  const error = requestUrl.searchParams.get('error');
   
   console.log('Auth callback called with:', { 
     code: code ? 'present' : 'missing',
     token_hash: token_hash ? 'present' : 'missing',
-    type 
+    type,
+    error
   });
+
+  // Handle error from email provider
+  if (error) {
+    console.error('Email provider error:', error);
+    return NextResponse.redirect(new URL('/auth/login?error=confirmation_failed', requestUrl.origin));
+  }
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
