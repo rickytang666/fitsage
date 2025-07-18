@@ -10,7 +10,6 @@ const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', color: '#0070f3' },
   { name: 'Workouts', href: '/workouts', color: '#34c759' },
   { name: 'Diary', href: '/diary', color: '#5e5ce6' },
-  { name: 'Measurements', href: '/measurements', color: '#ff9500' },
   { name: 'Profile', href: '/profile', color: '#ff3b30' },
 ];
 

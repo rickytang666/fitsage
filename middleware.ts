@@ -8,7 +8,6 @@ const PROTECTED_PATHS = [
   '/profile',
   '/workouts',
   '/diary',
-  '/measurements',
 ];
 
 // Auth paths - redirect to dashboard if user is already authenticated
