@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerClient({ cookies });
     
     try {
+      // First, exchange code for session to confirm the email
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (error) {
@@ -36,7 +37,11 @@ export async function GET(request: NextRequest) {
       
       console.log('Email confirmation successful for user:', data.user?.email);
       
-      // Account confirmed successfully - redirect to login page for clean flow
+      // Email is now confirmed, but we want the user to see the success message
+      // So immediately sign out to prevent auto-login, but keep the confirmation status
+      await supabase.auth.signOut();
+      
+      // Redirect to login page with success message - user will see the green banner
       return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
     } catch (error) {
       console.log('Callback error, redirecting to login:', error);
