@@ -127,17 +127,9 @@ export default function SignIn() {
         </div>
         
         <div className={styles.formGroup}>
-          <div className={styles.flexBetween}>
-            <label htmlFor="password" className={styles.label}>
-              Password
-            </label>
-            <Link 
-              href="/auth/forgot-password" 
-              className={styles.link}
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <label htmlFor="password" className={styles.label}>
+            Password
+          </label>
           <input
             id="password"
             name="password"
