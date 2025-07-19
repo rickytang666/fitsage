@@ -21,9 +21,6 @@ type AuthContextType = {
     success: boolean;
   }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{
-    error: Error | null;
-  }>;
 };
 
 // Create context with default values
@@ -34,7 +31,6 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null, success: false }),
   signUp: async () => ({ error: null, success: false }),
   signOut: async () => {},
-  resetPassword: async () => ({ error: null }),
 });
 
 // Custom hook to use the auth context
@@ -242,20 +238,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Reset password (sends password reset email)
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
-      });
-      
-      return { error };
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      return { error: error as Error };
-    }
-  };
-
   // Auth context value
   const value = {
     user,
@@ -264,7 +246,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
-    resetPassword,
   };
 
   return (
