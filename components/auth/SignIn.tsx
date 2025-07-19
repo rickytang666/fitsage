@@ -12,15 +12,22 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [confirmationSuccess, setConfirmationSuccess] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Check for error parameters in URL
+  // Check for URL parameters
   useEffect(() => {
     const urlError = searchParams.get('error');
+    const confirmed = searchParams.get('confirmed');
+    
     if (urlError === 'confirmation_failed') {
       setError('Email confirmation failed. Please try again or contact support.');
+    } else if (confirmed === 'true') {
+      // Show success message for confirmed accounts
+      setError(null); // Clear any existing errors
+      setConfirmationSuccess(true);
     }
   }, [searchParams]);
 
@@ -68,6 +75,12 @@ export default function SignIn() {
   return (
     <div className={styles.authContainer}>
       <h2 className={styles.title}>Sign In to FitSage</h2>
+      
+      {confirmationSuccess && (
+        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
+          <span className={styles.alertText}>✅ Email confirmed successfully! You can now sign in to your account.</span>
+        </div>
+      )}
       
       {error && (
         <div className={`${styles.alert} ${styles.alertError}`} role="alert">

@@ -50,6 +50,16 @@ export async function middleware(request: NextRequest) {
       return response;
     }
     
+    // If there's a code parameter at root, redirect to auth callback
+    if (isRootPath && searchParams.get('code')) {
+      const callbackUrl = new URL('/auth/callback', request.url);
+      // Preserve all search parameters for the callback
+      searchParams.forEach((value, key) => {
+        callbackUrl.searchParams.set(key, value);
+      });
+      return NextResponse.redirect(callbackUrl);
+    }
+    
     // Create supabase client - only when needed
     const supabase = createMiddlewareClient(
       { req: request, res: response },

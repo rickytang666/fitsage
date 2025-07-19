@@ -7,8 +7,7 @@
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  /* Force light mode styling to prevent browser dark mode interference */
-  color-scheme: light;
+  color: black;
 }
 
 /* Typography */
@@ -17,12 +16,10 @@
   font-weight: 700;
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #000000 !important;
 }
 
 .subtitle {
   font-size: 0.875rem;
-  color: #000000 !important;
   text-align: center;
 }
 
@@ -41,10 +38,7 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #000000 !important;
   margin-bottom: 0.25rem;
-  /* Force light mode styling to prevent browser dark mode interference */
-  color-scheme: light;
 }
 
 .input {
@@ -54,35 +48,30 @@
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-size: 0.875rem;
-  background-color: white !important;
-  color: #000000 !important;
+  background-color: white;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  /* Force light mode styling to prevent browser dark mode interference */
-  color-scheme: light;
 }
 
 .input:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-  background-color: white !important;
-  color: #000000 !important;
 }
 
 .input::placeholder {
-  color: #9ca3af !important;
+  color: #9ca3af;
 }
 
 .input::-webkit-input-placeholder {
-  color: #9ca3af !important;
+  color: #9ca3af;
 }
 
 .input::-moz-placeholder {
-  color: #9ca3af !important;
+  color: #9ca3af;
 }
 
 .input:-ms-input-placeholder {
-  color: #9ca3af !important;
+  color: #9ca3af;
 }
 
 /* Buttons */
@@ -195,75 +184,4 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-/* Dark Mode Protection - Force light mode for all form elements */
-.authContainer *,
-.authContainer *::before,
-.authContainer *::after {
-  color-scheme: light !important;
-}
-
-/* Specifically target input elements to prevent dark mode styling */
-.input,
-.input:focus,
-.input:active,
-.input:hover {
-  background-color: white !important;
-  color: #1f2937 !important;
-  border-color: #d1d5db !important;
-}
-
-.input:focus {
-  border-color: #6366f1 !important;
-}
-
-/* Ensure placeholder text remains visible in all modes */
-.input::placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Webkit/Blink browsers (Chrome, Safari, Edge) */
-.input::-webkit-input-placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Firefox */
-.input::-moz-placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Internet Explorer/Edge */
-.input:-ms-input-placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Override any browser dark mode styles */
-@media (prefers-color-scheme: dark) {
-  .authContainer {
-    background-color: white !important;
-    color: #1f2937 !important;
-  }
-  
-  .input {
-    background-color: white !important;
-    color: #1f2937 !important;
-    border-color: #d1d5db !important;
-  }
-  
-  .input:focus {
-    border-color: #6366f1 !important;
-  }
-  
-  .label {
-    color: #374151 !important;
-  }
-  
-  .title {
-    color: #111827 !important;
-  }
 }
