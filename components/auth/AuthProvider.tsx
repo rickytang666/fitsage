@@ -12,6 +12,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isSigningOut: boolean;
   signIn: (email: string, password: string) => Promise<{
     error: Error | null;
     success: boolean;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isLoading: true,
+  isSigningOut: false,
   signIn: async () => ({ error: null, success: false }),
   signUp: async () => ({ error: null, success: false }),
   signOut: async () => {},
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
   // Initialize auth state and set up auth listener
   useEffect(() => {
@@ -69,6 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
+        
+        // Don't update state if we're in the middle of signing out
+        if (isSigningOut) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -167,6 +174,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const signOut = async () => {
     try {
+      // Set signing out state to prevent UI updates
+      setIsSigningOut(true);
+      
+      // Immediately redirect to avoid showing the current page without auth
+      // This prevents the flash of unauthenticated content
+      window.location.replace('/?signedOut=true');
+      
+      // Then clean up in the background
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
@@ -224,13 +239,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (storageError) {
         console.error('Error clearing browser storage:', storageError);
       }
-      
-      // Wait a brief moment to ensure everything is cleared
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Force navigation to intro page with a query parameter to bypass any caching
-      // Use window.location.replace instead of href to prevent back button issues
-      window.location.replace('/?signedOut=true');
     } catch (error) {
       console.error('Error signing out:', error);
       // If there's an error, still try to redirect to clean up the UI
@@ -243,6 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     isLoading,
+    isSigningOut,
     signIn,
     signUp,
     signOut,

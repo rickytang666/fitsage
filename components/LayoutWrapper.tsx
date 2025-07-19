@@ -12,7 +12,7 @@ type LayoutWrapperProps = {
 function LayoutWrapperInner({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isSigningOut } = useAuth();
 
   // Don't show sidebar on auth pages
   const isAuthPage = pathname.startsWith('/auth');
@@ -23,8 +23,8 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
   // Don't show sidebar on root path (intro page) unless user is authenticated and didn't just sign out
   const isRootPath = pathname === '/';
   
-  // Don't show sidebar if user is not authenticated (unless on auth pages)
-  const shouldShowSidebar = !isAuthPage && !isLoading && user && !justSignedOut && !isRootPath;
+  // Don't show sidebar if user is not authenticated, is signing out, or is loading
+  const shouldShowSidebar = !isAuthPage && !isLoading && !isSigningOut && user && !justSignedOut && !isRootPath;
 
   if (shouldShowSidebar) {
     return (
