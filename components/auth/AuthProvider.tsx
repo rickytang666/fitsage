@@ -93,13 +93,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ AuthProvider: Sign in error:', error);
+        
+        // Handle specific error types without retry to prevent loops
+        if (error.message?.includes('rate limit') || error.message?.includes('Request rate limit reached')) {
+          const rateLimitError = new Error('Too many requests. Please wait a few minutes and try again.');
+          return { error: rateLimitError, success: false };
+        }
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          const credentialsError = new Error('Invalid email or password. Please check your credentials and try again.');
+          return { error: credentialsError, success: false };
+        }
+        
         return { error, success: false };
       }
       
       console.log('✅ AuthProvider: Sign in successful, session:', data.session?.user?.email);
-      
-      // Force a session refresh to ensure middleware sees the session
-      await supabase.auth.getSession();
       
       // Session will be updated automatically by the auth state listener
       return { error: null, success: true };
@@ -125,9 +134,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Sign up error:', error);
+        
+        // Handle specific error types
+        if (error.message?.includes('rate limit') || error.message?.includes('Request rate limit reached')) {
+          const rateLimitError = new Error('Too many sign-up attempts. Please wait a moment and try again.');
+          return { error: rateLimitError, success: false };
+        }
+        
+        if (error.message?.includes('already registered') || error.message?.includes('User already registered')) {
+          const existingUserError = new Error('This email is already registered. Please try signing in instead.');
+          return { error: existingUserError, success: false };
+        }
+        
         return { error, success: false };
       }
 
+      // Check if user was created or if they already exist
+      if (data.user && !data.user.email_confirmed_at && data.user.identities?.length === 0) {
+        // User already exists - identities array is empty for existing users
+        const existingUserError = new Error('An account with this email already exists. Please try signing in instead.');
+        return { error: existingUserError, success: false };
+      }
+
+      console.log('✅ AuthProvider: Sign up successful, user:', data.user?.email);
+      console.log('User confirmation status:', data.user?.email_confirmed_at);
+      console.log('User identities:', data.user?.identities?.length);
+      
       // For email confirmation flow, user needs to check email
       return { error: null, success: true };
     } catch (error) {
@@ -144,11 +176,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Error signing out:', error);
       }
       
-      // Session will be updated automatically by the auth state listener
-      // Force navigation to login page
-      window.location.href = '/auth/login';
+      // Clear any remaining session data
+      setUser(null);
+      setSession(null);
+      
+      // Forcefully clear all browser storage (especially for Chrome)
+      try {
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear specific Supabase keys (in case localStorage.clear() doesn't work)
+        const supabaseKeys = Object.keys(localStorage).filter(key => 
+          key.startsWith('supabase') || key.startsWith('sb-')
+        );
+        supabaseKeys.forEach(key => localStorage.removeItem(key));
+        
+        // Clear cookies - iterate through all cookies and remove Supabase-related ones
+        document.cookie.split(";").forEach(cookie => {
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name.includes('supabase') || name.includes('sb-') || name.includes('auth')) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+            // For Chrome, also try with dot domain
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+          }
+        });
+        
+        // Chrome-specific: Clear IndexedDB if available
+        if (typeof window !== 'undefined' && /Chrome/.test(navigator.userAgent) && 'indexedDB' in window) {
+          try {
+            const databases = await indexedDB.databases();
+            await Promise.all(databases.map(db => {
+              if (db.name && db.name.includes('supabase')) {
+                return new Promise((resolve, reject) => {
+                  const deleteReq = indexedDB.deleteDatabase(db.name!);
+                  deleteReq.onsuccess = () => resolve(void 0);
+                  deleteReq.onerror = () => reject(deleteReq.error);
+                });
+              }
+            }));
+          } catch (idbError) {
+            console.warn('Could not clear IndexedDB:', idbError);
+          }
+        }
+        
+        console.log('✅ All browser storage cleared');
+      } catch (storageError) {
+        console.error('Error clearing browser storage:', storageError);
+      }
+      
+      // Wait a brief moment to ensure everything is cleared
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Force navigation to intro page with a query parameter to bypass any caching
+      // Use window.location.replace instead of href to prevent back button issues
+      window.location.replace('/?signedOut=true');
     } catch (error) {
       console.error('Error signing out:', error);
+      // If there's an error, still try to redirect to clean up the UI
+      window.location.replace('/?signedOut=true');
     }
   };
 

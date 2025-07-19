@@ -11,7 +11,7 @@
   font-weight: 700;
   text-align: center;
   margin-bottom: 2rem;
-  color: #1f2937;
+  color: #000000 !important;
 }
 
 .card {
@@ -19,6 +19,8 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   border-radius: 0.5rem;
   padding: 1.5rem;
+  /* Force light mode styling to prevent browser dark mode interference */
+  color-scheme: light;
 }
 
 .dateSelector {
@@ -29,7 +31,7 @@
 .dateText {
   font-size: 1.125rem;
   font-weight: 500;
-  color: #1f2937;
+  color: #000000 !important;
 }
 
 .tabContainer {
@@ -54,7 +56,7 @@
 
 .tabInactive {
   background-color: #f3f4f6;
-  color: #6b7280;
+  color: #000000 !important;
 }
 
 .tabInactive:hover {
@@ -70,12 +72,16 @@
   font-size: 0.875rem;
   resize: vertical;
   margin-bottom: 1rem;
+  background-color: white !important;
+  color: #000000 !important;
 }
 
 .textarea:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: white !important;
+  color: #000000 !important;
 }
 
 .submitButton {
@@ -129,22 +135,22 @@
 }
 
 .summaryTitleExercise {
-  color: #1e40af;
+  color: #000000 !important;
 }
 
 .summaryTitleInjury {
-  color: #dc2626;
+  color: #000000 !important;
 }
 
 .summaryTitleNote {
-  color: #16a34a;
+  color: #000000 !important;
 }
 
 .summaryList {
   list-style-type: disc;
   list-style-position: inside;
   font-size: 0.875rem;
-  color: #374151;
+  color: #000000 !important;
 }
 
 .summaryList li {
@@ -166,18 +172,18 @@
 
 .summaryDate {
   font-weight: 500;
-  color: #1f2937;
+  color: #000000 !important;
 }
 
 .summaryFormattedDate {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #000000 !important;
 }
 
 .loadingState {
   text-align: center;
   padding: 2rem;
-  color: #6b7280;
+  color: #000000 !important;
 }
 
 .errorState {
@@ -187,4 +193,48 @@
   background-color: #fef2f2;
   border-radius: 0.375rem;
   margin-bottom: 1rem;
+}
+
+/* Dark Mode Protection for DiaryPage */
+.card *,
+.card *::before,
+.card *::after {
+  color-scheme: light !important;
+}
+
+/* Override any browser dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: white !important;
+    color: #000000 !important;
+  }
+  
+  .title {
+    color: #000000 !important;
+  }
+  
+  .dateText {
+    color: #000000 !important;
+  }
+  
+  /* Fix date input in dark mode */
+  .card input[type="date"] {
+    background-color: white !important;
+    color: #000000 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  .card input[type="date"]:focus {
+    border-color: #6366f1 !important;
+  }
+  
+  .card textarea {
+    background-color: white !important;
+    color: #000000 !important;
+    border-color: #d1d5db !important;
+  }
+  
+  .card textarea:focus {
+    border-color: #6366f1 !important;
+  }
 }

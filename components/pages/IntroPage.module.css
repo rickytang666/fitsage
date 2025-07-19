@@ -1,0 +1,274 @@
+/* IntroPage.module.css */
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #000000 !important;
+  display: flex;
+  flex-direction: column;
+  color-scheme: light;
+}
+
+/* Header */
+.header {
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoIcon {
+  font-size: 2rem;
+}
+
+.logoText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff !important;
+}
+
+/* Hero Section */
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.heroContent {
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: #ffffff !important;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  line-height: 1.6;
+  animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+/* Features */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeInUp 1s ease-out 0.8s both;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.featureIcon {
+  font-size: 2rem;
+}
+
+.featureText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff !important;
+}
+
+/* CTA Buttons */
+.ctaButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.primaryButton {
+  background: #ffffff !important;
+  color: #667eea !important;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.secondaryButton {
+  background: transparent !important;
+  color: #ffffff !important;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid #ffffff;
+}
+
+.secondaryButton:hover {
+  background: #ffffff !important;
+  color: #667eea !important;
+}
+
+/* Benefits Section */
+.benefits {
+  background: #ffffff !important;
+  padding: 4rem 2rem;
+  color-scheme: light;
+}
+
+.benefitsContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.benefitsTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #000000 !important;
+  margin-bottom: 3rem;
+}
+
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.benefitCard {
+  text-align: center;
+  padding: 2rem;
+  background: #f9fafb !important;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.benefitCard:hover {
+  transform: translateY(-5px);
+}
+
+.benefitIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.benefitTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000000 !important;
+  margin-bottom: 1rem;
+}
+
+.benefitDescription {
+  font-size: 1rem;
+  color: #000000 !important;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+/* Footer */
+.footer {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.footerText {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2rem;
+  }
+  
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+  
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .ctaButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Dark mode protection */
+@media (prefers-color-scheme: dark) {
+  .container,
+  .benefits,
+  .benefitCard {
+    color-scheme: light !important;
+  }
+  
+  .logoText,
+  .heroTitle,
+  .heroSubtitle,
+  .featureText,
+  .benefitsTitle,
+  .benefitTitle,
+  .benefitDescription,
+  .footerText {
+    color: inherit !important;
+  }
+}

@@ -30,7 +30,7 @@ export default function WorkoutsPage() {
 
       {/* Workout Cards */}
       <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900">Featured Workouts</h2>
+        <h2 className={styles.sectionTitle}>Featured Workouts</h2>
         <div className={styles.workoutGrid}>
 
           {/* Cardio Workout */}
@@ -213,13 +213,13 @@ function WorkoutCard({ title, duration, intensity, benefit, level, levelColor, i
       <h3 className={styles.workoutTitle}>
         {title}
       </h3>
-      <div className="mt-3 text-center text-sm text-gray-500">
+      <div className={styles.workoutDescription}>
         <p>{duration}</p>
-        <p className="mt-1">{intensity}</p>
-        <p className="mt-1">{benefit}</p>
+        <p className={styles.workoutDescriptionLine}>{intensity}</p>
+        <p className={styles.workoutDescriptionLine}>{benefit}</p>
       </div>
-      <div className="mt-4">
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${levelColor}-100 text-${levelColor}-800`}>
+      <div className={styles.workoutBadge}>
+        <span className={`${styles.levelBadge} ${styles[levelColor]}`}>
           {level}
         </span>
       </div>

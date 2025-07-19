@@ -75,3 +75,7 @@ next-env.d.ts
 # environment variables
 .env
 .env.local
+
+# markdown files
+*.md
+!README.md

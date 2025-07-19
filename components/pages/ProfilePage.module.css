@@ -4,6 +4,7 @@
   padding: 2.5rem 1rem;
   background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
   min-height: 100vh;
+  color: black;
 }
 
 .header {
@@ -14,13 +15,11 @@
 .title {
   font-size: 3rem;
   font-weight: 600;
-  color: #111827;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
   font-size: 1.125rem;
-  color: #6b7280;
   margin-top: 0.5rem;
   letter-spacing: 0.025em;
 }
@@ -28,17 +27,17 @@
 .profileCard {
   margin: 0 auto;
   max-width: 32rem;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: blur(12px);
   border: 1px solid #e5e7eb;
   border-radius: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 2rem;
+  color-scheme: light;
 }
 
 .profileContent {
   text-align: center;
-  color: #374151;
 }
 
 .profileContent h2 {
@@ -60,19 +59,163 @@
   max-width: 36rem;
   padding: 1.5rem;
   border-radius: 0.75rem;
-  background: #f9f9f9;
+  background: #f9f9f9 !important;
   box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   border: 1px solid #d1d5db;
+  color-scheme: light;
 }
 
 .settingsTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #374151;
   margin-bottom: 1rem;
 }
 
 .settingsContent {
-  color: #6b7280;
   line-height: 1.6;
+}
+
+.textSmallGray {
+  font-size: 0.875rem;
+  
+}
+
+/* New styles for physical stats section */
+.statsSection {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  color-scheme: light;
+}
+
+.statGroup {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.statValue {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.progressBar {
+  height: 6rem;
+  width: 1.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.progressFill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #4f46e5;
+  border-radius: 9999px;
+  transition: height 0.5s ease-in-out;
+}
+
+/* BMI Styles */
+.bmiContainer {
+  text-align: center;
+}
+
+.bmiTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.bmiValue {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.bmiStatus {
+  margin-bottom: 1rem;
+}
+
+.bmiStatusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.bmiStatusBadge.blue {
+  background-color: #dbeafe;
+}
+
+.bmiStatusBadge.green {
+  background-color: #dcfce7;
+}
+
+.bmiStatusBadge.yellow {
+  background-color: #fef3c7;
+}
+
+.bmiStatusBadge.red {
+  background-color: #fee2e2;
+}
+
+.bmiScale {
+  margin-top: 1rem;
+}
+
+.bmiScaleBar {
+  display: flex;
+  height: 0.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.bmiScaleSegment {
+  height: 100%;
+}
+
+.bmiScaleLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
 }

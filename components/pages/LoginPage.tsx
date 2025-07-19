@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import SignIn from '@/components/auth/SignIn';
 import styles from './LoginPage.module.css';
 
@@ -21,7 +22,9 @@ export default function LoginPage() {
         </div>
         
         <div className={styles.formContainer}>
-          <SignIn />
+          <Suspense fallback={<div className={styles.loading}>Loading...</div>}>
+            <SignIn />
+          </Suspense>
         </div>
       </div>
     </div>

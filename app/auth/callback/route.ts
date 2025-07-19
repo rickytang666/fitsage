@@ -7,12 +7,20 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const token_hash = requestUrl.searchParams.get('token_hash');
   const type = requestUrl.searchParams.get('type');
+  const error = requestUrl.searchParams.get('error');
   
   console.log('Auth callback called with:', { 
     code: code ? 'present' : 'missing',
     token_hash: token_hash ? 'present' : 'missing',
-    type 
+    type,
+    error
   });
+
+  // Handle error from email provider - just redirect to login cleanly
+  if (error) {
+    console.log('Email provider error, redirecting to login:', error);
+    return NextResponse.redirect(new URL('/auth/login', requestUrl.origin));
+  }
 
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
@@ -21,17 +29,18 @@ export async function GET(request: NextRequest) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       
       if (error) {
-        console.error('Error exchanging code for session:', error);
-        return NextResponse.redirect(new URL('/auth/login?error=confirmation_failed', requestUrl.origin));
+        console.log('Error exchanging code for session, redirecting to login:', error.message);
+        // Always redirect to login for clean UX - no scary error messages
+        return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
       }
       
       console.log('Email confirmation successful for user:', data.user?.email);
       
-      // Successful email confirmation - redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+      // Account confirmed successfully - redirect to login page for clean flow
+      return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
     } catch (error) {
-      console.error('Callback error:', error);
-      return NextResponse.redirect(new URL('/auth/login?error=confirmation_failed', requestUrl.origin));
+      console.log('Callback error, redirecting to login:', error);
+      return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
     }
   }
 
@@ -46,21 +55,21 @@ export async function GET(request: NextRequest) {
       });
       
       if (error) {
-        console.error('Error verifying OTP:', error);
-        return NextResponse.redirect(new URL('/auth/login?error=confirmation_failed', requestUrl.origin));
+        console.log('Error verifying OTP, redirecting to login:', error.message);
+        return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
       }
       
       console.log('Token hash confirmation successful for user:', data.user?.email);
       
-      // Successful confirmation - redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+      // Successful confirmation - redirect to login page for clean flow
+      return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
     } catch (error) {
-      console.error('Token hash error:', error);
-      return NextResponse.redirect(new URL('/auth/login?error=confirmation_failed', requestUrl.origin));
+      console.log('Token hash error, redirecting to login:', error);
+      return NextResponse.redirect(new URL('/auth/login?confirmed=true', requestUrl.origin));
     }
   }
 
-  // No code provided - redirect to login
-  console.log('No code provided in callback');
+  // No code provided - redirect to login cleanly
+  console.log('No code provided in callback, redirecting to login');
   return NextResponse.redirect(new URL('/auth/login', requestUrl.origin));
 }

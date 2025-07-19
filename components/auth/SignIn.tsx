@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from './AuthProvider';
+import styles from './Auth.module.css';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -11,8 +12,24 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [confirmationSuccess, setConfirmationSuccess] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for URL parameters
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    const confirmed = searchParams.get('confirmed');
+    
+    if (urlError === 'confirmation_failed') {
+      setError('Email confirmation failed. Please try again or contact support.');
+    } else if (confirmed === 'true') {
+      // Show success message for confirmed accounts
+      setError(null); // Clear any existing errors
+      setConfirmationSuccess(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,23 +73,29 @@ export default function SignIn() {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-center mb-6">Sign In to FitSage</h2>
+    <div className={styles.authContainer}>
+      <h2 className={styles.title}>Sign In to FitSage</h2>
+      
+      {confirmationSuccess && (
+        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
+          <span className={styles.alertText}>✅ Email confirmed successfully! You can now sign in to your account.</span>
+        </div>
+      )}
       
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-          <span className="block sm:inline">{error}</span>
+        <div className={`${styles.alert} ${styles.alertError}`} role="alert">
+          <span className={styles.alertText}>{error}</span>
         </div>
       )}
       
       {loginSuccess && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
           <div className="flex items-center">
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className="block sm:inline">Sign in successful! Redirecting to dashboard...</span>
+            <span className={styles.alertText}>Sign in successful! Redirecting to dashboard...</span>
           </div>
           <div className="mt-2">
             <Link 
@@ -85,32 +108,32 @@ export default function SignIn() {
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
+        <div className={styles.formGroup}>
+          <label htmlFor="email" className={styles.label}>
             Email Address
           </label>
           <input
             id="email"
             name="email"
             type="email"
-            autoComplete="email"
+            autoComplete="off"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className={styles.input}
             placeholder="you@example.com"
           />
         </div>
         
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <div className={styles.formGroup}>
+          <div className={styles.flexBetween}>
+            <label htmlFor="password" className={styles.label}>
               Password
             </label>
             <Link 
               href="/auth/forgot-password" 
-              className="text-sm text-indigo-600 hover:text-indigo-500"
+              className={styles.link}
             >
               Forgot password?
             </Link>
@@ -119,11 +142,11 @@ export default function SignIn() {
             id="password"
             name="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete="off"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className={styles.input}
             placeholder="••••••••"
           />
         </div>
@@ -132,19 +155,17 @@ export default function SignIn() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-              isLoading ? 'opacity-75 cursor-not-allowed' : ''
-            }`}
+            className={`${styles.button} ${isLoading ? styles.buttonLoading : ''}`}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </div>
       </form>
       
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
+      <div className={styles.linkSection}>
+        <p className={styles.linkText}>
           Don't have an account?{' '}
-          <Link href="/auth/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link href="/auth/signup" className={styles.link}>
             Sign up
           </Link>
         </p>
