@@ -174,14 +174,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const signOut = async () => {
     try {
-      // Set signing out state to prevent UI updates
-      setIsSigningOut(true);
-      
-      // Immediately redirect to avoid showing the current page without auth
-      // This prevents the flash of unauthenticated content
+      // Immediately redirect BEFORE any state changes or async operations
+      // This prevents any UI flashing
       window.location.replace('/?signedOut=true');
       
-      // Then clean up in the background
+      // Everything below happens after redirect is initiated
+      // Set signing out state (though user won't see this due to immediate redirect)
+      setIsSigningOut(true);
+      
+      // Clean up in the background after redirect
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
