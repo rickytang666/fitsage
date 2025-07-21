@@ -219,3 +219,121 @@
   justify-content: space-between;
   font-size: 0.75rem;
 }
+
+/* Profile Form Styles */
+.viewMode, .editMode {
+  text-align: left;
+}
+
+.profileField {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.profileField:last-of-type {
+  border-bottom: none;
+  margin-bottom: 1.5rem;
+}
+
+.profileField label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.profileField span {
+  color: #6b7280;
+}
+
+.formField {
+  margin-bottom: 1rem;
+}
+
+.formField label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.editButton, .saveButton, .cancelButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: none;
+}
+
+.editButton {
+  background-color: #4f46e5;
+  color: white;
+  width: 100%;
+}
+
+.editButton:hover {
+  background-color: #4338ca;
+}
+
+.saveButton {
+  background-color: #10b981;
+  color: white;
+  flex: 1;
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.saveButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background-color: #6b7280;
+  color: white;
+  flex: 1;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background-color: #4b5563;
+}
+
+.cancelButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.125rem;
+}
+
+.error {
+  color: #dc2626;
+}
