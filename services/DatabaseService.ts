@@ -107,6 +107,8 @@ export class DatabaseService {
    */
   static async saveUserProfile(user: User): Promise<boolean> {
     try {
+      console.log('🔄 Saving user profile:', { id: user.id, name: user.name, height: user.height, weight: user.weight });
+      
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -118,13 +120,14 @@ export class DatabaseService {
         });
 
       if (error) {
-        console.error('Error saving profile:', error);
+        console.error('❌ Error saving profile:', error);
         return false;
       }
 
+      console.log('✅ Profile saved successfully');
       return true;
     } catch (error) {
-      console.error('Error saving user profile:', error);
+      console.error('❌ Error saving user profile:', error);
       return false;
     }
   }

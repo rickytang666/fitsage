@@ -3,8 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { createSupabaseClient } from '@/utils/supabase-client';
-import DatabaseService from '@/services/DatabaseService';
-import { User as FitSageUser } from '@/models/User';
 
 // Create Supabase client instance
 const supabase = createSupabaseClient();
@@ -52,31 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
 
-  // Auto-create profile for new users
-  const createProfileIfNeeded = async (authUser: User) => {
-    try {
-      // Check if profile already exists
-      const existingUser = await DatabaseService.loadUser(authUser.id);
-      
-      if (!existingUser) {
-        // No profile exists, create one
-        console.log('🆕 Creating profile for new user:', authUser.email);
-        
-        const userName = authUser.email?.split('@')[0] || 'User';
-        const newUser = new FitSageUser(authUser.id, userName, 0, 0);
-        
-        const saved = await DatabaseService.saveUserProfile(newUser);
-        if (saved) {
-          console.log('✅ Auto-created profile for:', userName);
-        } else {
-          console.error('❌ Failed to auto-create profile');
-        }
-      }
-    } catch (error) {
-      console.error('Error auto-creating profile:', error);
-    }
-  };
-
   // Initialize auth state and set up auth listener
   useEffect(() => {
     // Get initial session
@@ -103,11 +76,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Don't update state if we're in the middle of signing out
         if (isSigningOut) return;
         
-        // Auto-create profile for new users
-        if (event === 'SIGNED_IN' && session?.user) {
-          await createProfileIfNeeded(session.user);
-        }
-        
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -115,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [isSigningOut]); // Add dependency to fix potential stale closure
+  }, []);
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
