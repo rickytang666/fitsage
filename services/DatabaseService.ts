@@ -66,10 +66,14 @@ export class DatabaseService {
       // 4. Convert database logs to Log objects
       if (logs && logs.length > 0) {
         logs.forEach(dbLog => {
+          // Fix timezone issue: parse date string as local date, not UTC
+          const dateParts = dbLog.log_date.split('-').map((num: string) => parseInt(num));
+          const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); // Year, Month (0-indexed), Day
+          
           const log = new Log(
             dbLog.id,
             dbLog.diary_entry || '',
-            new Date(dbLog.log_date)
+            localDate
           );
 
           // Parse workouts from JSON
@@ -223,6 +227,170 @@ export class DatabaseService {
       console.error('❌ Exception while saving log:', error);
       return false;
     }
+  }
+
+  /**
+   * Load all diary entries for a user (simplified version - no workouts/injuries)
+   */
+  static async loadDiaryEntries(userId: string): Promise<Log[]> {
+    try {
+      const { data: logs, error } = await supabase
+        .from('diary_logs')
+        .select('id, diary_entry, log_date')
+        .eq('user_id', userId)
+        .order('log_date', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error loading diary entries:', error);
+        return [];
+      }
+
+      return logs.map(dbLog => {
+        // Fix timezone issue: parse date string as local date, not UTC
+        const dateParts = dbLog.log_date.split('-').map((num: string) => parseInt(num));
+        const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); // Year, Month (0-indexed), Day
+        
+        const log = new Log(
+          dbLog.id,
+          dbLog.diary_entry || '',
+          localDate
+        );
+        // Leave workouts and injuries empty as requested
+        return log;
+      });
+
+    } catch (error) {
+      console.error('❌ Exception loading diary entries:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save or update a simple diary entry
+   */
+  static async saveDiaryEntry(userId: string, entryId: string, diaryEntry: string, date: Date): Promise<boolean> {
+    try {
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      // Check if this date is available (if we're creating new) or if it's the same entry (if updating)
+      const { data: existingLog } = await supabase
+        .from('diary_logs')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('log_date', dateStr)
+        .single();
+
+      // If entry exists and it's not the same ID, this date is taken
+      if (existingLog && existingLog.id !== entryId) {
+        console.error('❌ Date already has an entry');
+        return false;
+      }
+
+      const logData = {
+        id: entryId,
+        user_id: userId,
+        log_date: dateStr,
+        diary_entry: diaryEntry,
+        workouts: [], // Empty as requested
+        injuries: [], // Empty as requested
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('diary_logs')
+        .upsert(logData);
+
+      if (error) {
+        console.error('❌ Error saving diary entry:', error);
+        return false;
+      }
+
+      console.log('✅ Diary entry saved successfully');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Exception saving diary entry:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete a diary entry
+   */
+  static async deleteDiaryEntry(entryId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('diary_logs')
+        .delete()
+        .eq('id', entryId);
+
+      if (error) {
+        console.error('❌ Error deleting diary entry:', error);
+        return false;
+      }
+
+      console.log('✅ Diary entry deleted successfully');
+      return true;
+
+    } catch (error) {
+      console.error('❌ Exception deleting diary entry:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if a date is available for diary entry
+   */
+  static async isDateAvailable(userId: string, date: Date, excludeEntryId?: string): Promise<boolean> {
+    try {
+      const dateStr = date.toISOString().split('T')[0];
+      
+      let query = supabase
+        .from('diary_logs')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('log_date', dateStr);
+      
+      // Exclude a specific entry ID if provided (for editing)
+      if (excludeEntryId) {
+        query = query.neq('id', excludeEntryId);
+      }
+      
+      const { data: existingLog } = await query.single();
+      
+      return !existingLog; // Available if no existing log found
+      
+    } catch (error) {
+      // If error is "not found", then date is available
+      return true;
+    }
+  }
+
+  /**
+   * Find the nearest available date (going backwards from given date, not future)
+   */
+  static async findNearestAvailableDate(userId: string, startDate: Date = new Date(), excludeEntryId?: string): Promise<Date> {
+    const today = new Date();
+    const currentDate = new Date(startDate);
+    
+    // Don't allow future dates
+    if (currentDate > today) {
+      currentDate.setTime(today.getTime());
+    }
+    
+    for (let i = 0; i < 365; i++) { // Check up to a year back
+      const isAvailable = await this.isDateAvailable(userId, currentDate, excludeEntryId);
+      
+      if (isAvailable) {
+        return new Date(currentDate);
+      }
+      
+      // Go back one day
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+    
+    // Fallback: return today (shouldn't happen in practice)
+    return new Date(today);
   }
 }
 
