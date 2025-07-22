@@ -10,6 +10,16 @@ export default function WorkoutsPage() {
         <p className={styles.subtitle}>Choose your fitness journey</p>
       </div>
 
+      {/* Placeholder Banner */}
+      <div className={styles.placeholderBanner}>
+        <div className={styles.bannerContent}>
+          <div className={styles.bannerIcon}>🚧</div>
+          <div className={styles.bannerText}>
+            <strong>Under Development:</strong> The workout cards below are currently placeholders. Full workout functionality coming soon!
+          </div>
+        </div>
+      </div>
+
       <div className={styles.statsCard}>
         <h2 className={styles.statsTitle}>This Week's Progress</h2>
         <div className={styles.statsGrid}>

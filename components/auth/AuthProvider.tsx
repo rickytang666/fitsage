@@ -49,12 +49,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
+  
+  // Track API calls for debugging
+  const [apiCalls, setApiCalls] = useState(0);
+  
+  console.log(`🔢 AuthProvider render count - API calls so far: ${apiCalls}`);
 
   // Initialize auth state and set up auth listener
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
+      console.log('📞 Making getSession API call...');
+      setApiCalls(prev => prev + 1);
+      
       const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (!mounted) return; // Prevent state updates if component unmounted
       
       if (error) {
         console.error('Error getting session:', error);
@@ -71,10 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        if (!mounted) return; // Prevent state updates if component unmounted
         
-        // Don't update state if we're in the middle of signing out
-        if (isSigningOut) return;
+        console.log('Auth state changed:', event, session?.user?.email);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -82,8 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - only run once!
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {

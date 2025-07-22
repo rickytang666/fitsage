@@ -1,240 +1,299 @@
-/* DiaryPage.module.css */
+/* DiaryPage.module.css - Simplified diary interface */
 
 .container {
   max-width: 64rem;
   margin: 0 auto;
   padding: 1rem 1rem 1.5rem;
+  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
+  min-height: 100vh;
+  color: black;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2.5rem;
 }
 
 .title {
-  font-size: 1.875rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #000000 !important;
+  color: #1f2937 !important;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.card {
-  background: white;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  /* Force light mode styling to prevent browser dark mode interference */
+.subtitle {
+  font-size: 1.125rem;
+  color: #6b7280 !important;
+  letter-spacing: 0.025em;
+}
+
+.entryForm {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   color-scheme: light;
 }
 
-.dateSelector {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.dateText {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #000000 !important;
-}
-
-.tabContainer {
+.formHeader {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.tab {
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
+.formHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937 !important;
+  margin: 0;
 }
 
-.tabActive {
-  background-color: #3b82f6;
-  color: white;
+.dateSection {
+  margin-bottom: 1.5rem;
 }
 
-.tabInactive {
-  background-color: #f3f4f6;
-  color: #000000 !important;
+.dateLabel {
+  display: block;
+  font-weight: 600;
+  color: #374151 !important;
+  margin-bottom: 0.5rem;
 }
 
-.tabInactive:hover {
-  background-color: #e5e7eb;
-}
-
-.textarea {
-  width: 100%;
-  min-height: 8rem;
+.dateInput {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  resize: vertical;
-  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
   background-color: white !important;
-  color: #000000 !important;
+  color: #1f2937 !important;
+  transition: border-color 0.15s ease-in-out;
 }
 
-.textarea:focus {
+.dateInput:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: white !important;
-  color: #000000 !important;
 }
 
-.submitButton {
+.dateInputError {
+  border-color: #ef4444;
+}
+
+.textSection {
+  margin-bottom: 1.5rem;
+}
+
+.textArea {
   width: 100%;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  background-color: white !important;
+  color: #1f2937 !important;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.textArea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.textArea::placeholder {
+  color: #9ca3af;
+}
+
+.textMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280 !important;
+}
+
+.charCount {
+  color: #9ca3af !important;
+}
+
+.saveButton {
   background-color: #3b82f6;
   color: white;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
+  padding: 0.875rem 2rem;
   border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.15s ease-in-out;
 }
 
-.submitButton:hover {
+.saveButton:hover {
   background-color: #2563eb;
 }
 
-.submitButton:disabled {
+.saveButtonDisabled {
   background-color: #9ca3af;
   cursor: not-allowed;
 }
 
-.summaryCard {
-  border-left: 4px solid;
-  padding-left: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-  border-radius: 0.25rem;
-}
-
-.summaryCardExercise {
-  background-color: #f0f9ff;
-  border-color: #3b82f6;
-}
-
-.summaryCardInjury {
-  background-color: #fef2f2;
-  border-color: #ef4444;
-}
-
-.summaryCardNote {
-  background-color: #f0fdf4;
-  border-color: #22c55e;
-}
-
-.summaryTitle {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.summaryTitleExercise {
-  color: #000000 !important;
-}
-
-.summaryTitleInjury {
-  color: #000000 !important;
-}
-
-.summaryTitleNote {
-  color: #000000 !important;
-}
-
-.summaryList {
-  list-style-type: disc;
-  list-style-position: inside;
+.cancelButton {
+  background-color: #6b7280;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
-  color: #000000 !important;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
 }
 
-.summaryList li {
-  margin-bottom: 0.25rem;
+.cancelButton:hover {
+  background-color: #4b5563;
 }
 
-.summariesContainer {
+.entriesList {
+  margin-top: 3rem;
+}
+
+.entriesTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937 !important;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.entriesContainer {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
-.summaryHeader {
+.entryCard {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease-in-out;
+  color-scheme: light;
+}
+
+.entryCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.entryHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.summaryDate {
-  font-weight: 500;
-  color: #000000 !important;
-}
-
-.summaryFormattedDate {
-  font-size: 0.875rem;
-  color: #000000 !important;
-}
-
-.loadingState {
-  text-align: center;
-  padding: 2rem;
-  color: #000000 !important;
-}
-
-.errorState {
-  text-align: center;
-  padding: 2rem;
-  color: #dc2626;
-  background-color: #fef2f2;
-  border-radius: 0.375rem;
   margin-bottom: 1rem;
 }
 
-/* Dark Mode Protection for DiaryPage */
-.card *,
-.card *::before,
-.card *::after {
-  color-scheme: light !important;
+.entryDate {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937 !important;
+  margin: 0;
 }
 
-/* Override any browser dark mode styles */
+.entryActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editButton {
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.editButton:hover {
+  background-color: #2563eb;
+}
+
+.deleteButton {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.deleteButton:hover {
+  background-color: #dc2626;
+}
+
+.entryContent {
+  line-height: 1.6;
+}
+
+.entryContent p {
+  color: #374151 !important;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  background-color: #f9fafb;
+  border-radius: 0.75rem;
+  color: #6b7280 !important;
+  border: 1px solid #e5e7eb;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.125rem;
+  color: #6b7280 !important;
+}
+
+.error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626 !important;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Dark mode protection */
 @media (prefers-color-scheme: dark) {
-  .card {
+  .container,
+  .entryForm,
+  .entryCard,
+  .emptyState {
     background-color: white !important;
-    color: #000000 !important;
+    color: #1f2937 !important;
   }
   
-  .title {
-    color: #000000 !important;
-  }
-  
-  .dateText {
-    color: #000000 !important;
-  }
-  
-  /* Fix date input in dark mode */
-  .card input[type="date"] {
+  .dateInput,
+  .textArea {
     background-color: white !important;
-    color: #000000 !important;
-    border-color: #d1d5db !important;
-  }
-  
-  .card input[type="date"]:focus {
-    border-color: #6366f1 !important;
-  }
-  
-  .card textarea {
-    background-color: white !important;
-    color: #000000 !important;
-    border-color: #d1d5db !important;
-  }
-  
-  .card textarea:focus {
-    border-color: #6366f1 !important;
+    color: #1f2937 !important;
   }
 }
