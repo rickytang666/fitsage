@@ -7,10 +7,9 @@ import styles from './Sidebar.module.css';
 
 // Navigation items definition
 const navigationItems = [
-  { name: 'Dashboard', href: '/dashboard', color: '#0070f3' },
+  { name: 'Home', href: '/profile', color: '#0070f3' },
   { name: 'Workouts', href: '/workouts', color: '#34c759' },
   { name: 'Diary', href: '/diary', color: '#5e5ce6' },
-  { name: 'Profile', href: '/profile', color: '#ff3b30' },
 ];
 
 export default function Sidebar() {
@@ -19,7 +18,7 @@ export default function Sidebar() {
 
   // Check if a link is active
   const isActiveLink = (href: string) => {
-    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+    return pathname === href || (href !== '/profile' && pathname.startsWith(href));
   };
   
   return (

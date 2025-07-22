@@ -60,9 +60,9 @@ export default function SignIn() {
       
       // Wait a bit longer to ensure session is established
       setTimeout(() => {
-        console.log('🚀 Redirecting to dashboard...');
+        console.log('🚀 Redirecting to home...');
         // Use window.location.href to ensure a fresh request that middleware can intercept
-        window.location.href = '/dashboard';
+        window.location.href = '/profile';
       }, 2000); // Increased delay to 2 seconds
       
     } catch (err) {
@@ -95,11 +95,11 @@ export default function SignIn() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className={styles.alertText}>Sign in successful! Redirecting to dashboard...</span>
+            <span className={styles.alertText}>Sign in successful! Redirecting to home...</span>
           </div>
           <div className="mt-2">
             <Link 
-              href="/dashboard" 
+              href="/profile" 
               className="text-sm font-medium text-green-700 underline"
             >
               Click here if you are not redirected automatically

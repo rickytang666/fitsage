@@ -343,3 +343,42 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Chart section styles */
+.chartSection {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  color-scheme: light;
+}
+
+.chartTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.chartContainer {
+  height: 20rem;
+}
+
+/* Motivational quote styles */
+.motivationalQuote {
+  margin-top: 2rem;
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-left: 4px solid #6366f1;
+}
+
+.quoteText {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+}

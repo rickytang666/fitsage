@@ -4,13 +4,12 @@ import { cookies } from 'next/headers';
 
 // Paths that require authentication
 const PROTECTED_PATHS = [
-  '/dashboard',
   '/profile',
   '/workouts',
   '/diary',
 ];
 
-// Auth paths - redirect to dashboard if user is already authenticated
+// Auth paths - redirect to home if user is already authenticated
 const AUTH_PATHS = [
   '/auth/login',
   '/auth/signup',
@@ -36,7 +35,7 @@ export async function middleware(request: NextRequest) {
     // Only check auth for protected paths, auth paths, and root path to reduce API calls
     const isAuthPath = AUTH_PATHS.includes(path);
     const isProtectedPath = PROTECTED_PATHS.some(protectedPath => 
-      path === protectedPath || (protectedPath !== '/dashboard' && path.startsWith(protectedPath))
+      path === protectedPath || (protectedPath !== '/profile' && path.startsWith(protectedPath))
     );
     const isRootPath = path === '/';
     
@@ -72,14 +71,14 @@ export async function middleware(request: NextRequest) {
     // Get session - only for auth/protected/root paths
     const { data: { session } } = await supabase.auth.getSession();
     
-    // If user is authenticated and on auth page, redirect to dashboard
+    // If user is authenticated and on auth page, redirect to home
     if (session && isAuthPath) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/profile', request.url));
     }
     
-    // If user is authenticated and on root path, redirect to dashboard
+    // If user is authenticated and on root path, redirect to home
     if (session && isRootPath) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL('/profile', request.url));
     }
     
     // If user is not authenticated and on protected path, redirect to login
