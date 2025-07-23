@@ -35,7 +35,7 @@ CREATE TABLE public.diary_logs (
   diary_entry TEXT,
   workouts JSONB, -- Store array of workouts as JSON (now includes sets/reps/weight)
   injuries TEXT[], -- PostgreSQL text array for injuries
-  suggestions TEXT, -- Can store either string or JSON array of suggestions
+  suggestions JSONB, -- Store array of suggestion strings as JSON
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE
 );

@@ -74,7 +74,9 @@ export class DatabaseService {
             dbLog.id,
             dbLog.diary_entry || '',
             localDate,
-            dbLog.suggestions || '' // Add suggestions field
+            // Ensure suggestions is always an array
+            Array.isArray(dbLog.suggestions) ? dbLog.suggestions : 
+            (dbLog.suggestions ? [dbLog.suggestions] : [])
           );
 
           // Parse workouts from JSON
@@ -186,11 +188,12 @@ export class DatabaseService {
         injuriesCount: log.injuries.length
       });
 
-      // Find available date if needed
-      const availableDate = await this.findAvailableDate(userId, log.date);
-      if (availableDate.getTime() !== log.date.getTime()) {
-        console.log(`📅 Date conflict! Moving log from ${log.date.toDateString()} to ${availableDate.toDateString()}`);
-        log.date = availableDate; // Update the log's date
+      // Check if the selected date is available for this log (excluding this entry ID for updates)
+      const isDateAvailable = await this.isDateAvailable(userId, log.date, log.id);
+      
+      if (!isDateAvailable) {
+        console.error('❌ Date is not available for this entry');
+        return false;
       }
 
       // Convert workouts to plain objects for JSON storage
@@ -219,10 +222,10 @@ export class DatabaseService {
 
       console.log('💾 About to save log data:', logData);
 
-      // Insert new log (we already found an available date)
+      // Upsert log (handles both insert and update cases)
       const { data, error } = await supabase
         .from('diary_logs')
-        .insert(logData)
+        .upsert(logData)
         .select();
 
       if (error) {
@@ -240,13 +243,13 @@ export class DatabaseService {
   }
 
   /**
-   * Load all diary entries for a user (simplified version - no workouts/injuries)
+   * Load all diary entries for a user with complete data (workouts, injuries, suggestions)
    */
   static async loadDiaryEntries(userId: string): Promise<Log[]> {
     try {
       const { data: logs, error } = await supabase
         .from('diary_logs')
-        .select('id, diary_entry, log_date')
+        .select('*')
         .eq('user_id', userId)
         .order('log_date', { ascending: false });
 
@@ -263,9 +266,35 @@ export class DatabaseService {
         const log = new Log(
           dbLog.id,
           dbLog.diary_entry || '',
-          localDate
+          localDate,
+          // Ensure suggestions is always an array
+          Array.isArray(dbLog.suggestions) ? dbLog.suggestions : 
+          (dbLog.suggestions ? [dbLog.suggestions] : [])
         );
-        // Leave workouts and injuries empty as requested
+
+        // Parse workouts from JSON
+        if (dbLog.workouts && Array.isArray(dbLog.workouts)) {
+          dbLog.workouts.forEach((workoutData: any) => {
+            const workout = new Workout(
+              workoutData.id,
+              workoutData.name,
+              new Date(workoutData.date),
+              {
+                durationMinutes: workoutData.durationMinutes,
+                sets: workoutData.sets,
+                reps: workoutData.reps,
+                weight: workoutData.weight
+              }
+            );
+            log.workouts.push(workout);
+          });
+        }
+
+        // Add injuries
+        if (dbLog.injuries) {
+          log.injuries = dbLog.injuries;
+        }
+
         return log;
       });
 

@@ -60,9 +60,9 @@ export class Log {
     date: Date;
     workouts: Workout[];
     injuries: string[];
-    suggestions: string | string[]; // Can be a single string or array of strings for bullet points
+    suggestions: string[]; // Array of suggestion strings
 
-    constructor(id: string, diaryEntry: string, date: Date, suggestions: string | string[] = '') {
+    constructor(id: string, diaryEntry: string, date: Date, suggestions: string[] = []) {
         this.id = id;
         this.diaryEntry = diaryEntry;
         this.date = date;
