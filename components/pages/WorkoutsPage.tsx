@@ -8,6 +8,11 @@ import styles from './WorkoutsPage.module.css';
 
 export default function WorkoutsPage() {
   const { user: authUser } = useAuth();
+  // Centralized diary entries state - shared across all components
+  const [allDiaryEntries, setAllDiaryEntries] = useState<any[]>([]);
+  const [isLoadingDiary, setIsLoadingDiary] = useState(true);
+  const [diaryError, setDiaryError] = useState<string>('');
+  
   const [weekStats, setWeekStats] = useState({
     totalWorkouts: 0,
     totalMinutes: 0,
@@ -15,9 +20,35 @@ export default function WorkoutsPage() {
     isLoading: true
   });
 
-  // Calculate this week's statistics
+  // Load all diary entries once when component mounts
+  useEffect(() => {
+    const loadAllDiaryEntries = async () => {
+      if (!authUser?.id) return;
+
+      console.log('📚 Loading all diary entries for WorkoutsPage...');
+      setIsLoadingDiary(true);
+      setDiaryError('');
+
+      try {
+        const entries = await DatabaseService.loadDiaryEntries(authUser.id);
+        console.log('📚 Loaded', entries.length, 'diary entries for sharing across components');
+        setAllDiaryEntries(entries);
+      } catch (error) {
+        console.error('❌ Error loading diary entries:', error);
+        setDiaryError('Failed to load diary entries');
+        setAllDiaryEntries([]);
+      } finally {
+        setIsLoadingDiary(false);
+      }
+    };
+
+    loadAllDiaryEntries();
+  }, [authUser?.id]);
+
+  // Calculate this week's statistics using shared diary entries
+  // Calculate this week's statistics using shared diary entries
   const calculateWeekStats = async () => {
-    if (!authUser?.id) return;
+    if (!authUser?.id || allDiaryEntries.length === 0) return;
 
     try {
       // Get start of this week (Sunday)
@@ -31,12 +62,11 @@ export default function WorkoutsPage() {
       endOfWeek.setDate(startOfWeek.getDate() + 6); // Go to Saturday
       endOfWeek.setHours(23, 59, 59, 999); // End of day
 
-      // Load all diary entries
-      const diaryEntries = await DatabaseService.loadDiaryEntries(authUser.id);
+      console.log('📊 Calculating week stats from shared diary entries...');
       
-      // Filter workouts from this week
+      // Filter workouts from this week using shared data
       const thisWeekWorkouts: Workout[] = [];
-      diaryEntries.forEach(entry => {
+      allDiaryEntries.forEach(entry => {
         if (entry.date >= startOfWeek && entry.date <= endOfWeek) {
           thisWeekWorkouts.push(...entry.workouts);
         }
@@ -71,10 +101,10 @@ export default function WorkoutsPage() {
 
   // Load stats when component mounts
   useEffect(() => {
-    if (authUser?.id) {
+    if (authUser?.id && allDiaryEntries.length > 0) {
       calculateWeekStats();
     }
-  }, [authUser?.id]);
+  }, [authUser?.id, allDiaryEntries]); // Recalculate when diary entries change
 
   // Format duration for display
   const formatDuration = (totalMinutes: number): string => {
@@ -140,7 +170,7 @@ export default function WorkoutsPage() {
         <div className={styles.panel}>
           <h2 className={styles.panelTitle}>📅 Past 7 Days Workouts</h2>
           <div className={styles.panelContent}>
-            <PastSevenDaysWorkouts userId={authUser.id} />
+            <PastSevenDaysWorkouts diaryEntries={allDiaryEntries} isLoading={isLoadingDiary} />
           </div>
         </div>
 
@@ -148,7 +178,7 @@ export default function WorkoutsPage() {
         <div className={styles.panel}>
           <h2 className={styles.panelTitle}>⭐ Featured Workouts</h2>
           <div className={styles.panelContent}>
-            <FeaturedWorkouts userId={authUser.id} />
+            <FeaturedWorkouts userId={authUser.id} diaryEntries={allDiaryEntries} isLoading={isLoadingDiary} />
           </div>
         </div>
       </div>
@@ -156,16 +186,22 @@ export default function WorkoutsPage() {
   );
 }
 
-// Component for Past 7 Days Workouts
-function PastSevenDaysWorkouts({ userId }: { userId: string }) {
+// Component for Past 7 Days Workouts - now uses shared diary entries
+function PastSevenDaysWorkouts({ diaryEntries, isLoading }: { diaryEntries: any[], isLoading: boolean }) {
   const [workouts, setWorkouts] = useState<Array<{
     workout: Workout;
     date: Date;
   }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadPastWeekWorkouts = async () => {
+      console.log('📅 PastSevenDaysWorkouts processing shared diary entries:', diaryEntries.length);
+      
+      if (isLoading || diaryEntries.length === 0) {
+        console.log('📅 Still loading diary entries or no entries available');
+        return;
+      }
+
       try {
         // Get past 7 days (including today)
         const endDate = new Date();
@@ -174,14 +210,14 @@ function PastSevenDaysWorkouts({ userId }: { userId: string }) {
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
 
-        // Load all diary entries
-        const diaryEntries = await DatabaseService.loadDiaryEntries(userId);
+        // Use shared diary entries instead of loading again
+        console.log('📅 PastSevenDaysWorkouts processing', diaryEntries.length, 'shared diary entries');
         
         // Filter and collect workouts from past 7 days
         const pastWeekWorkouts: Array<{ workout: Workout; date: Date }> = [];
-        diaryEntries.forEach(entry => {
+        diaryEntries.forEach((entry: any) => {
           if (entry.date >= startDate && entry.date <= endDate) {
-            entry.workouts.forEach(workout => {
+            entry.workouts.forEach((workout: Workout) => {
               pastWeekWorkouts.push({ workout, date: entry.date });
             });
           }
@@ -192,16 +228,15 @@ function PastSevenDaysWorkouts({ userId }: { userId: string }) {
         
         setWorkouts(pastWeekWorkouts);
       } catch (error) {
-        console.error('Error loading past week workouts:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Error processing past week workouts:', error);
+        setWorkouts([]);
       }
     };
 
-    if (userId) {
+    if (!isLoading) {
       loadPastWeekWorkouts();
     }
-  }, [userId]);
+  }, [diaryEntries, isLoading]);
 
   if (isLoading) {
     return <div className={styles.loading}>Loading past workouts...</div>;
@@ -253,14 +288,150 @@ function PastSevenDaysWorkouts({ userId }: { userId: string }) {
   );
 }
 
-// Component for Featured Workouts (placeholder for now)
-function FeaturedWorkouts({ userId }: { userId: string }) {
+// Component for Featured Workouts (AI-powered recommendations) - now uses shared diary entries
+function FeaturedWorkouts({ userId, diaryEntries, isLoading }: { 
+  userId: string, 
+  diaryEntries: any[], 
+  isLoading: boolean
+}) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [featuredWorkouts, setFeaturedWorkouts] = useState<any[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const loadFeaturedWorkouts = async () => {
+      console.log('🎯 FeaturedWorkouts processing shared diary entries:', diaryEntries.length);
+      
+      if (isLoading || diaryEntries.length === 0) {
+        console.log('❌ Still loading diary entries or no entries available');
+        return;
+      }
+      
+      setIsProcessing(true);
+      setError('');
+      
+      try {
+        const response = await fetch('/api/featured-workouts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            userId,
+            diaryEntries: diaryEntries // Pass shared diary entries to API
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          setSuggestions(data.suggestions || []);
+          setFeaturedWorkouts(data.featuredWorkouts || []);
+          setDebugInfo(data.debug || null);
+        } else {
+          setSuggestions(data.suggestions || ['Unable to generate recommendations']);
+          setFeaturedWorkouts(data.featuredWorkouts || []);
+          setDebugInfo(data.debug || null);
+          if (data.meta?.error) {
+            setError(data.meta.error);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load featured workouts:', err);
+        setError('Failed to load AI recommendations');
+        setSuggestions(['Unable to connect to AI service']);
+        setFeaturedWorkouts([]);
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+
+    if (!isLoading && diaryEntries.length > 0) {
+      loadFeaturedWorkouts();
+    }
+  }, [userId, diaryEntries, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className={styles.featuredLoading}>
+        <div className={styles.loadingSpinner}>📚</div>
+        <p>Loading diary entries...</p>
+      </div>
+    );
+  }
+
+  if (isProcessing) {
+    return (
+      <div className={styles.featuredLoading}>
+        <div className={styles.loadingSpinner}>🤖</div>
+        <p>AI is analyzing your workout patterns...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.featuredPlaceholder}>
-      <div className={styles.comingSoonCard}>
-        <div className={styles.comingSoonIcon}>🤖</div>
-        <h3>AI-Powered Recommendations</h3>
-        <p>Coming soon! Our AI will analyze your past 3 days of workouts and suggest personalized featured workouts just for you.</p>
+    <div className={styles.featuredWorkouts}>
+      {/* AI Suggestions Section */}
+      <div className={styles.suggestionsSection}>
+        <h3 className={styles.suggestionsTitle}>💡 AI Suggestions</h3>
+        {error && (
+          <div className={styles.errorMessage}>⚠️ {error}</div>
+        )}
+        <ul className={styles.suggestionsList}>
+          {suggestions.map((suggestion, index) => (
+            <li key={index} className={styles.suggestion}>
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Featured Workouts Section */}
+      <div className={styles.workoutsSection}>
+        <h3 className={styles.workoutsTitle}>⭐ Recommended Workouts ({featuredWorkouts.length})</h3>
+        <div className={styles.featuredWorkoutsList}>
+          {featuredWorkouts.map((workout) => (
+            <div key={workout.id} className={styles.featuredWorkoutCard}>
+              <div className={styles.featuredWorkoutHeader}>
+                <h4 className={styles.featuredWorkoutName}>{workout.name}</h4>
+                <span 
+                  className={styles.featuredWorkoutLevel}
+                  data-level={workout.difficultyLevel}
+                >
+                  {workout.difficultyLevel}
+                </span>
+              </div>
+              
+              <div className={styles.featuredWorkoutStats}>
+                {workout.durationMinutes && (
+                  <span className={styles.workoutStat}>⏱️ {workout.durationMinutes}m</span>
+                )}
+                {workout.sets && (
+                  <span className={styles.workoutStat}>🔄 {workout.sets} sets</span>
+                )}
+                {workout.reps && (
+                  <span className={styles.workoutStat}>↗️ {workout.reps} reps</span>
+                )}
+                {workout.weight && workout.weight > 0 && (
+                  <span className={styles.workoutStat}>🏋️ {workout.weight}kg</span>
+                )}
+                {workout.estimatedCalories && (
+                  <span className={styles.workoutStat}>🔥 ~{workout.estimatedCalories} cal</span>
+                )}
+              </div>
+
+              {workout.description && (
+                <p className={styles.featuredWorkoutDescription}>{workout.description}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

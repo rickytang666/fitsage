@@ -82,6 +82,42 @@ export class Log {
     }
 }
 
+export class FeaturedWorkout {
+  id: string;
+  name: string;
+  durationMinutes?: number; // For cardio/yoga workouts
+  sets?: number; // For strength training
+  reps?: number; // For strength training
+  weight?: number; // For strength training (in kg)
+  difficultyLevel: 'all level' | 'beginner' | 'intermediate' | 'advanced';
+  estimatedCalories?: number;
+  description?: string;
+
+  constructor(
+    id: string,
+    name: string,
+    difficultyLevel: 'all level' | 'beginner' | 'intermediate' | 'advanced',
+    options: {
+      durationMinutes?: number;
+      sets?: number;
+      reps?: number;
+      weight?: number;
+      estimatedCalories?: number;
+      description?: string;
+    } = {}
+  ) {
+    this.id = id;
+    this.name = name;
+    this.difficultyLevel = difficultyLevel;
+    this.durationMinutes = options.durationMinutes;
+    this.sets = options.sets;
+    this.reps = options.reps;
+    this.weight = options.weight;
+    this.estimatedCalories = options.estimatedCalories;
+    this.description = options.description;
+  }
+}
+
 export class User {
   id: string;
   name: string;
