@@ -73,7 +73,8 @@ export class DatabaseService {
           const log = new Log(
             dbLog.id,
             dbLog.diary_entry || '',
-            localDate
+            localDate,
+            dbLog.suggestions || '' // Add suggestions field
           );
 
           // Parse workouts from JSON
@@ -83,7 +84,12 @@ export class DatabaseService {
                 workoutData.id,
                 workoutData.name,
                 new Date(workoutData.date),
-                workoutData.durationMinutes
+                {
+                  durationMinutes: workoutData.durationMinutes,
+                  sets: workoutData.sets,
+                  reps: workoutData.reps,
+                  weight: workoutData.weight
+                }
               );
               log.workouts.push(workout);
             });
@@ -192,7 +198,10 @@ export class DatabaseService {
         id: workout.id,
         name: workout.name,
         date: workout.date.toISOString(),
-        durationMinutes: workout.durationMinutes
+        durationMinutes: workout.durationMinutes,
+        sets: workout.sets,
+        reps: workout.reps,
+        weight: workout.weight
       }));
 
       console.log('📊 Workouts JSON:', workoutsJson);
@@ -204,6 +213,7 @@ export class DatabaseService {
         diary_entry: log.diaryEntry,
         workouts: workoutsJson,
         injuries: log.injuries,
+        suggestions: log.suggestions, // Add suggestions field
         updated_at: new Date().toISOString()
       };
 

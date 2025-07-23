@@ -3,13 +3,54 @@ export class Workout {
   id: string;
   name: string;
   date: Date;
-  durationMinutes: number;
+  // Duration-based workout (e.g., cardio, yoga)
+  durationMinutes?: number;
+  // Sets/reps-based workout (e.g., weight training)
+  sets?: number;
+  reps?: number;
+  // Optional weight for strength training
+  weight?: number; // in kg
   
-  constructor(id: string, name: string, date: Date, durationMinutes: number) {
+  constructor(
+    id: string, 
+    name: string, 
+    date: Date, 
+    options: {
+      durationMinutes?: number;
+      sets?: number;
+      reps?: number;
+      weight?: number;
+    } = {}
+  ) {
     this.id = id;
     this.name = name;
     this.date = date;
-    this.durationMinutes = durationMinutes;
+    this.durationMinutes = options.durationMinutes;
+    this.sets = options.sets;
+    this.reps = options.reps;
+    this.weight = options.weight;
+  }
+
+  // Helper methods to determine workout type
+  get isDurationBased(): boolean {
+    return this.durationMinutes !== undefined && this.durationMinutes > 0;
+  }
+
+  get isSetsBased(): boolean {
+    return this.sets !== undefined && this.sets > 0;
+  }
+
+  // Get a readable description of the workout
+  get description(): string {
+    if (this.isDurationBased) {
+      return `${this.name} - ${this.durationMinutes} minutes`;
+    } else if (this.isSetsBased) {
+      let desc = `${this.name} - ${this.sets} sets`;
+      if (this.reps) desc += ` of ${this.reps} reps`;
+      if (this.weight) desc += ` @ ${this.weight}kg`;
+      return desc;
+    }
+    return this.name;
   }
 }
 
@@ -19,13 +60,15 @@ export class Log {
     date: Date;
     workouts: Workout[];
     injuries: string[];
+    suggestions: string | string[]; // Can be a single string or array of strings for bullet points
 
-    constructor(id: string, diaryEntry: string, date: Date) {
+    constructor(id: string, diaryEntry: string, date: Date, suggestions: string | string[] = '') {
         this.id = id;
         this.diaryEntry = diaryEntry;
         this.date = date;
         this.workouts = [];
         this.injuries = [];
+        this.suggestions = suggestions;
     }
 }
 
@@ -81,7 +124,7 @@ export class User {
   
   get totalWorkoutMinutes(): number {
     return this.getAllWorkouts().reduce((total, workout) => 
-      total + workout.durationMinutes, 0
+      total + (workout.durationMinutes || 0), 0
     );
   }
 }
