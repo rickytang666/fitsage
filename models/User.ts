@@ -10,6 +10,8 @@ export class Workout {
   reps?: number;
   // Optional weight for strength training
   weight?: number; // in kg
+  // Calories burned during the workout (mandatory)
+  calories: number;
   
   constructor(
     id: string, 
@@ -20,7 +22,8 @@ export class Workout {
       sets?: number;
       reps?: number;
       weight?: number;
-    } = {}
+      calories: number; // Now mandatory
+    }
   ) {
     this.id = id;
     this.name = name;
@@ -29,6 +32,7 @@ export class Workout {
     this.sets = options.sets;
     this.reps = options.reps;
     this.weight = options.weight;
+    this.calories = options.calories;
   }
 
   // Helper methods to determine workout type
@@ -42,15 +46,21 @@ export class Workout {
 
   // Get a readable description of the workout
   get description(): string {
+    let desc = '';
     if (this.isDurationBased) {
-      return `${this.name} - ${this.durationMinutes} minutes`;
+      desc = `${this.name} - ${this.durationMinutes} minutes`;
     } else if (this.isSetsBased) {
-      let desc = `${this.name} - ${this.sets} sets`;
+      desc = `${this.name} - ${this.sets} sets`;
       if (this.reps) desc += ` of ${this.reps} reps`;
       if (this.weight) desc += ` @ ${this.weight}kg`;
-      return desc;
+    } else {
+      desc = this.name;
     }
-    return this.name;
+    
+    // Always show calories since it's mandatory
+    desc += ` (${this.calories} cal)`;
+    
+    return desc;
   }
 }
 

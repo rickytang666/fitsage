@@ -5,7 +5,8 @@ type WorkoutData = {
   id: string;
   name: string;
   date: string; // ISO string
-  durationMinutes?: number;
+  durationMinutes: number; // Now mandatory
+  calories: number; // Now mandatory
   sets?: number;
   reps?: number;
   weight?: number; // in kg
@@ -48,7 +49,8 @@ Return ONLY valid JSON in this exact format:
       "durationMinutes": 30,
       "sets": 3,
       "reps": 10,
-      "weight": 80
+      "weight": 80,
+      "calories": 250
     }
   ],
   "injuries": ["injury description"],
@@ -57,7 +59,8 @@ Return ONLY valid JSON in this exact format:
 
 Rules:
 - durationMinutes is MANDATORY for every workout (estimate if not given)
-- sets, reps, weight are optional (only include if mentioned or clearly implied)
+- calories is MANDATORY for every workout (estimate based on workout type, duration, and intensity)
+- sets, reps, weight are optional (only include if mentioned or can be reasonably estimated)
 - Include weight in kg (convert if needed)
 - Always provide 2-3 constructive suggestions
 - Return empty array [] if no workouts/injuries found
@@ -112,10 +115,11 @@ ${diaryText}
       if (!Array.isArray(parsedData.injuries)) parsedData.injuries = [];
       if (!Array.isArray(parsedData.suggestions)) parsedData.suggestions = [];
 
-      // Ensure every workout has a duration
+      // Ensure every workout has duration and calories
       parsedData.workouts = parsedData.workouts.map(workout => ({
         ...workout,
         durationMinutes: workout.durationMinutes || 30, // Default 30 minutes if missing
+        calories: workout.calories || 200, // Default 200 calories if missing
       }));
 
     } catch (err) {

@@ -90,7 +90,8 @@ export class DatabaseService {
                   durationMinutes: workoutData.durationMinutes,
                   sets: workoutData.sets,
                   reps: workoutData.reps,
-                  weight: workoutData.weight
+                  weight: workoutData.weight,
+                  calories: workoutData.calories || 200 // Default if missing from old data
                 }
               );
               log.workouts.push(workout);
@@ -204,7 +205,8 @@ export class DatabaseService {
         durationMinutes: workout.durationMinutes,
         sets: workout.sets,
         reps: workout.reps,
-        weight: workout.weight
+        weight: workout.weight,
+        calories: workout.calories
       }));
 
       console.log('📊 Workouts JSON:', workoutsJson);
@@ -275,6 +277,15 @@ export class DatabaseService {
         // Parse workouts from JSON
         if (dbLog.workouts && Array.isArray(dbLog.workouts)) {
           dbLog.workouts.forEach((workoutData: any) => {
+            console.log('🔍 Debug loading workout from DB:', JSON.stringify(workoutData));
+            console.log('🔍 Calories value:', workoutData.calories, 'Type:', typeof workoutData.calories);
+            
+            // Ensure calories is a valid number
+            let caloriesValue = workoutData.calories;
+            if (typeof caloriesValue !== 'number' || isNaN(caloriesValue) || caloriesValue <= 0) {
+              caloriesValue = 200; // Default fallback
+            }
+            
             const workout = new Workout(
               workoutData.id,
               workoutData.name,
@@ -283,9 +294,11 @@ export class DatabaseService {
                 durationMinutes: workoutData.durationMinutes,
                 sets: workoutData.sets,
                 reps: workoutData.reps,
-                weight: workoutData.weight
+                weight: workoutData.weight,
+                calories: caloriesValue
               }
             );
+            console.log('🔍 Created workout object:', workout.calories, 'Type:', typeof workout.calories);
             log.workouts.push(workout);
           });
         }

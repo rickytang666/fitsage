@@ -19,6 +19,7 @@ export default function DiaryPage() {
   const [isDateValid, setIsDateValid] = useState(true);
   const [viewMode, setViewMode] = useState<'diary' | 'summary'>('summary'); // Default to summary view
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set()); // Track which entries are expanded
+  const [isCanceling, setIsCanceling] = useState(false); // Track if we're canceling to prevent validation flash
 
   // Generate a simple ID
   const generateId = () => `diary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -178,6 +179,7 @@ export default function DiaryPage() {
             sets: workoutData.sets,
             reps: workoutData.reps,
             weight: workoutData.weight,
+            calories: workoutData.calories || 200, // Ensure calories is always provided
           }
         );
         log.workouts.push(workout);
@@ -237,17 +239,37 @@ export default function DiaryPage() {
     setStatusMessage('');
     setIsDateValid(true);
     
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Start scrolling immediately, no delay
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    });
+    
+    // Focus the textarea after a short delay to let the form update
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.focus();
+        // Move cursor to end of text
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+    }, 200);
   };
 
   // Cancel editing
   const cancelEdit = async () => {
+    // Set canceling flag to prevent validation
+    setIsCanceling(true);
+    // Clear everything immediately to prevent validation flash
     setCurrentEntry(null);
     setEntryText('');
     setError('');
     setStatusMessage('');
+    setIsDateValid(true);
+    // Set default date last to avoid validation trigger
     await setDefaultDate();
+    // Clear canceling flag
+    setIsCanceling(false);
   };
 
   // Delete entry
@@ -295,10 +317,11 @@ export default function DiaryPage() {
 
   // Validate date when it changes
   useEffect(() => {
-    if (selectedDate && !isSaving) { // Don't validate while saving
+    // Don't validate while saving, or if we're canceling edit (no currentEntry but entryText is empty)
+    if (selectedDate && !isSaving && !isCanceling) {
       validateDate(selectedDate, currentEntry?.id);
     }
-  }, [selectedDate, validateDate, currentEntry?.id, isSaving]);
+  }, [selectedDate, validateDate, currentEntry?.id, isSaving, isCanceling]);
 
   if (!authUser) {
     return (
@@ -503,6 +526,15 @@ export default function DiaryPage() {
                                     )}
                                   </>
                                 )}
+                                <span className={styles.workoutStat}>
+                                  🔥 {(() => {
+                                    const cal = workout.calories;
+                                    if (typeof cal === 'number' && !isNaN(cal) && cal > 0) {
+                                      return cal;
+                                    }
+                                    return 200; // Fallback
+                                  })()} cal
+                                </span>
                               </div>
                             </div>
                           ))}
