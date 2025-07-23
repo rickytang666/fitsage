@@ -1,8 +1,108 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../auth/AuthProvider';
+import DatabaseService from '../../services/DatabaseService';
+import { Workout } from '../../models/User';
 import styles from './WorkoutsPage.module.css';
 
 export default function WorkoutsPage() {
+  const { user: authUser } = useAuth();
+  const [weekStats, setWeekStats] = useState({
+    totalWorkouts: 0,
+    totalMinutes: 0,
+    totalCalories: 0,
+    isLoading: true
+  });
+
+  // Calculate this week's statistics
+  const calculateWeekStats = async () => {
+    if (!authUser?.id) return;
+
+    try {
+      // Get start of this week (Sunday)
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Go to Sunday
+      startOfWeek.setHours(0, 0, 0, 0); // Start of day
+
+      // Get end of this week (Saturday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // Go to Saturday
+      endOfWeek.setHours(23, 59, 59, 999); // End of day
+
+      // Load all diary entries
+      const diaryEntries = await DatabaseService.loadDiaryEntries(authUser.id);
+      
+      // Filter workouts from this week
+      const thisWeekWorkouts: Workout[] = [];
+      diaryEntries.forEach(entry => {
+        if (entry.date >= startOfWeek && entry.date <= endOfWeek) {
+          thisWeekWorkouts.push(...entry.workouts);
+        }
+      });
+
+      // Calculate stats
+      const totalWorkouts = thisWeekWorkouts.length;
+      const totalMinutes = thisWeekWorkouts.reduce((sum, workout) => 
+        sum + (workout.durationMinutes || 0), 0
+      );
+      const totalCalories = thisWeekWorkouts.reduce((sum, workout) => 
+        sum + (workout.calories || 0), 0
+      );
+
+      setWeekStats({
+        totalWorkouts,
+        totalMinutes,
+        totalCalories,
+        isLoading: false
+      });
+
+    } catch (error) {
+      console.error('Error calculating week stats:', error);
+      setWeekStats({
+        totalWorkouts: 0,
+        totalMinutes: 0,
+        totalCalories: 0,
+        isLoading: false
+      });
+    }
+  };
+
+  // Load stats when component mounts
+  useEffect(() => {
+    if (authUser?.id) {
+      calculateWeekStats();
+    }
+  }, [authUser?.id]);
+
+  // Format duration for display
+  const formatDuration = (totalMinutes: number): string => {
+    if (totalMinutes === 0) return '0h';
+    
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (hours === 0) {
+      return `${minutes}m`;
+    } else if (minutes === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${minutes}m`;
+    }
+  };
+
+  if (!authUser) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>💪 Workouts</h1>
+          <p className={styles.subtitle}>Please log in to view your workouts</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -10,228 +110,157 @@ export default function WorkoutsPage() {
         <p className={styles.subtitle}>Choose your fitness journey</p>
       </div>
 
-      {/* Placeholder Banner */}
-      <div className={styles.placeholderBanner}>
-        <div className={styles.bannerContent}>
-          <div className={styles.bannerIcon}>🚧</div>
-          <div className={styles.bannerText}>
-            <strong>Under Development:</strong> The workout cards below are currently placeholders. Full workout functionality coming soon!
-          </div>
-        </div>
-      </div>
-
       <div className={styles.statsCard}>
         <h2 className={styles.statsTitle}>This Week's Progress</h2>
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
-            <div className={styles.statValue}>5</div>
+            <div className={styles.statValue}>
+              {weekStats.isLoading ? '...' : weekStats.totalWorkouts}
+            </div>
             <div className={styles.statLabel}>Workouts</div>
           </div>
           <div className={styles.statItem}>
-            <div className={styles.statValue}>2.5h</div>
+            <div className={styles.statValue}>
+              {weekStats.isLoading ? '...' : formatDuration(weekStats.totalMinutes)}
+            </div>
             <div className={styles.statLabel}>Total Time</div>
           </div>
           <div className={styles.statItem}>
-            <div className={styles.statValue}>850</div>
+            <div className={styles.statValue}>
+              {weekStats.isLoading ? '...' : weekStats.totalCalories.toLocaleString()}
+            </div>
             <div className={styles.statLabel}>Calories</div>
           </div>
         </div>
       </div>
 
-      {/* Workout Cards */}
-      <div className="mt-8">
-        <h2 className={styles.sectionTitle}>Featured Workouts</h2>
-        <div className={styles.workoutGrid}>
+      {/* Split Panels - Past 7 days and Featured workouts */}
+      <div className={styles.splitPanelsContainer}>
+        {/* Past 7 Days Panel */}
+        <div className={styles.panel}>
+          <h2 className={styles.panelTitle}>📅 Past 7 Days Workouts</h2>
+          <div className={styles.panelContent}>
+            <PastSevenDaysWorkouts userId={authUser.id} />
+          </div>
+        </div>
 
-          {/* Cardio Workout */}
-          <WorkoutCard
-            title="Cardio Workout"
-            duration="30 minutes"
-            intensity="Moderate intensity"
-            benefit="Improves heart health"
-            level="Beginner Friendly"
-            levelColor="green"
-            iconPath="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-
-          {/* Strength Training */}
-          <WorkoutCard
-            title="Strength Training"
-            duration="45 minutes"
-            intensity="High intensity"
-            benefit="Builds muscle mass"
-            level="Intermediate"
-            levelColor="yellow"
-            iconPath="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-          />
-
-          {/* Flexibility Workout */}
-          <WorkoutCard
-            title="Flexibility Workout"
-            duration="60 minutes"
-            intensity="Low intensity"
-            benefit="Improves mobility"
-            level="All Levels"
-            levelColor="blue"
-            iconPath="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
-
-          {/* HIIT Workout */}
-          <WorkoutCard
-            title="HIIT Workout"
-            duration="25 minutes"
-            intensity="Very high intensity"
-            benefit="Burns calories efficiently"
-            level="Advanced"
-            levelColor="red"
-            iconPath="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"
-          />
-
-          {/* Yoga Session */}
-          <WorkoutCard
-            title="Yoga Session"
-            duration="75 minutes"
-            intensity="Low to moderate intensity"
-            benefit="Improves balance and flexibility"
-            level="All Levels"
-            levelColor="blue"
-            iconPath="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-
-          {/* Swimming */}
-          <WorkoutCard
-            title="Swimming"
-            duration="40 minutes"
-            intensity="Moderate intensity"
-            benefit="Full body workout, low impact"
-            level="Intermediate"
-            levelColor="cyan"
-            iconPath="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-          />
-
-          {/* Boxing */}
-          <WorkoutCard
-            title="Boxing"
-            duration="50 minutes"
-            intensity="High intensity"
-            benefit="Improves coordination and strength"
-            level="Intermediate-Advanced"
-            levelColor="orange"
-            iconPath="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
-
-          {/* Pilates */}
-          <WorkoutCard
-            title="Pilates"
-            duration="55 minutes"
-            intensity="Low to moderate intensity"
-            benefit="Strengthens core and improves posture"
-            level="Beginner-Intermediate"
-            levelColor="pink"
-            iconPath="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-
-          {/* CrossFit */}
-          <WorkoutCard
-            title="CrossFit"
-            duration="45 minutes"
-            intensity="Very high intensity"
-            benefit="Builds functional strength and endurance"
-            level="Advanced"
-            levelColor="red"
-            iconPath="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          />
-
-          {/* Cycling */}
-          <WorkoutCard
-            title="Cycling"
-            duration="60 minutes"
-            intensity="Moderate to high intensity"
-            benefit="Strengthens legs and cardiovascular system"
-            level="All Levels"
-            levelColor="green"
-            iconPath="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-          />
-
-          {/* Running */}
-          <WorkoutCard
-            title="Running"
-            duration="35 minutes"
-            intensity="Moderate to high intensity"
-            benefit="Improves endurance and burns calories"
-            level="Beginner Friendly"
-            levelColor="green"
-            iconPath="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-          />
-
-          {/* Rock Climbing */}
-          <WorkoutCard
-            title="Rock Climbing"
-            duration="70 minutes"
-            intensity="High intensity"
-            benefit="Builds upper body strength and problem-solving"
-            level="Intermediate-Advanced"
-            levelColor="orange"
-            iconPath="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-
-          {/* Meditation */}
-          <WorkoutCard
-            title="Meditation"
-            duration="20 minutes"
-            intensity="Low intensity"
-            benefit="Reduces stress and improves mental clarity"
-            level="All Levels"
-            levelColor="blue"
-            iconPath="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-          />
-
+        {/* Featured Workouts Panel */}
+        <div className={styles.panel}>
+          <h2 className={styles.panelTitle}>⭐ Featured Workouts</h2>
+          <div className={styles.panelContent}>
+            <FeaturedWorkouts userId={authUser.id} />
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Helper component
-function WorkoutCard({ title, duration, intensity, benefit, level, levelColor, iconPath }: {
-  title: string;
-  duration: string;
-  intensity: string;
-  benefit: string;
-  level: string;
-  levelColor: string;
-  iconPath: string;
-}) {
+// Component for Past 7 Days Workouts
+function PastSevenDaysWorkouts({ userId }: { userId: string }) {
+  const [workouts, setWorkouts] = useState<Array<{
+    workout: Workout;
+    date: Date;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPastWeekWorkouts = async () => {
+      try {
+        // Get past 7 days (including today)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 6); // Past 7 days including today
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Load all diary entries
+        const diaryEntries = await DatabaseService.loadDiaryEntries(userId);
+        
+        // Filter and collect workouts from past 7 days
+        const pastWeekWorkouts: Array<{ workout: Workout; date: Date }> = [];
+        diaryEntries.forEach(entry => {
+          if (entry.date >= startDate && entry.date <= endDate) {
+            entry.workouts.forEach(workout => {
+              pastWeekWorkouts.push({ workout, date: entry.date });
+            });
+          }
+        });
+
+        // Sort by date (most recent first)
+        pastWeekWorkouts.sort((a, b) => b.date.getTime() - a.date.getTime());
+        
+        setWorkouts(pastWeekWorkouts);
+      } catch (error) {
+        console.error('Error loading past week workouts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (userId) {
+      loadPastWeekWorkouts();
+    }
+  }, [userId]);
+
+  if (isLoading) {
+    return <div className={styles.loading}>Loading past workouts...</div>;
+  }
+
+  if (workouts.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <p>💭 No workouts in the past 7 days.</p>
+        <p>Start by adding a diary entry!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.workoutCard}>
-      <div className={styles.workoutIcon}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="mx-auto h-10 w-10 text-indigo-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d={iconPath}
-          />
-        </svg>
-      </div>
-      <h3 className={styles.workoutTitle}>
-        {title}
-      </h3>
-      <div className={styles.workoutDescription}>
-        <p>{duration}</p>
-        <p className={styles.workoutDescriptionLine}>{intensity}</p>
-        <p className={styles.workoutDescriptionLine}>{benefit}</p>
-      </div>
-      <div className={styles.workoutBadge}>
-        <span className={`${styles.levelBadge} ${styles[levelColor]}`}>
-          {level}
-        </span>
+    <div className={styles.workoutsList}>
+      {workouts.map((item, index) => (
+        <div key={`${item.workout.id}-${index}`} className={styles.pastWorkoutCard}>
+          <div className={styles.workoutDate}>
+            {item.date.toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              month: 'short', 
+              day: 'numeric' 
+            })}
+          </div>
+          <div className={styles.workoutInfo}>
+            <h3 className={styles.workoutName}>{item.workout.name}</h3>
+            <div className={styles.workoutStats}>
+              {item.workout.durationMinutes && (
+                <span className={styles.workoutStat}>⏱️ {item.workout.durationMinutes}m</span>
+              )}
+              {item.workout.sets && (
+                <span className={styles.workoutStat}>🔄 {item.workout.sets} sets</span>
+              )}
+              {item.workout.reps && (
+                <span className={styles.workoutStat}>↗️ {item.workout.reps} reps</span>
+              )}
+              {item.workout.weight && (
+                <span className={styles.workoutStat}>🏋️ {item.workout.weight}kg</span>
+              )}
+              {item.workout.calories && (
+                <span className={styles.workoutStat}>🔥 {item.workout.calories} cal</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Component for Featured Workouts (placeholder for now)
+function FeaturedWorkouts({ userId }: { userId: string }) {
+  return (
+    <div className={styles.featuredPlaceholder}>
+      <div className={styles.comingSoonCard}>
+        <div className={styles.comingSoonIcon}>🤖</div>
+        <h3>AI-Powered Recommendations</h3>
+        <p>Coming soon! Our AI will analyze your past 3 days of workouts and suggest personalized featured workouts just for you.</p>
       </div>
     </div>
   );
