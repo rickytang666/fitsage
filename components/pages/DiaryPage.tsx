@@ -148,6 +148,45 @@ export default function DiaryPage() {
       });
 
       if (!geminiResponse.ok) {
+        // Handle specific rate limiting error
+        if (geminiResponse.status === 429) {
+          const errorData = await geminiResponse.json();
+          setError('AI is temporarily busy due to high usage. Your entry will be saved without AI analysis.');
+          setStatusMessage('Saving diary without AI analysis...');
+          
+          // Save without AI processing
+          const fallbackLog = new Log(
+            currentEntry?.id || generateId(),
+            entryText.trim(),
+            new Date(selectedDate),
+            ['📝 Entry saved without AI analysis due to rate limiting.']
+          );
+          
+          const success = await DatabaseService.saveLog(fallbackLog, authUser.id);
+          if (success) {
+            await loadDiaryEntries();
+            // Clear form
+            if (currentEntry) {
+              setCurrentEntry(null);
+              setEntryText('');
+              setError('');
+              setStatusMessage('');
+              setIsDateValid(true);
+              await setDefaultDate();
+            } else {
+              setEntryText('');
+              setError('');
+              setStatusMessage('');
+              await setDefaultDate();
+            }
+            setStatusMessage('✅ Diary saved successfully (AI analysis will be available later)!');
+            setTimeout(() => setStatusMessage(''), 3000);
+            return;
+          } else {
+            setError('Failed to save diary entry. Please try again.');
+            return;
+          }
+        }
         throw new Error('Failed to process diary with AI');
       }
 

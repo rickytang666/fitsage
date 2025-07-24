@@ -299,9 +299,9 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
-  useEffect(() => {
-    const loadFeaturedWorkouts = async () => {
+  const loadFeaturedWorkouts = async () => {
       console.log('🎯 FeaturedWorkouts processing shared diary entries:', diaryEntries.length);
       
       if (isLoading || diaryEntries.length === 0) {
@@ -311,6 +311,7 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
       
       setIsProcessing(true);
       setError('');
+      setIsRateLimited(false);
       
       try {
         const response = await fetch('/api/featured-workouts', {
@@ -324,11 +325,25 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
           }),
         });
 
+        const data = await response.json();
+        
+        if (response.status === 429) {
+          // Handle rate limiting specifically
+          setSuggestions(data.suggestions || [
+            '😅 AI recommendations are taking a break due to high usage.',
+            '⏰ Please wait a few minutes and try again.',
+            '💪 Try the basic workouts below while waiting!'
+          ]);
+          setFeaturedWorkouts(data.featuredWorkouts || []);
+          setError('Rate limited - AI is temporarily busy');
+          setIsRateLimited(true);
+          setDebugInfo(data.debug || null);
+          return;
+        }
+        
         if (!response.ok) {
           throw new Error(`API returned ${response.status}`);
         }
-
-        const data = await response.json();
         
         if (data.success) {
           setSuggestions(data.suggestions || []);
@@ -340,6 +355,8 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
           setDebugInfo(data.debug || null);
           if (data.meta?.error) {
             setError(data.meta.error);
+          } else if (data.meta?.rateLimited) {
+            setError('AI recommendations are rate limited');
           }
         }
       } catch (err) {
@@ -350,12 +367,20 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
       } finally {
         setIsProcessing(false);
       }
-    };
+  };
 
+  useEffect(() => {
     if (!isLoading && diaryEntries.length > 0) {
       loadFeaturedWorkouts();
     }
   }, [userId, diaryEntries, isLoading]);
+  
+  // Manual retry function
+  const retryFeaturedWorkouts = async () => {
+    if (!isLoading && diaryEntries.length > 0) {
+      await loadFeaturedWorkouts();
+    }
+  };
 
   if (isLoading) {
     return (
@@ -379,7 +404,18 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
     <div className={styles.featuredWorkouts}>
       {/* AI Suggestions Section */}
       <div className={styles.suggestionsSection}>
-        <h3 className={styles.suggestionsTitle}>💡 AI Suggestions</h3>
+        <div className={styles.suggestionsHeader}>
+          <h3 className={styles.suggestionsTitle}>💡 AI Suggestions</h3>
+          {isRateLimited && (
+            <button 
+              onClick={retryFeaturedWorkouts}
+              className={styles.retryButton}
+              disabled={isProcessing}
+            >
+              {isProcessing ? '⏳ Retrying...' : '🔄 Try Again'}
+            </button>
+          )}
+        </div>
         {error && (
           <div className={styles.errorMessage}>⚠️ {error}</div>
         )}

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
+import { geminiRateLimiter, waitForRateLimit, isRateLimitError } from '@/utils/rate-limiter';
 
 // Types matching our enhanced models
 type WorkoutData = {
@@ -37,9 +39,79 @@ You are a fitness AI assistant. Analyze the following diary entry and return a s
 CRITICAL REQUIREMENTS:
 1. Extract ALL workouts mentioned (even casual activities)
 2. For each workout, ALWAYS estimate duration in minutes (mandatory)
-3. If sets/reps mentioned, include them; if weight mentioned, include it in kg
+3. For each workout, ALWAYS estimate calories burned (mandatory)
 4. Provide 2-3 helpful suggestions for improvement or encouragement
 5. Identify any injuries, pain, or discomfort mentioned
+6. Use CONSISTENT and STANDARDIZED workout names (see naming rules below)
+
+🏷️ WORKOUT NAMING STANDARDS - BE RIGOROUS AND CONSISTENT:
+Use these EXACT standard names (case-sensitive). Never create variations!
+
+CARDIO ACTIVITIES:
+- "Running" (not "jogging", "jog", "run")
+- "Cycling" (not "bike ride", "biking", "bicycle")
+- "Walking" (not "stroll", "walk")
+- "Swimming" (not "swim")
+- "Rowing" (not "row")
+- "Elliptical" (not "elliptical machine")
+- "Treadmill" (not "treadmill running")
+- "Stair Climbing" (not "stairs", "stairmaster")
+- "Dancing" (not "dance")
+- "Hiking" (not "hike")
+- "Jump Rope" (not "jumping rope", "skipping")
+
+STRENGTH TRAINING:
+- "Push-ups" (not "pushups", "push up")
+- "Pull-ups" (not "pullups", "pull up")
+- "Squats" (not "squat")
+- "Deadlifts" (not "deadlift")
+- "Bench Press" (not "bench pressing")
+- "Overhead Press" (not "shoulder press", "military press")
+- "Bicep Curls" (not "curls", "arm curls")
+- "Tricep Dips" (not "dips")
+- "Lunges" (not "lunge")
+- "Planks" (not "plank", "plank hold")
+- "Burpees" (not "burpee")
+- "Mountain Climbers" (not "mountain climber")
+
+FLEXIBILITY & RECOVERY:
+- "Yoga" (not "yoga session")
+- "Stretching" (not "stretch")
+- "Pilates" (not "pilates class")
+- "Foam Rolling" (not "foam roller")
+
+SPORTS:
+- "Basketball" (not "playing basketball")
+- "Tennis" (not "playing tennis")
+- "Soccer" (not "football", "playing soccer")
+- "Golf" (not "playing golf")
+- "Volleyball" (not "playing volleyball")
+
+🚨 IMPORTANT WORKOUT DATA STRUCTURE RULES:
+For each workout, you can ONLY use one of these two patterns:
+
+PATTERN 1 - Duration-based workouts (cardio, yoga, walking, etc):
+{
+  "name": "Running",
+  "durationMinutes": 30,
+  "calories": 300
+  // NO sets, reps, or weight fields
+}
+
+PATTERN 2 - Sets-based workouts (strength training, weightlifting, etc):
+{
+  "name": "Bench Press",
+  "durationMinutes": 20,
+  "calories": 150,
+  "sets": 3,
+  "reps": 10,
+  "weight": 80  // optional, only if mentioned
+}
+
+🚨 NEVER include sets without reps or reps without sets!
+🚨 If you include sets, you MUST also include reps!
+🚨 Weight is only optional when both sets AND reps are present!
+🚨 ALWAYS use the EXACT standard names from the list above!
 
 Return ONLY valid JSON in this exact format:
 {
@@ -47,10 +119,10 @@ Return ONLY valid JSON in this exact format:
     {
       "name": "Exercise name",
       "durationMinutes": 30,
+      "calories": 250,
       "sets": 3,
       "reps": 10,
-      "weight": 80,
-      "calories": 250
+      "weight": 80
     }
   ],
   "injuries": ["injury description"],
@@ -60,7 +132,9 @@ Return ONLY valid JSON in this exact format:
 Rules:
 - durationMinutes is MANDATORY for every workout (estimate if not given)
 - calories is MANDATORY for every workout (estimate based on workout type, duration, and intensity)
-- sets, reps, weight are optional (only include if mentioned or can be reasonably estimated)
+- If the workout involves sets/reps (strength training): BOTH sets AND reps are MANDATORY
+- If the workout is duration-based (cardio, yoga): DO NOT include sets, reps, or weight
+- Weight is optional and only valid when both sets AND reps are present
 - Include weight in kg (convert if needed)
 - Always provide 2-3 constructive suggestions
 - Return empty array [] if no workouts/injuries found
@@ -70,59 +144,81 @@ ${diaryText}
 `;
 
   try {
+    // Rate limit logic
+    const rateLimitStatus = geminiRateLimiter.getStatus();
+    console.log('📏 Summarize rate limit status (diary limiter):', rateLimitStatus);
+    
+    if (!rateLimitStatus.canMakeRequest) {
+      console.log(`⏳ Rate limit exceeded, need to wait ${Math.ceil(rateLimitStatus.waitTime / 1000)}s`);
+      // Return early with rate limit message
+      const rateLimitLogData: Omit<LogData, 'id'> = {
+        diaryEntry: diaryText,
+        date: logDate,
+        workouts: [],
+        injuries: [],
+        suggestions: [
+          `😅 AI is temporarily busy! You've used ${rateLimitStatus.requestsInWindow}/${rateLimitStatus.maxRequests} requests this minute.`,
+          `⏰ Please wait ${Math.ceil(rateLimitStatus.waitTime / 1000)} seconds and try again.`,
+          `📝 Your diary entry has been saved successfully without AI analysis.`
+        ],
+      };
+      return NextResponse.json({ logData: rateLimitLogData }, { status: 429 });
+    }
+    
+    await waitForRateLimit();
+    geminiRateLimiter.recordRequest();
+
+    // Initialize the Google GenAI client using the pattern from your guide
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
     // Retry logic for Gemini API with exponential backoff
-    let response: Response | undefined;
+    let rawText = '';
     let attempts = 0;
     const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-            }),
-          }
-        );
-
-        if (response.ok) {
-          break; // Success, exit retry loop
-        }
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash-exp',
+          contents: prompt,
+        });
+        rawText = response.text;
+        break; // Success, exit retry loop
         
-        if (response.status === 503 && attempts < maxAttempts - 1) {
-          // 503 Service Unavailable - retry with exponential backoff
-          const delay = Math.pow(2, attempts) * 1000; // 1s, 2s, 4s
-          console.log(`⚠️ Gemini API returned 503, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+      } catch (genError: any) {
+        // Handle rate limiting and service unavailable errors
+        const isRateLimited = genError.message?.includes('429') || genError.message?.includes('rate');
+        const isServiceUnavailable = genError.message?.includes('503') || genError.message?.includes('unavailable');
+        
+        if ((isRateLimited || isServiceUnavailable) && attempts < maxAttempts - 1) {
+          // Calculate delay: longer for rate limits, shorter for service issues
+          const baseDelay = isRateLimited ? 5000 : 1000; // 5s for rate limit, 1s for service issues
+          const delay = baseDelay * Math.pow(2, attempts); // Exponential backoff: 5s, 10s, 20s for rate limits
+          
+          const errorType = isRateLimited ? 'rate limit exceeded' : 'service unavailable';
+          console.log(`⚠️ Gemini API ${errorType}, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+          
           await new Promise(resolve => setTimeout(resolve, delay));
           attempts++;
           continue;
         }
         
-        // Non-503 error or max attempts reached
-        throw new Error(`Gemini API returned ${response.status}`);
-        
-      } catch (fetchError) {
-        if (attempts === maxAttempts - 1) {
-          throw fetchError; // Last attempt failed
+        // Handle rate limit with specific error message
+        if (isRateLimited) {
+          throw new Error('Rate limit exceeded. Please wait a few minutes before trying again.');
         }
+        
+        // Last attempt failed or other errors
+        if (attempts === maxAttempts - 1) {
+          throw genError;
+        }
+        
         attempts++;
         const delay = Math.pow(2, attempts) * 1000;
         console.log(`⚠️ Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-
-    if (!response || !response.ok) {
-      throw new Error(`Gemini API failed after ${maxAttempts} attempts`);
-    }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
     if (!rawText) {
       throw new Error('No response from Gemini API');
@@ -149,12 +245,41 @@ ${diaryText}
       if (!Array.isArray(parsedData.injuries)) parsedData.injuries = [];
       if (!Array.isArray(parsedData.suggestions)) parsedData.suggestions = [];
 
-      // Ensure every workout has duration and calories
-      parsedData.workouts = parsedData.workouts.map(workout => ({
-        ...workout,
-        durationMinutes: workout.durationMinutes || 30, // Default 30 minutes if missing
-        calories: workout.calories || 200, // Default 200 calories if missing
-      }));
+      // Validate and clean workout data structure
+      parsedData.workouts = parsedData.workouts.map((workout, index) => {
+        const cleanedWorkout: any = {
+          name: workout.name || `Workout ${index + 1}`,
+          durationMinutes: workout.durationMinutes || 30, // Default 30 minutes if missing
+          calories: workout.calories || 200, // Default 200 calories if missing
+        };
+
+        // Validate sets/reps consistency
+        const hasSets = workout.sets !== undefined && workout.sets !== null && workout.sets > 0;
+        const hasReps = workout.reps !== undefined && workout.reps !== null && workout.reps > 0;
+        const hasWeight = workout.weight !== undefined && workout.weight !== null && workout.weight > 0;
+
+        if (hasSets && hasReps) {
+          // Valid sets-based workout: both sets and reps are present
+          cleanedWorkout.sets = workout.sets;
+          cleanedWorkout.reps = workout.reps;
+          if (hasWeight) {
+            cleanedWorkout.weight = workout.weight;
+          }
+        } else if (hasSets && !hasReps) {
+          // Invalid: sets without reps - convert to duration-based
+          console.warn(`⚠️ Workout "${workout.name}" has sets but no reps - converting to duration-based`);
+          // Don't include sets, reps, or weight
+        } else if (!hasSets && hasReps) {
+          // Invalid: reps without sets - convert to duration-based
+          console.warn(`⚠️ Workout "${workout.name}" has reps but no sets - converting to duration-based`);
+          // Don't include sets, reps, or weight
+        } else {
+          // Valid duration-based workout: no sets or reps
+          // Don't include sets, reps, or weight
+        }
+
+        return cleanedWorkout;
+      });
 
     } catch (err) {
       console.error('❌ Failed to parse Gemini JSON:', err);
@@ -189,21 +314,50 @@ ${diaryText}
       injuriesFound: parsedData.injuries.length,
       suggestionsGenerated: parsedData.suggestions.length,
     });
+    
+    // Log workout structure for debugging
+    workoutsWithIds.forEach((workout, index) => {
+      const workoutType = (workout.sets && workout.reps) ? 'sets-based' : 'duration-based';
+      console.log(`🏋️ Workout ${index + 1}: "${workout.name}" (${workoutType})`, {
+        durationMinutes: workout.durationMinutes,
+        calories: workout.calories,
+        sets: workout.sets,
+        reps: workout.reps,
+        weight: workout.weight
+      });
+    });
 
     return NextResponse.json({ logData });
 
   } catch (error) {
-    console.error('❌ Gemini API error:', error);
+    console.error('❗ Gemini API error:', error);
     
-    // Return fallback response on error
+    // Determine appropriate error message based on error type
+    let errorMessage = '❗ AI processing failed. Your diary has been saved as-is.';
+    let statusCode = 500;
+    
+    const errorString = error instanceof Error ? error.message : String(error);
+    
+    if (errorString.includes('Rate limit exceeded') || errorString.includes('429')) {
+      errorMessage = '😅 AI is taking a break due to high usage. Your diary has been saved, but AI analysis is temporarily unavailable. Please try again in a few minutes.';
+      statusCode = 429;
+    } else if (errorString.includes('503') || errorString.includes('service unavailable')) {
+      errorMessage = '🔧 AI service is temporarily unavailable. Your diary has been saved, but analysis will be added later.';
+      statusCode = 503;
+    } else if (errorString.includes('API key') || errorString.includes('401') || errorString.includes('403')) {
+      errorMessage = '🔑 AI configuration issue. Your diary has been saved without AI analysis.';
+      statusCode = 500;
+    }
+    
+    // Return fallback response with appropriate error message
     const fallbackLogData: Omit<LogData, 'id'> = {
       diaryEntry: diaryText,
       date: logDate,
       workouts: [],
       injuries: [],
-      suggestions: ['❌ AI processing failed. Your diary has been saved as-is.'],
+      suggestions: [errorMessage],
     };
 
-    return NextResponse.json({ logData: fallbackLogData });
+    return NextResponse.json({ logData: fallbackLogData }, { status: statusCode });
   }
 }

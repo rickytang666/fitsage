@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 import DatabaseService from '@/services/DatabaseService';
 import { FeaturedWorkout } from '@/models/User';
 
@@ -19,10 +20,7 @@ type AIResponseData = {
   }[];
 };
 
-// Simple in-memory rate limiting to prevent excessive requests
-const requestCount = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 10; // Max 10 requests per minute
-const RATE_WINDOW = 60000; // 1 minute
+// Using shared rate limiter for consistency with diary API
 
 export async function POST(req: Request) {
   const { userId, diaryEntries } = await req.json();
@@ -30,45 +28,8 @@ export async function POST(req: Request) {
   console.log('🔍 Featured workouts API called with userId:', userId);
   console.log('📚 Received shared diary entries:', diaryEntries?.length || 0);
   
-  // Rate limiting check
-  const now = Date.now();
-  const userKey = userId || 'anonymous';
-  const userRequests = requestCount.get(userKey);
-  
-  if (userRequests) {
-    if (now < userRequests.resetTime) {
-      // Within rate limit window
-      if (userRequests.count >= RATE_LIMIT) {
-        console.warn(`⚠️ Rate limit exceeded for user ${userKey}`);
-        return NextResponse.json(
-          { 
-            success: false,
-            error: 'Too many requests. Please wait a few minutes and try again.',
-            suggestions: ['Please wait before making more requests'],
-            featuredWorkouts: [],
-            meta: { rateLimited: true }
-          },
-          { status: 429 }
-        );
-      }
-      userRequests.count++;
-    } else {
-      // Reset window
-      userRequests.count = 1;
-      userRequests.resetTime = now + RATE_WINDOW;
-    }
-  } else {
-    // First request for this user
-    requestCount.set(userKey, { count: 1, resetTime: now + RATE_WINDOW });
-  }
-  
-  // Clean up old entries
-  if (requestCount.size > 1000) {
-    const keysToDelete = Array.from(requestCount.entries())
-      .filter(([, data]) => now > data.resetTime)
-      .map(([key]) => key);
-    keysToDelete.forEach(key => requestCount.delete(key));
-  }
+  // Note: Removed artificial rate limiting - let Google's API handle actual rate limits
+  // This prevents confusing user experience where rate limit message shows even when API succeeds
 
   if (!userId) {
     console.log('❌ No userId provided to API');
@@ -233,59 +194,59 @@ Rules:
 - If no diary entries exist, provide general beginner-friendly recommendations
 `;
 
+    // Note: No artificial rate limiting - let Google's API handle actual limits
+
+    // Initialize the Google GenAI client using the pattern from your guide
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
     // Retry logic for Gemini API with exponential backoff
-    let response: Response | undefined;
+    let rawText = '';
     let attempts = 0;
     const maxAttempts = 3;
     
     while (attempts < maxAttempts) {
       try {
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-            }),
-          }
-        );
-
-        if (response.ok) {
-          break; // Success, exit retry loop
-        }
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash-exp',
+          contents: prompt,
+        });
+        rawText = response.text;
+        break; // Success, exit retry loop
         
-        if (response.status === 503 && attempts < maxAttempts - 1) {
-          // 503 Service Unavailable - retry with exponential backoff
-          const delay = Math.pow(2, attempts) * 1000; // 1s, 2s, 4s
-          console.log(`⚠️ Featured workouts: Gemini API returned 503, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+      } catch (genError: any) {
+        // Handle rate limiting and service unavailable errors
+        const isRateLimited = genError.message?.includes('429') || genError.message?.includes('rate');
+        const isServiceUnavailable = genError.message?.includes('503') || genError.message?.includes('unavailable');
+        
+        if ((isRateLimited || isServiceUnavailable) && attempts < maxAttempts - 1) {
+          // Calculate delay: longer for rate limits, shorter for service issues
+          const baseDelay = isRateLimited ? 5000 : 1000; // 5s for rate limit, 1s for service issues
+          const delay = baseDelay * Math.pow(2, attempts); // Exponential backoff
+          
+          const errorType = isRateLimited ? 'rate limit exceeded' : 'service unavailable';
+          console.log(`⚠️ Featured workouts: Gemini API ${errorType}, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+          
           await new Promise(resolve => setTimeout(resolve, delay));
           attempts++;
           continue;
         }
         
-        // Non-503 error or max attempts reached
-        throw new Error(`Gemini API returned ${response.status}`);
-        
-      } catch (fetchError) {
-        if (attempts === maxAttempts - 1) {
-          throw fetchError; // Last attempt failed
+        // Handle rate limit with specific error message
+        if (isRateLimited) {
+          throw new Error('Rate limit exceeded. AI recommendations are temporarily unavailable.');
         }
+        
+        // Last attempt failed or other errors
+        if (attempts === maxAttempts - 1) {
+          throw genError;
+        }
+        
         attempts++;
         const delay = Math.pow(2, attempts) * 1000;
         console.log(`⚠️ Featured workouts: Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-
-    if (!response || !response.ok) {
-      throw new Error(`Gemini API failed after ${maxAttempts} attempts`);
-    }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
     if (!rawText) {
       throw new Error('No response from Gemini API');
@@ -449,27 +410,54 @@ Rules:
     });
 
   } catch (error) {
-    console.error('❌ Featured workouts API error:', error);
+    console.error('❗ Featured workouts API error:', error);
+    
+    // Determine appropriate error message and suggestions based on error type
+    let suggestions = [
+      '❗ AI recommendations temporarily unavailable.',
+      'Focus on consistency - even 10 minutes of daily activity helps!',
+      'Mix different types of exercises to keep things interesting.'
+    ];
+    
+    const errorString = error instanceof Error ? error.message : String(error);
+    
+    if (errorString.includes('Rate limit exceeded') || errorString.includes('429')) {
+      suggestions = [
+        '😅 AI workout recommendations are taking a break due to high usage.',
+        '⏰ Please wait a few minutes and refresh the page to get personalized recommendations.',
+        '💪 While waiting, try the basic workouts below or go for a walk!'
+      ];
+    } else if (errorString.includes('503') || errorString.includes('service unavailable')) {
+      suggestions = [
+        '🔧 AI service is temporarily down for maintenance.',
+        '🏋️ Try the basic workouts below while we get things back up!',
+        '✨ Your personalized recommendations will return soon.'
+      ];
+    }
     
     // Return fallback response on error
     const fallbackWorkouts = [
       new FeaturedWorkout('fallback_1', 'Simple Walk', 'all level', { 
         durationMinutes: 15, 
-        estimatedCalories: 75 
+        estimatedCalories: 75,
+        description: 'A gentle walk to stay active'
       }),
       new FeaturedWorkout('fallback_2', 'Basic Stretching', 'all level', { 
         durationMinutes: 10, 
-        estimatedCalories: 30 
+        estimatedCalories: 30,
+        description: 'Light stretching for flexibility'
+      }),
+      new FeaturedWorkout('fallback_3', 'Bodyweight Squats', 'beginner', { 
+        sets: 2, 
+        reps: 10,
+        estimatedCalories: 40,
+        description: 'Simple strength exercise'
       })
     ];
 
     return NextResponse.json({
       success: false,
-      suggestions: [
-        '❌ AI recommendations temporarily unavailable.',
-        'Focus on consistency - even 10 minutes of daily activity helps!',
-        'Mix different types of exercises to keep things interesting.'
-      ],
+      suggestions: suggestions,
       featuredWorkouts: fallbackWorkouts.map(fw => ({
         id: fw.id,
         name: fw.name,

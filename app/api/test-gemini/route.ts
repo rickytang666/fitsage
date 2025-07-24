@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
 
 export async function GET() {
   // Simple test to check if Gemini API key is configured
@@ -23,29 +24,18 @@ export async function POST(req: Request) {
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: testText || 'Hello, are you working?' }] }],
-        }),
-      }
-    );
+    // Initialize the Google GenAI client using the pattern from your guide
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    // Generate content using the API pattern from your guide
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: testText || 'Hello, are you working?',
+    });
 
     return NextResponse.json({ 
       success: true, 
-      response: rawText,
+      response: response.text,
       message: '✅ Gemini API is working correctly'
     });
 
