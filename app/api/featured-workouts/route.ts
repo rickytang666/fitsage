@@ -188,21 +188,55 @@ Rules:
 - If no diary entries exist, provide general beginner-friendly recommendations
 `;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      }
-    );
+    // Retry logic for Gemini API with exponential backoff
+    let response: Response | undefined;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+            }),
+          }
+        );
 
-    if (!response.ok) {
-      throw new Error(`Gemini API returned ${response.status}`);
+        if (response.ok) {
+          break; // Success, exit retry loop
+        }
+        
+        if (response.status === 503 && attempts < maxAttempts - 1) {
+          // 503 Service Unavailable - retry with exponential backoff
+          const delay = Math.pow(2, attempts) * 1000; // 1s, 2s, 4s
+          console.log(`⚠️ Featured workouts: Gemini API returned 503, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          attempts++;
+          continue;
+        }
+        
+        // Non-503 error or max attempts reached
+        throw new Error(`Gemini API returned ${response.status}`);
+        
+      } catch (fetchError) {
+        if (attempts === maxAttempts - 1) {
+          throw fetchError; // Last attempt failed
+        }
+        attempts++;
+        const delay = Math.pow(2, attempts) * 1000;
+        console.log(`⚠️ Featured workouts: Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+
+    if (!response || !response.ok) {
+      throw new Error(`Gemini API failed after ${maxAttempts} attempts`);
     }
 
     const data = await response.json();

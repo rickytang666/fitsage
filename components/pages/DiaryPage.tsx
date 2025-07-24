@@ -70,8 +70,8 @@ export default function DiaryPage() {
     if (!authUser?.id) return;
     
     try {
-      // When forceToday is true (like after deletion), start from today
-      const startDate = forceToday ? new Date() : undefined;
+      // Always start from today when looking for available dates
+      const startDate = new Date();
       const availableDate = await DatabaseService.findNearestAvailableDate(authUser.id, startDate);
       // Fix timezone issue: format date properly for input
       const year = availableDate.getFullYear();
@@ -309,10 +309,15 @@ export default function DiaryPage() {
 
   // Initial load
   useEffect(() => {
-    if (authUser?.id) {
-      loadDiaryEntries();
-      setDefaultDate();
-    }
+    const initializePage = async () => {
+      if (authUser?.id) {
+        // First load diary entries, then set default date
+        await loadDiaryEntries();
+        await setDefaultDate();
+      }
+    };
+    
+    initializePage();
   }, [authUser?.id, loadDiaryEntries, setDefaultDate]);
 
   // Validate date when it changes
