@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import SignIn from '@/components/auth/SignIn';
 import styles from './LoginPage.module.css';
 
@@ -12,6 +13,13 @@ export default function LoginPage() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
+        {/* Back Button */}
+        <div className={styles.backButton}>
+          <Link href="/" className={styles.backLink}>
+            ← Back to Home
+          </Link>
+        </div>
+        
         <div className={styles.header}>
           <h1 className={styles.title}>
             🏋️‍♂️ FitSage

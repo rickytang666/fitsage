@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import DatabaseService from '../../services/DatabaseService';
-import { Log } from '../../models/User';
+import { Log, Workout } from '../../models/User';
 import styles from './DiaryPage.module.css';
 
 export default function DiaryPage() {
@@ -15,10 +15,27 @@ export default function DiaryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState<string>('');
   const [isDateValid, setIsDateValid] = useState(true);
+  const [viewMode, setViewMode] = useState<'diary' | 'summary'>('summary'); // Default to summary view
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set()); // Track which entries are expanded
+  const [isCanceling, setIsCanceling] = useState(false); // Track if we're canceling to prevent validation flash
 
   // Generate a simple ID
   const generateId = () => `diary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Toggle expanded state for diary entries
+  const toggleEntryExpansion = (entryId: string) => {
+    setExpandedEntries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entryId)) {
+        newSet.delete(entryId);
+      } else {
+        newSet.add(entryId);
+      }
+      return newSet;
+    });
+  };
 
   // Format date for display (fix timezone issues)
   const formatDate = (date: Date): string => {
@@ -53,8 +70,8 @@ export default function DiaryPage() {
     if (!authUser?.id) return;
     
     try {
-      // When forceToday is true (like after deletion), start from today
-      const startDate = forceToday ? new Date() : undefined;
+      // Always start from today when looking for available dates
+      const startDate = new Date();
       const availableDate = await DatabaseService.findNearestAvailableDate(authUser.id, startDate);
       // Fix timezone issue: format date properly for input
       const year = availableDate.getFullYear();
@@ -114,14 +131,65 @@ export default function DiaryPage() {
     }
 
     setIsSaving(true);
+    setStatusMessage('Processing with AI...');
+    setError(''); // Clear any previous errors
+    
     try {
-      const entryId = currentEntry?.id || generateId();
-      const success = await DatabaseService.saveDiaryEntry(
-        authUser.id,
-        entryId,
-        entryText.trim(),
-        new Date(selectedDate)
+      // First, call Gemini API to process the diary entry
+      const geminiResponse = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          diaryText: entryText.trim(),
+          logDate: new Date(selectedDate).toISOString(),
+        }),
+      });
+
+      if (!geminiResponse.ok) {
+        throw new Error('Failed to process diary with AI');
+      }
+
+      const { logData } = await geminiResponse.json();
+      
+      if (!logData) {
+        throw new Error('Invalid response from AI processing');
+      }
+
+      setStatusMessage('Saving processed diary...');
+
+      // Create Log object with AI-processed data
+      const logId = currentEntry?.id || generateId();
+      const log = new Log(
+        logId,
+        logData.diaryEntry,
+        new Date(selectedDate),
+        logData.suggestions
       );
+
+      // Add workouts with proper structure
+      logData.workouts.forEach((workoutData: any) => {
+        const workout = new Workout(
+          workoutData.id,
+          workoutData.name,
+          new Date(workoutData.date),
+          {
+            durationMinutes: workoutData.durationMinutes,
+            sets: workoutData.sets,
+            reps: workoutData.reps,
+            weight: workoutData.weight,
+            calories: workoutData.calories || 200, // Ensure calories is always provided
+          }
+        );
+        log.workouts.push(workout);
+      });
+
+      // Add injuries
+      log.injuries = logData.injuries;
+
+      // Save the complete log to database
+      const success = await DatabaseService.saveLog(log, authUser.id);
 
       if (success) {
         // Reload entries to show updated list
@@ -133,22 +201,26 @@ export default function DiaryPage() {
           setCurrentEntry(null);
           setEntryText('');
           setError(''); // Clear any errors
+          setStatusMessage(''); // Clear status messages
           setIsDateValid(true); // Reset validation state
           await setDefaultDate(); // Find next available date
         } else {
           // Clear new entry form
           setEntryText('');
           setError(''); // Clear any errors
+          setStatusMessage(''); // Clear status messages
           await setDefaultDate(); // Find next available date
         }
         
-        setError('');
+        setStatusMessage('✅ Diary saved successfully with AI insights!');
+        // Clear success message after 3 seconds
+        setTimeout(() => setStatusMessage(''), 3000);
       } else {
-        setError('Failed to save diary entry. Please try again.');
+        setError('Failed to save processed diary entry. Please try again.');
       }
     } catch (error) {
-      console.error('Error saving entry:', error);
-      setError('An error occurred while saving the entry.');
+      console.error('Error processing/saving entry:', error);
+      setError(`An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
@@ -164,18 +236,40 @@ export default function DiaryPage() {
     const day = String(entry.date.getDate()).padStart(2, '0');
     setSelectedDate(`${year}-${month}-${day}`);
     setError('');
+    setStatusMessage('');
     setIsDateValid(true);
     
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Start scrolling immediately, no delay
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'smooth' 
+    });
+    
+    // Focus the textarea after a short delay to let the form update
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.focus();
+        // Move cursor to end of text
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+    }, 200);
   };
 
   // Cancel editing
   const cancelEdit = async () => {
+    // Set canceling flag to prevent validation
+    setIsCanceling(true);
+    // Clear everything immediately to prevent validation flash
     setCurrentEntry(null);
     setEntryText('');
     setError('');
+    setStatusMessage('');
+    setIsDateValid(true);
+    // Set default date last to avoid validation trigger
     await setDefaultDate();
+    // Clear canceling flag
+    setIsCanceling(false);
   };
 
   // Delete entry
@@ -215,18 +309,24 @@ export default function DiaryPage() {
 
   // Initial load
   useEffect(() => {
-    if (authUser?.id) {
-      loadDiaryEntries();
-      setDefaultDate();
-    }
+    const initializePage = async () => {
+      if (authUser?.id) {
+        // First load diary entries, then set default date
+        await loadDiaryEntries();
+        await setDefaultDate();
+      }
+    };
+    
+    initializePage();
   }, [authUser?.id, loadDiaryEntries, setDefaultDate]);
 
   // Validate date when it changes
   useEffect(() => {
-    if (selectedDate && !isSaving) { // Don't validate while saving
+    // Don't validate while saving, or if we're canceling edit (no currentEntry but entryText is empty)
+    if (selectedDate && !isSaving && !isCanceling) {
       validateDate(selectedDate, currentEntry?.id);
     }
-  }, [selectedDate, validateDate, currentEntry?.id, isSaving]);
+  }, [selectedDate, validateDate, currentEntry?.id, isSaving, isCanceling]);
 
   if (!authUser) {
     return (
@@ -285,6 +385,13 @@ export default function DiaryPage() {
           </div>
         )}
 
+        {/* Status Message */}
+        {statusMessage && (
+          <div className={styles.statusMessage}>
+            {statusMessage}
+          </div>
+        )}
+
         {/* Text Area */}
         <div className={styles.textSection}>
           <textarea
@@ -314,9 +421,27 @@ export default function DiaryPage() {
 
       {/* Entries List */}
       <div className={styles.entriesList}>
-        <h2 className={styles.entriesTitle}>
-          Previous Entries ({diaryEntries.length})
-        </h2>
+        <div className={styles.entriesHeader}>
+          <h2 className={styles.entriesTitle}>
+            Previous Entries ({diaryEntries.length})
+          </h2>
+          
+          {/* View Toggle */}
+          <div className={styles.viewToggle}>
+            <button
+              onClick={() => setViewMode('diary')}
+              className={`${styles.toggleButton} ${viewMode === 'diary' ? styles.toggleButtonActive : ''}`}
+            >
+              📝 Diary View
+            </button>
+            <button
+              onClick={() => setViewMode('summary')}
+              className={`${styles.toggleButton} ${viewMode === 'summary' ? styles.toggleButtonActive : ''}`}
+            >
+              📊 Summary View
+            </button>
+          </div>
+        </div>
         
         {isLoading ? (
           <div className={styles.loading}>Loading your diary entries...</div>
@@ -344,9 +469,115 @@ export default function DiaryPage() {
                   </div>
                 </div>
                 
-                <div className={styles.entryContent}>
-                  <p>{entry.diaryEntry}</p>
-                </div>
+                {/* Diary View - Show original text */}
+                {viewMode === 'diary' && (
+                  <div className={styles.entryContent}>
+                    <div className={styles.diaryText}>
+                      <div className={styles.diaryHeader}>
+                        <h4>📝 Original Entry:</h4>
+                        {entry.diaryEntry.length > 200 && (
+                          <button
+                            onClick={() => toggleEntryExpansion(entry.id)}
+                            className={styles.expandButton}
+                          >
+                            {expandedEntries.has(entry.id) ? 'Show Less' : 'View Full Entry'}
+                          </button>
+                        )}
+                      </div>
+                      <div className={styles.diaryContent}>
+                        {expandedEntries.has(entry.id) || entry.diaryEntry.length <= 200 ? (
+                          <p className={styles.diaryFullText}>{entry.diaryEntry}</p>
+                        ) : (
+                          <p className={styles.diaryTruncated}>
+                            {entry.diaryEntry.substring(0, 200)}...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary View - Show AI-processed data */}
+                {viewMode === 'summary' && (
+                  <div className={styles.summaryContent}>
+                    {/* Workouts Section */}
+                    {entry.workouts && entry.workouts.length > 0 && (
+                      <div className={styles.workoutsSection}>
+                        <h4 className={styles.sectionTitle}>💪 Workouts</h4>
+                        <div className={styles.workoutsGrid}>
+                          {entry.workouts.map((workout) => (
+                            <div key={workout.id} className={styles.workoutCard}>
+                              <div className={styles.workoutName}>{workout.name}</div>
+                              <div className={styles.workoutDetails}>
+                                {workout.isDurationBased && (
+                                  <span className={styles.workoutStat}>
+                                    ⏱️ {workout.durationMinutes} min
+                                  </span>
+                                )}
+                                {workout.isSetsBased && (
+                                  <>
+                                    <span className={styles.workoutStat}>
+                                      🔄 {workout.sets} sets
+                                    </span>
+                                    {workout.reps && (
+                                      <span className={styles.workoutStat}>
+                                        ↗️ {workout.reps} reps
+                                      </span>
+                                    )}
+                                    {workout.weight && (
+                                      <span className={styles.workoutStat}>
+                                        🏋️ {workout.weight}kg
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                                <span className={styles.workoutStat}>
+                                  🔥 {(() => {
+                                    const cal = workout.calories;
+                                    if (typeof cal === 'number' && !isNaN(cal) && cal > 0) {
+                                      return cal;
+                                    }
+                                    return 200; // Fallback
+                                  })()} cal
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Injuries Section */}
+                    <div className={styles.injuriesSection}>
+                      <h4 className={styles.sectionTitle}>🩹 Injuries & Pain</h4>
+                      {entry.injuries && entry.injuries.length > 0 ? (
+                        <ul className={styles.injuriesList}>
+                          {entry.injuries.map((injury, index) => (
+                            <li key={index} className={styles.injuryItem}>{injury}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className={styles.noInjuries}>✅ No injuries reported</p>
+                      )}
+                    </div>
+
+                    {/* Suggestions Section */}
+                    <div className={styles.suggestionsSection}>
+                      <h4 className={styles.sectionTitle}>💡 AI Suggestions</h4>
+                      {entry.suggestions && Array.isArray(entry.suggestions) && entry.suggestions.length > 0 ? (
+                        <div className={styles.suggestionsList}>
+                          {entry.suggestions.map((suggestion, index) => (
+                            <div key={index} className={styles.suggestionItem}>
+                              {suggestion}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className={styles.noSuggestions}>💭 No suggestions available</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

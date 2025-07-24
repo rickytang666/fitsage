@@ -73,7 +73,10 @@ export class DatabaseService {
           const log = new Log(
             dbLog.id,
             dbLog.diary_entry || '',
-            localDate
+            localDate,
+            // Ensure suggestions is always an array
+            Array.isArray(dbLog.suggestions) ? dbLog.suggestions : 
+            (dbLog.suggestions ? [dbLog.suggestions] : [])
           );
 
           // Parse workouts from JSON
@@ -83,7 +86,13 @@ export class DatabaseService {
                 workoutData.id,
                 workoutData.name,
                 new Date(workoutData.date),
-                workoutData.durationMinutes
+                {
+                  durationMinutes: workoutData.durationMinutes,
+                  sets: workoutData.sets,
+                  reps: workoutData.reps,
+                  weight: workoutData.weight,
+                  calories: workoutData.calories || 200 // Default if missing from old data
+                }
               );
               log.workouts.push(workout);
             });
@@ -180,11 +189,12 @@ export class DatabaseService {
         injuriesCount: log.injuries.length
       });
 
-      // Find available date if needed
-      const availableDate = await this.findAvailableDate(userId, log.date);
-      if (availableDate.getTime() !== log.date.getTime()) {
-        console.log(`📅 Date conflict! Moving log from ${log.date.toDateString()} to ${availableDate.toDateString()}`);
-        log.date = availableDate; // Update the log's date
+      // Check if the selected date is available for this log (excluding this entry ID for updates)
+      const isDateAvailable = await this.isDateAvailable(userId, log.date, log.id);
+      
+      if (!isDateAvailable) {
+        console.error('❌ Date is not available for this entry');
+        return false;
       }
 
       // Convert workouts to plain objects for JSON storage
@@ -192,7 +202,11 @@ export class DatabaseService {
         id: workout.id,
         name: workout.name,
         date: workout.date.toISOString(),
-        durationMinutes: workout.durationMinutes
+        durationMinutes: workout.durationMinutes,
+        sets: workout.sets,
+        reps: workout.reps,
+        weight: workout.weight,
+        calories: workout.calories
       }));
 
       console.log('📊 Workouts JSON:', workoutsJson);
@@ -204,15 +218,16 @@ export class DatabaseService {
         diary_entry: log.diaryEntry,
         workouts: workoutsJson,
         injuries: log.injuries,
+        suggestions: log.suggestions, // Add suggestions field
         updated_at: new Date().toISOString()
       };
 
       console.log('💾 About to save log data:', logData);
 
-      // Insert new log (we already found an available date)
+      // Upsert log (handles both insert and update cases)
       const { data, error } = await supabase
         .from('diary_logs')
-        .insert(logData)
+        .upsert(logData)
         .select();
 
       if (error) {
@@ -230,13 +245,13 @@ export class DatabaseService {
   }
 
   /**
-   * Load all diary entries for a user (simplified version - no workouts/injuries)
+   * Load all diary entries for a user with complete data (workouts, injuries, suggestions)
    */
   static async loadDiaryEntries(userId: string): Promise<Log[]> {
     try {
       const { data: logs, error } = await supabase
         .from('diary_logs')
-        .select('id, diary_entry, log_date')
+        .select('*')
         .eq('user_id', userId)
         .order('log_date', { ascending: false });
 
@@ -253,9 +268,46 @@ export class DatabaseService {
         const log = new Log(
           dbLog.id,
           dbLog.diary_entry || '',
-          localDate
+          localDate,
+          // Ensure suggestions is always an array
+          Array.isArray(dbLog.suggestions) ? dbLog.suggestions : 
+          (dbLog.suggestions ? [dbLog.suggestions] : [])
         );
-        // Leave workouts and injuries empty as requested
+
+        // Parse workouts from JSON
+        if (dbLog.workouts && Array.isArray(dbLog.workouts)) {
+          dbLog.workouts.forEach((workoutData: any) => {
+            console.log('🔍 Debug loading workout from DB:', JSON.stringify(workoutData));
+            console.log('🔍 Calories value:', workoutData.calories, 'Type:', typeof workoutData.calories);
+            
+            // Ensure calories is a valid number
+            let caloriesValue = workoutData.calories;
+            if (typeof caloriesValue !== 'number' || isNaN(caloriesValue) || caloriesValue <= 0) {
+              caloriesValue = 200; // Default fallback
+            }
+            
+            const workout = new Workout(
+              workoutData.id,
+              workoutData.name,
+              new Date(workoutData.date),
+              {
+                durationMinutes: workoutData.durationMinutes,
+                sets: workoutData.sets,
+                reps: workoutData.reps,
+                weight: workoutData.weight,
+                calories: caloriesValue
+              }
+            );
+            console.log('🔍 Created workout object:', workout.calories, 'Type:', typeof workout.calories);
+            log.workouts.push(workout);
+          });
+        }
+
+        // Add injuries
+        if (dbLog.injuries) {
+          log.injuries = dbLog.injuries;
+        }
+
         return log;
       });
 

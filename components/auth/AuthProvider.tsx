@@ -1,11 +1,17 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { createSupabaseClient } from '@/utils/supabase-client';
 
-// Create Supabase client instance
-const supabase = createSupabaseClient();
+// Create Supabase client instance INSIDE the provider to prevent multiple instances
+let supabaseInstance: any = null;
+const getSupabaseClient = () => {
+  if (!supabaseInstance) {
+    supabaseInstance = createSupabaseClient();
+  }
+  return supabaseInstance;
+};
 
 // Improved auth context with proper Supabase integration
 type AuthContextType = {
@@ -50,19 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
   
-  // Track API calls for debugging
-  const [apiCalls, setApiCalls] = useState(0);
+  // Get supabase client instance
+  const supabase = getSupabaseClient();
   
-  console.log(`🔢 AuthProvider render count - API calls so far: ${apiCalls}`);
+  // Track initialization to prevent multiple getSession calls
+  const initRef = useRef(false);
 
   // Initialize auth state and set up auth listener
   useEffect(() => {
     let mounted = true;
     
+    // Prevent multiple initializations
+    if (initRef.current) return;
+    initRef.current = true;
+    
     // Get initial session
     const getInitialSession = async () => {
-      console.log('📞 Making getSession API call...');
-      setApiCalls(prev => prev + 1);
+      console.log('📞 Getting initial session...');
       
       const { data: { session }, error } = await supabase.auth.getSession();
       
@@ -82,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: Session | null) => {
         if (!mounted) return; // Prevent state updates if component unmounted
         
         console.log('Auth state changed:', event, session?.user?.email);
@@ -101,6 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
+    const supabase = getSupabaseClient(); // Get client instance
+    
     try {
       console.log('🔑 AuthProvider: Attempting sign in with Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -137,6 +149,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign up with email and password
   const signUp = async (email: string, password: string) => {
+    const supabase = getSupabaseClient(); // Get client instance
+    
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -187,6 +201,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sign out
   const signOut = async () => {
+    const supabase = getSupabaseClient(); // Get client instance
+    
     try {
       // Immediately redirect BEFORE any state changes or async operations
       // This prevents any UI flashing

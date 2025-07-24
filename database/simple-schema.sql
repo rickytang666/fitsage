@@ -33,8 +33,9 @@ CREATE TABLE public.diary_logs (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   log_date DATE NOT NULL,
   diary_entry TEXT,
-  workouts JSONB, -- Store array of workouts as JSON
+  workouts JSONB, -- Store array of workouts as JSON (now includes sets/reps/weight)
   injuries TEXT[], -- PostgreSQL text array for injuries
+  suggestions JSONB, -- Store array of suggestion strings as JSON
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE
 );
