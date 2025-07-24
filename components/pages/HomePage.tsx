@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import DatabaseService from '../../services/DatabaseService';
-import { User } from '../../models/User';
+import { User, Log, Workout } from '../../models/User';
 import styles from './HomePage.module.css';
 import {
   Chart as ChartJS,
@@ -41,6 +41,8 @@ export default function HomePage() {
     height: 0,
     weight: 0
   });
+  const [weeklyIntensityData, setWeeklyIntensityData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [isLoadingChart, setIsLoadingChart] = useState(true);
 
   // Set greeting based on time of day
   useEffect(() => {
@@ -53,6 +55,13 @@ export default function HomePage() {
   useEffect(() => {
     loadUserData();
   }, [authUser]);
+
+  // Load chart data when user data is loaded
+  useEffect(() => {
+    if (authUser?.id) {
+      loadWeeklyChartData();
+    }
+  }, [authUser?.id]);
 
   const loadUserData = async () => {
     if (!authUser?.id) {
@@ -153,13 +162,103 @@ export default function HomePage() {
     return { status: "Obese", color: "red" };
   };
 
+  // Calculate workout intensity based on multiple factors
+  const calculateWorkoutIntensity = (workouts: Workout[]): number => {
+    if (!workouts || workouts.length === 0) return 0;
+
+    let totalIntensity = 0;
+    
+    workouts.forEach(workout => {
+      let intensity = 0;
+      
+      // Base intensity from calories (normalized to 0-1 scale)
+      // 100 calories = 0.5 intensity, 500+ calories = 2.0 intensity
+      const calorieIntensity = Math.min((workout.calories || 0) / 250, 2.0);
+      intensity += calorieIntensity;
+      
+      // Duration intensity (normalized to 0-1 scale)
+      // 30 minutes = 0.5 intensity, 90+ minutes = 1.5 intensity
+      if (workout.durationMinutes) {
+        const durationIntensity = Math.min(workout.durationMinutes / 60, 1.5);
+        intensity += durationIntensity;
+      }
+      
+      // Sets/reps intensity (for strength training)
+      if (workout.sets && workout.reps) {
+        // More sets and reps = higher intensity
+        const setsRepsIntensity = Math.min((workout.sets * workout.reps) / 50, 1.0);
+        intensity += setsRepsIntensity;
+      }
+      
+      // Weight intensity bonus (for strength training)
+      if (workout.weight && workout.weight > 0) {
+        // Higher weight = slight intensity bonus
+        const weightBonus = Math.min(workout.weight / 100, 0.5);
+        intensity += weightBonus;
+      }
+      
+      totalIntensity += intensity;
+    });
+
+    // Cap maximum daily intensity at 4.0 and round to 1 decimal
+    return Math.round(Math.min(totalIntensity, 4.0) * 10) / 10;
+  };
+
+  // Load workout data for the past 7 days and calculate intensity
+  const loadWeeklyChartData = async () => {
+    if (!authUser?.id) return;
+    
+    setIsLoadingChart(true);
+    
+    try {
+      // Load diary entries
+      const diaryEntries = await DatabaseService.loadDiaryEntries(authUser.id);
+      
+      // Get the past 7 days (Sunday to Saturday)
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const weekData: number[] = [0, 0, 0, 0, 0, 0, 0]; // [Sun, Mon, Tue, Wed, Thu, Fri, Sat]
+      
+      // Calculate dates for each day of the current week
+      for (let i = 0; i < 7; i++) {
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - currentDay + i); // Go to Sunday + i days
+        targetDate.setHours(12, 0, 0, 0); // Set to noon for consistent comparison
+        
+        // Find diary entry for this date
+        const matchingEntry = diaryEntries.find(entry => {
+          const entryDate = new Date(entry.date);
+          entryDate.setHours(12, 0, 0, 0);
+          return entryDate.toDateString() === targetDate.toDateString();
+        });
+        
+        if (matchingEntry && matchingEntry.workouts) {
+          weekData[i] = calculateWorkoutIntensity(matchingEntry.workouts);
+        }
+      }
+      
+      console.log('📊 Weekly intensity data calculated:', {
+        weekData,
+        totalEntries: diaryEntries.length,
+        currentWeek: `${new Date(today.getTime() - currentDay * 24 * 60 * 60 * 1000).toLocaleDateString()} - ${new Date(today.getTime() + (6 - currentDay) * 24 * 60 * 60 * 1000).toLocaleDateString()}`
+      });
+      
+      setWeeklyIntensityData(weekData);
+    } catch (error) {
+      console.error('Error loading weekly chart data:', error);
+      // Keep default zeros on error
+    } finally {
+      setIsLoadingChart(false);
+    }
+  };
+
   // Chart data
   const chartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     datasets: [
       {
         label: 'Workout Intensity',
-        data: [0.5, 1, 0, 2.5, 2, 2.5, 3.5],
+        data: weeklyIntensityData,
         borderColor: 'rgb(249, 115, 22)',
         backgroundColor: 'rgba(249, 115, 22, 0.1)',
         pointBackgroundColor: 'rgb(249, 115, 22)',
@@ -168,7 +267,7 @@ export default function HomePage() {
         pointRadius: 6,
         pointHoverRadius: 8,
         fill: true,
-        tension: 0.1,
+        tension: 0.4,
       },
     ],
   };
@@ -187,6 +286,19 @@ export default function HomePage() {
         bodyColor: 'white',
         borderColor: 'rgb(249, 115, 22)',
         borderWidth: 1,
+        callbacks: {
+          label: function(context: any) {
+            const value = context.parsed.y;
+            let intensityLevel = 'No workout';
+            if (value > 0) {
+              if (value <= 1) intensityLevel = 'Light';
+              else if (value <= 2) intensityLevel = 'Moderate';
+              else if (value <= 3) intensityLevel = 'High';
+              else intensityLevel = 'Very High';
+            }
+            return `Intensity: ${value} (${intensityLevel})`;
+          }
+        }
       },
     },
     scales: {
@@ -214,7 +326,7 @@ export default function HomePage() {
     },
     elements: {
       line: {
-        tension: 0.1,
+        tension: 0.4,
       },
     },
   };
@@ -378,9 +490,41 @@ export default function HomePage() {
 
       {/* Workout Chart */}
       <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>Weekly Workout Intensity</h2>
+        <h2 className={styles.chartTitle}>📊 Weekly Workout Intensity</h2>
+        <p className={styles.chartSubtitle}>
+          Intensity is calculated based on calories burned, duration, sets/reps, and weight used
+        </p>
         <div className={styles.chartContainer}>
-          <Line data={chartData} options={chartOptions} />
+          {isLoadingChart ? (
+            <div className={styles.chartLoading}>
+              <div className={styles.loadingSpinner}></div>
+              <p>Loading your workout data...</p>
+            </div>
+          ) : (
+            <Line data={chartData} options={chartOptions} />
+          )}
+        </div>
+        <div className={styles.intensityLegend}>
+          <div className={styles.legendItem}>
+            <span className={styles.legendDot} style={{backgroundColor: '#ef4444'}}></span>
+            <span>Very High (3.1-4.0)</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendDot} style={{backgroundColor: '#f97316'}}></span>
+            <span>High (2.1-3.0)</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendDot} style={{backgroundColor: '#eab308'}}></span>
+            <span>Moderate (1.1-2.0)</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendDot} style={{backgroundColor: '#22c55e'}}></span>
+            <span>Light (0.1-1.0)</span>
+          </div>
+          <div className={styles.legendItem}>
+            <span className={styles.legendDot} style={{backgroundColor: '#9ca3af'}}></span>
+            <span>No workout (0)</span>
+          </div>
         </div>
       </div>
 
