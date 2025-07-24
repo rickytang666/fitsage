@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
+// Simple in-memory cache for session validation to reduce Supabase requests
+const sessionCache = new Map<string, { session: any; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds cache
+
 // Paths that require authentication
 const PROTECTED_PATHS = [
   '/profile',
@@ -59,17 +63,41 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(callbackUrl);
     }
     
-    // Create supabase client - only when needed
-    const supabase = createMiddlewareClient(
-      { req: request, res: response },
-      {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      }
-    );
+    // Create cache key based on request cookies
+    const cookieHeader = request.headers.get('cookie') || '';
+    const cacheKey = `session_${Buffer.from(cookieHeader).toString('base64').slice(0, 50)}`;
     
-    // Get session - only for auth/protected/root paths
-    const { data: { session } } = await supabase.auth.getSession();
+    // Check cache first to avoid unnecessary Supabase requests
+    const cached = sessionCache.get(cacheKey);
+    let session = null;
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      // Use cached session
+      session = cached.session;
+      console.log('🚀 Using cached session for middleware');
+    } else {
+      // Create supabase client - only when needed and not cached
+      const supabase = createMiddlewareClient(
+        { req: request, res: response },
+        {
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        }
+      );
+      
+      // Get session - only for auth/protected/root paths
+      const { data: { session: freshSession } } = await supabase.auth.getSession();
+      session = freshSession;
+      
+      // Cache the session
+      sessionCache.set(cacheKey, { session, timestamp: Date.now() });
+      
+      // Clean up old cache entries (simple cleanup)
+      if (sessionCache.size > 100) {
+        const oldKeys = Array.from(sessionCache.keys()).slice(0, 20);
+        oldKeys.forEach(key => sessionCache.delete(key));
+      }
+    }
     
     // If user is authenticated and on auth page, redirect to home
     if (session && isAuthPath) {

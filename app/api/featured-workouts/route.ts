@@ -19,11 +19,56 @@ type AIResponseData = {
   }[];
 };
 
+// Simple in-memory rate limiting to prevent excessive requests
+const requestCount = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 10; // Max 10 requests per minute
+const RATE_WINDOW = 60000; // 1 minute
+
 export async function POST(req: Request) {
   const { userId, diaryEntries } = await req.json();
 
   console.log('🔍 Featured workouts API called with userId:', userId);
   console.log('📚 Received shared diary entries:', diaryEntries?.length || 0);
+  
+  // Rate limiting check
+  const now = Date.now();
+  const userKey = userId || 'anonymous';
+  const userRequests = requestCount.get(userKey);
+  
+  if (userRequests) {
+    if (now < userRequests.resetTime) {
+      // Within rate limit window
+      if (userRequests.count >= RATE_LIMIT) {
+        console.warn(`⚠️ Rate limit exceeded for user ${userKey}`);
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Too many requests. Please wait a few minutes and try again.',
+            suggestions: ['Please wait before making more requests'],
+            featuredWorkouts: [],
+            meta: { rateLimited: true }
+          },
+          { status: 429 }
+        );
+      }
+      userRequests.count++;
+    } else {
+      // Reset window
+      userRequests.count = 1;
+      userRequests.resetTime = now + RATE_WINDOW;
+    }
+  } else {
+    // First request for this user
+    requestCount.set(userKey, { count: 1, resetTime: now + RATE_WINDOW });
+  }
+  
+  // Clean up old entries
+  if (requestCount.size > 1000) {
+    const keysToDelete = Array.from(requestCount.entries())
+      .filter(([, data]) => now > data.resetTime)
+      .map(([key]) => key);
+    keysToDelete.forEach(key => requestCount.delete(key));
+  }
 
   if (!userId) {
     console.log('❌ No userId provided to API');

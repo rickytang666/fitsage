@@ -13,14 +13,17 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [confirmationSuccess, setConfirmationSuccess] = useState(false);
+  const [lastAttemptTime, setLastAttemptTime] = useState(0);
   const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Check for URL parameters
+  // Check for URL parameters - run only once when component mounts
   useEffect(() => {
     const urlError = searchParams.get('error');
     const confirmed = searchParams.get('confirmed');
+    
+    console.log('🔍 SignIn: Checking URL parameters once');
     
     if (urlError === 'confirmation_failed') {
       setError('Email confirmation failed. Please try again or contact support.');
@@ -29,10 +32,20 @@ export default function SignIn() {
       setError(null); // Clear any existing errors
       setConfirmationSuccess(true);
     }
-  }, [searchParams]);
+  }, []); // Empty dependency array to run only once
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent rapid-fire requests (debounce 2 seconds)
+    const now = Date.now();
+    if (now - lastAttemptTime < 2000) {
+      console.log('🚧 Sign in attempt blocked due to debouncing');
+      setError('Please wait a moment before trying again.');
+      return;
+    }
+    setLastAttemptTime(now);
+    
     console.log('🔐 Sign in attempt started for:', email);
     console.log('📋 Form event:', e);
     

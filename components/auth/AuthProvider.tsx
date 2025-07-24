@@ -70,36 +70,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (initRef.current) return;
     initRef.current = true;
     
-    // Get initial session
+    // Get initial session with debouncing
     const getInitialSession = async () => {
-      console.log('📞 Getting initial session...');
+      console.log('📞 Getting initial session (once only)...');
       
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (!mounted) return; // Prevent state updates if component unmounted
-      
-      if (error) {
-        console.error('Error getting session:', error);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return; // Prevent state updates if component unmounted
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-      
-      setIsLoading(false);
     };
 
+    // Only get session on first load, not on every render
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - but only for actual auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
         if (!mounted) return; // Prevent state updates if component unmounted
         
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+        // Only log and update for actual authentication events
+        if (['SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'].includes(event)) {
+          console.log('Auth state changed:', event, session?.user?.email);
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
       }
     );
 

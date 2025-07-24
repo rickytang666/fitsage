@@ -11,7 +11,17 @@ let supabaseClientInstance: ReturnType<typeof createClientComponentClient<Databa
  */
 export const createSupabaseClient = () => {
   if (!supabaseClientInstance) {
-    supabaseClientInstance = createClientComponentClient<Database>();
+    supabaseClientInstance = createClientComponentClient<Database>({
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      options: {
+        auth: {
+          autoRefreshToken: false, // Disable automatic token refresh
+          persistSession: true,
+          detectSessionInUrl: false, // Disable automatic URL session detection
+        }
+      }
+    });
   }
   return supabaseClientInstance;
 };
