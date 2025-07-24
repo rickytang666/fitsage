@@ -37,9 +37,9 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent rapid-fire requests (debounce 2 seconds)
+    // Prevent rapid-fire requests (debounce 3 seconds to be more conservative)
     const now = Date.now();
-    if (now - lastAttemptTime < 2000) {
+    if (now - lastAttemptTime < 3000) {
       console.log('🚧 Sign in attempt blocked due to debouncing');
       setError('Please wait a moment before trying again.');
       return;
@@ -71,12 +71,12 @@ export default function SignIn() {
       // Login successful - show success message
       setLoginSuccess(true);
       
-      // Wait a bit longer to ensure session is established
+      // Wait longer to ensure session is fully established and avoid rapid redirects
       setTimeout(() => {
-        console.log('🚀 Redirecting to home...');
-        // Use window.location.href to ensure a fresh request that middleware can intercept
+        console.log('🚀 Redirecting to profile...');
+        // Direct redirect since middleware no longer handles auth
         window.location.href = '/profile';
-      }, 2000); // Increased delay to 2 seconds
+      }, 1500); // Reduced to 1.5 seconds but still conservative
       
     } catch (err) {
       console.error('💥 Unexpected error during login:', err);

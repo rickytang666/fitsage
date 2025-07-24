@@ -20,7 +20,7 @@ export default function WorkoutsPage() {
     isLoading: true
   });
 
-  // Load all diary entries once when component mounts
+  // Load all diary entries once when component mounts (optimized)
   useEffect(() => {
     const loadAllDiaryEntries = async () => {
       if (!authUser?.id) return;
@@ -30,6 +30,9 @@ export default function WorkoutsPage() {
       setDiaryError('');
 
       try {
+        // Add a small delay to prevent rapid consecutive calls
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const entries = await DatabaseService.loadDiaryEntries(authUser.id);
         console.log('📚 Loaded', entries.length, 'diary entries for sharing across components');
         setAllDiaryEntries(entries);
@@ -42,7 +45,9 @@ export default function WorkoutsPage() {
       }
     };
 
-    loadAllDiaryEntries();
+    // Debounce the load function to prevent multiple rapid calls
+    const timeoutId = setTimeout(loadAllDiaryEntries, 200);
+    return () => clearTimeout(timeoutId);
   }, [authUser?.id]);
 
   // Calculate this week's statistics using shared diary entries

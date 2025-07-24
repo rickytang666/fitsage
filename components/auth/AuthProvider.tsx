@@ -61,6 +61,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Track initialization to prevent multiple getSession calls
   const initRef = useRef(false);
+  
+  // Client-side route protection since we removed middleware auth
+  useEffect(() => {
+    if (!isLoading && typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const protectedPaths = ['/profile', '/workouts', '/diary'];
+      const authPaths = ['/auth/login', '/auth/signup'];
+      
+      // Redirect to login if accessing protected path without session
+      if (!session && protectedPaths.includes(path)) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      
+      // Redirect to profile if accessing auth pages with session
+      if (session && authPaths.includes(path)) {
+        window.location.href = '/profile';
+        return;
+      }
+      
+      // Redirect to profile if on root with session
+      if (session && path === '/' && !window.location.search.includes('signedOut=true')) {
+        window.location.href = '/profile';
+        return;
+      }
+    }
+  }, [session, isLoading]);
 
   // Initialize auth state and set up auth listener
   useEffect(() => {
@@ -70,23 +97,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (initRef.current) return;
     initRef.current = true;
     
-    // Get initial session with debouncing
+    // Get initial session ONLY ONCE with minimal API usage
     const getInitialSession = async () => {
       console.log('📞 Getting initial session (once only)...');
       
       try {
+        // Longer delay to prevent any rapid calls during app startup
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return; // Prevent state updates if component unmounted
         
-        if (error) {
+        if (error && !error.message?.includes('refresh_token_not_found')) {
+          // Only log actual errors, not expected refresh token issues
           console.error('Error getting session:', error);
-          setSession(null);
-          setUser(null);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
         }
+        
+        // Set session state regardless of error (null is valid)
+        console.log('✅ Initial session check complete:', session?.user?.email || 'No active session');
+        setSession(session);
+        setUser(session?.user ?? null);
       } catch (error) {
         console.error('Session initialization error:', error);
         if (mounted) {
@@ -103,19 +134,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Only get session on first load, not on every render
     getInitialSession();
 
-    // Listen for auth changes - but only for actual auth events
+    // Listen for auth changes - but ONLY for actual auth events, not all state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
         if (!mounted) return; // Prevent state updates if component unmounted
         
-        // Only log and update for actual authentication events
-        if (['SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED'].includes(event)) {
-          console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔍 Auth event received:', event);
+        
+        // Only respond to these specific events to reduce unnecessary updates
+        if (['SIGNED_IN', 'SIGNED_OUT'].includes(event)) {
+          console.log('✅ Processing auth state change:', event, session?.user?.email || 'No session');
           
           setSession(session);
           setUser(session?.user ?? null);
           setIsLoading(false);
         }
+        // Ignore TOKEN_REFRESHED and other events to reduce API calls
       }
     );
 

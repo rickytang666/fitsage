@@ -16,10 +16,10 @@ class RateLimiter {
     windowStart: Date.now()
   };
 
-  // Configuration based on Gemini API limits
+  // Configuration based on Gemini API limits (more conservative)
   private readonly config = {
-    maxRequestsPerMinute: 20, // Slightly higher limit since we have separate limiters
-    minTimeBetweenRequests: 2000, // 2 seconds between requests (reduced from 4s)
+    maxRequestsPerMinute: 15, // Reduced from 20 to be more conservative
+    minTimeBetweenRequests: 3000, // 3 seconds between requests (increased from 2s)
     windowDuration: 60000, // 1 minute window
   };
 

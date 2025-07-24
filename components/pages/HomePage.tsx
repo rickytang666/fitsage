@@ -52,16 +52,19 @@ export default function HomePage() {
     else setGreeting('Good evening');
   }, []);
 
+  // Single effect to load both user data and chart data together
   useEffect(() => {
-    loadUserData();
-  }, [authUser]);
-
-  // Load chart data when user data is loaded
-  useEffect(() => {
-    if (authUser?.id) {
-      loadWeeklyChartData();
-    }
-  }, [authUser?.id]);
+    const loadAllData = async () => {
+      if (authUser?.id) {
+        // Load user data first
+        await loadUserData();
+        // Then load chart data
+        await loadWeeklyChartData();
+      }
+    };
+    
+    loadAllData();
+  }, [authUser?.id]); // Only depend on authUser.id to prevent excessive reloads
 
   const loadUserData = async () => {
     if (!authUser?.id) {
