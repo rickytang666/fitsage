@@ -307,6 +307,7 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [featuredWorkouts, setFeaturedWorkouts] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingFromCache, setIsLoadingFromCache] = useState(false);
   const [error, setError] = useState<string>('');
   const [errorType, setErrorType] = useState<'rate_limit' | 'service_error' | null>(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
@@ -326,12 +327,14 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
       // Handle case with no diary entries - still check cache and provide fallback
       if (diaryEntries.length === 0) {
         try {
+          setIsLoadingFromCache(true);
           // Try to get any existing cache first
           const cachedResults = await DatabaseService.getCachedFeaturedWorkouts(userId);
           
           if (cachedResults && cachedResults.isValid) {
             setSuggestions(cachedResults.suggestions);
             setFeaturedWorkouts(cachedResults.featuredWorkouts);
+            setIsLoadingFromCache(false);
             setIsProcessing(false);
             return;
           }
@@ -378,32 +381,37 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
               description: 'Strengthen your legs and glutes'
             }
           ]);
+          setIsLoadingFromCache(false);
           setIsProcessing(false);
           return;
         } catch (cacheError) {
           console.error('Cache check failed for empty diary:', cacheError);
           setError('Unable to load workout cache');
+          setIsLoadingFromCache(false);
           setIsProcessing(false);
           return;
         }
       }
       
-      setIsProcessing(true);
       setError('');
       setIsRateLimited(false);
       
       try {
         // 🚀 FIRST: Try to get cached results
+        setIsLoadingFromCache(true);
         const cachedResults = await DatabaseService.getCachedFeaturedWorkouts(userId);
         
         if (cachedResults && cachedResults.isValid) {
           setSuggestions(cachedResults.suggestions);
           setFeaturedWorkouts(cachedResults.featuredWorkouts);
+          setIsLoadingFromCache(false);
           setIsProcessing(false);
           return;
         }
         
         // 🔄 Cache invalid or doesn't exist - generate new results
+        setIsLoadingFromCache(false);
+        setIsProcessing(true);
 
         const response = await fetch('/api/featured-workouts', {
           method: 'POST',
@@ -567,6 +575,7 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
         ]);
       } finally {
         setIsProcessing(false);
+        setIsLoadingFromCache(false);
       }
   };
 
@@ -592,11 +601,20 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
     );
   }
 
+  if (isLoadingFromCache) {
+    return (
+      <div className={styles.featuredLoading}>
+        <div className={styles.loadingSpinner}>💾</div>
+        <p>Loading your suggestions...</p>
+      </div>
+    );
+  }
+
   if (isProcessing) {
     return (
       <div className={styles.featuredLoading}>
         <div className={styles.loadingSpinner}>🤖</div>
-        <p>AI is analyzing your workout patterns...</p>
+        <p>AI is generating recommendations...</p>
       </div>
     );
   }
