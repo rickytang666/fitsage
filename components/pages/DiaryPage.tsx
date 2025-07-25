@@ -130,100 +130,155 @@ export default function DiaryPage() {
       return;
     }
 
+    const entryToSave = entryText.trim();
+    const dateToSave = selectedDate;
+    const currentEntryId = currentEntry?.id;
+    const isEditing = !!currentEntry;
+
     setIsSaving(true);
-    setStatusMessage('Processing with AI...');
+    setStatusMessage('Saving...');
     setError(''); // Clear any previous errors
-    
-    try {
-      // First, call Gemini API to process the diary entry
-      const geminiResponse = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          diaryText: entryText.trim(),
-          logDate: new Date(selectedDate).toISOString(),
-        }),
-      });
 
-      if (!geminiResponse.ok) {
-        throw new Error('Failed to process diary with AI');
-      }
-
-      const { logData } = await geminiResponse.json();
-      
-      if (!logData) {
-        throw new Error('Invalid response from AI processing');
-      }
-
-      setStatusMessage('Saving processed diary...');
-
-      // Create Log object with AI-processed data
-      const logId = currentEntry?.id || generateId();
-      const log = new Log(
-        logId,
-        logData.diaryEntry,
-        new Date(selectedDate),
-        logData.suggestions
-      );
-
-      // Add workouts with proper structure
-      logData.workouts.forEach((workoutData: any) => {
-        const workout = new Workout(
-          workoutData.id,
-          workoutData.name,
-          new Date(workoutData.date),
-          {
-            durationMinutes: workoutData.durationMinutes,
-            sets: workoutData.sets,
-            reps: workoutData.reps,
-            weight: workoutData.weight,
-            calories: workoutData.calories || 200, // Ensure calories is always provided
-          }
-        );
-        log.workouts.push(workout);
-      });
-
-      // Add injuries
-      log.injuries = logData.injuries;
-
-      // Save the complete log to database
-      const success = await DatabaseService.saveLog(log, authUser.id);
-
-      if (success) {
-        // Reload entries to show updated list
-        await loadDiaryEntries();
-        
-        // If editing, exit edit mode; if new entry, clear form
-        if (currentEntry) {
-          // Exit edit mode - clear everything first to avoid validation flash
-          setCurrentEntry(null);
-          setEntryText('');
-          setError(''); // Clear any errors
-          setStatusMessage(''); // Clear status messages
-          setIsDateValid(true); // Reset validation state
-          await setDefaultDate(); // Find next available date
-        } else {
-          // Clear new entry form
-          setEntryText('');
-          setError(''); // Clear any errors
-          setStatusMessage(''); // Clear status messages
-          await setDefaultDate(); // Find next available date
-        }
-        
-        setStatusMessage('✅ Diary saved successfully with AI insights!');
-        // Clear success message after 3 seconds
-        setTimeout(() => setStatusMessage(''), 3000);
-      } else {
-        setError('Failed to save processed diary entry. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error processing/saving entry:', error);
-      setError(`An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsSaving(false);
+    // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
+    if (isEditing) {
+      setCurrentEntry(null);
+      setEntryText('');
+      setError('');
+      setStatusMessage('');
+      setIsDateValid(true);
+      await setDefaultDate();
+    } else {
+      setEntryText('');
+      setError('');
+      setStatusMessage('');
+      await setDefaultDate();
     }
+    setIsSaving(false);
+
+    // 🎯 Background AI processing - don't block user
+    (async () => {
+      try {
+        setStatusMessage('✅ Saved! Processing with AI...');
+        
+        // Call Gemini API to process the diary entry
+        const geminiResponse = await fetch('/api/summarize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            diaryText: entryToSave,
+            logDate: new Date(dateToSave).toISOString(),
+          }),
+        });
+
+        if (!geminiResponse.ok) {
+          // Handle AI failures gracefully
+          if (geminiResponse.status === 429) {
+            setStatusMessage('✅ Saved! (AI analysis delayed due to rate limits)');
+            setTimeout(() => setStatusMessage(''), 4000);
+            
+            // Save basic entry without AI analysis
+            const fallbackLog = new Log(
+              currentEntryId || generateId(),
+              entryToSave,
+              new Date(dateToSave),
+              ['📝 Entry saved. AI analysis will be available when quota resets.']
+            );
+            
+            await DatabaseService.saveLog(fallbackLog, authUser.id);
+            await loadDiaryEntries();
+            return;
+          }
+          throw new Error('AI processing failed');
+        }
+
+        const { logData } = await geminiResponse.json();
+        
+        if (!logData) {
+          throw new Error('Invalid AI response');
+        }
+
+        // Create Log object with AI-processed data
+        const log = new Log(
+          currentEntryId || generateId(),
+          logData.diaryEntry,
+          new Date(dateToSave),
+          logData.suggestions
+        );
+
+        // Add workouts with proper structure
+        logData.workouts.forEach((workoutData: any) => {
+          const workout = new Workout(
+            workoutData.id,
+            workoutData.name,
+            new Date(workoutData.date),
+            {
+              durationMinutes: workoutData.durationMinutes,
+              sets: workoutData.sets,
+              reps: workoutData.reps,
+              weight: workoutData.weight,
+              calories: workoutData.calories || 200,
+            }
+          );
+          log.workouts.push(workout);
+        });
+
+        // Add injuries
+        log.injuries = logData.injuries;
+
+        // Save the complete log to database
+        const success = await DatabaseService.saveLog(log, authUser.id);
+
+        if (success) {
+          await loadDiaryEntries();
+          setStatusMessage('✅ Saved with AI insights! Updating recommendations...');
+          
+          // 🚀 REGENERATE FEATURED WORKOUTS CACHE in background
+          try {
+            // Get fresh diary entries for cache generation
+            const freshDiaryEntries = await DatabaseService.loadDiaryEntries(authUser.id);
+            
+            // Generate new featured workouts and cache them
+            const response = await fetch('/api/featured-workouts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                userId: authUser.id,
+                diaryEntries: freshDiaryEntries,
+                regenerateCache: true
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              await DatabaseService.saveFeaturedWorkoutsCache(
+                authUser.id,
+                data.suggestions || [],
+                data.featuredWorkouts || [],
+                freshDiaryEntries
+              );
+              console.log('✅ Featured workouts cache regenerated after diary update');
+              setStatusMessage('✅ Diary saved with AI insights!');
+            } else {
+              setStatusMessage('✅ Diary saved with AI insights!');
+            }
+          } catch (cacheError) {
+            console.log('⚠️ Cache regeneration failed (non-critical):', cacheError);
+            setStatusMessage('✅ Diary saved with AI insights!');
+          }
+          
+          setTimeout(() => setStatusMessage(''), 4000);
+        } else {
+          setStatusMessage('❌ Failed to save processed diary entry');
+          setTimeout(() => setStatusMessage(''), 4000);
+        }
+      } catch (error) {
+        console.error('Background AI processing error:', error);
+        setStatusMessage('❌ AI processing failed');
+        setTimeout(() => setStatusMessage(''), 4000);
+      }
+    })();
   }, [authUser?.id, selectedDate, entryText, isDateValid, currentEntry, loadDiaryEntries, setDefaultDate]);
 
   // Edit an existing entry
@@ -283,6 +338,41 @@ export default function DiaryPage() {
       if (success) {
         // Reload entries to show updated list
         await loadDiaryEntries();
+        
+        // 🚀 REGENERATE FEATURED WORKOUTS CACHE after deletion
+        try {
+          console.log('🗑️ Regenerating cache after diary deletion...');
+          const freshDiaryEntries = await DatabaseService.loadDiaryEntries(authUser!.id);
+          
+          // Clear cache since data changed
+          await DatabaseService.clearFeaturedWorkoutsCache(authUser!.id);
+          
+          // Generate new cache if there are still entries
+          if (freshDiaryEntries.length > 0) {
+            const response = await fetch('/api/featured-workouts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                userId: authUser!.id,
+                diaryEntries: freshDiaryEntries,
+                regenerateCache: true
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              await DatabaseService.saveFeaturedWorkoutsCache(
+                authUser!.id,
+                data.suggestions || [],
+                data.featuredWorkouts || [],
+                freshDiaryEntries
+              );
+              console.log('✅ Cache regenerated after deletion');
+            }
+          }
+        } catch (cacheError) {
+          console.log('⚠️ Cache regeneration after deletion failed (non-critical):', cacheError);
+        }
         
         // Small delay to ensure database changes are reflected
         await new Promise(resolve => setTimeout(resolve, 100));

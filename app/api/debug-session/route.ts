@@ -3,6 +3,11 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
+  // Disable in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Debug endpoints disabled in production' }, { status: 404 });
+  }
+
   try {
     const supabase = createRouteHandlerClient({ cookies });
     

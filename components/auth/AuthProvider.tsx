@@ -61,6 +61,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   // Track initialization to prevent multiple getSession calls
   const initRef = useRef(false);
+  
+  // Client-side route protection since we removed middleware auth
+  useEffect(() => {
+    if (!isLoading && typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const protectedPaths = ['/profile', '/workouts', '/diary'];
+      const authPaths = ['/auth/login', '/auth/signup'];
+      
+      // Redirect to login if accessing protected path without session
+      if (!session && protectedPaths.includes(path)) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      
+      // Redirect to profile if accessing auth pages with session
+      if (session && authPaths.includes(path)) {
+        window.location.href = '/profile';
+        return;
+      }
+      
+      // Redirect to profile if on root with session
+      if (session && path === '/' && !window.location.search.includes('signedOut=true')) {
+        window.location.href = '/profile';
+        return;
+      }
+    }
+  }, [session, isLoading]);
 
   // Initialize auth state and set up auth listener
   useEffect(() => {
@@ -70,36 +97,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (initRef.current) return;
     initRef.current = true;
     
-    // Get initial session
+    // Get initial session ONLY ONCE with minimal API usage
     const getInitialSession = async () => {
-      console.log('📞 Getting initial session...');
+      console.log('📞 Getting initial session (once only)...');
       
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (!mounted) return; // Prevent state updates if component unmounted
-      
-      if (error) {
-        console.error('Error getting session:', error);
-      } else {
+      try {
+        // Longer delay to prevent any rapid calls during app startup
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return; // Prevent state updates if component unmounted
+        
+        if (error && !error.message?.includes('refresh_token_not_found')) {
+          // Only log actual errors, not expected refresh token issues
+          console.error('Error getting session:', error);
+        }
+        
+        // Set session state regardless of error (null is valid)
+        console.log('✅ Initial session check complete:', session?.user?.email || 'No active session');
         setSession(session);
         setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Session initialization error:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-      
-      setIsLoading(false);
     };
 
+    // Only get session on first load, not on every render
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - but ONLY for actual auth events, not all state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event: string, session: Session | null) => {
         if (!mounted) return; // Prevent state updates if component unmounted
         
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔍 Auth event received:', event);
         
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+        // Only respond to these specific events to reduce unnecessary updates
+        if (['SIGNED_IN', 'SIGNED_OUT'].includes(event)) {
+          console.log('✅ Processing auth state change:', event, session?.user?.email || 'No session');
+          
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+          
+          // 🚀 Preload featured workouts cache on first login (background task)
+          if (event === 'SIGNED_IN' && session?.user?.id) {
+            setTimeout(async () => {
+              try {
+                console.log('🔄 Background: Checking featured workouts cache for new session...');
+                
+                // Dynamic import to avoid circular dependencies
+                const { default: DatabaseService } = await import('@/services/DatabaseService');
+                
+                const cachedResults = await DatabaseService.getCachedFeaturedWorkouts(session.user.id);
+                if (!cachedResults || !cachedResults.isValid) {
+                  console.log('💾 Background: No valid cache found, will populate on first WorkoutsPage visit');
+                  // Don't pre-generate here, let WorkoutsPage handle it when user actually visits
+                } else {
+                  console.log('✅ Background: Valid cache exists, ready for instant loading');
+                }
+              } catch (error) {
+                console.log('⚠️ Background cache check failed (non-critical):', error);
+              }
+            }, 2000); // Wait 2 seconds after login to avoid interfering with main flow
+          }
+        }
+        // Ignore TOKEN_REFRESHED and other events to reduce API calls
       }
     );
 

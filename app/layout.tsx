@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+// Import request monitor for debugging (development only)
+import '@/utils/request-monitor';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

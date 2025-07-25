@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import DatabaseService from '@/services/DatabaseService';
 
 export async function POST(req: Request) {
+  // Disable in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Debug endpoints disabled in production' }, { status: 404 });
+  }
+
   const { userId } = await req.json();
 
   console.log('🐛 DEBUG USER API: Received userId:', userId);

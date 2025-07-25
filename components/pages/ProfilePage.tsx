@@ -18,9 +18,12 @@ export default function ProfilePage() {
     weight: 0
   });
 
+  // Only load user data when authUser.id is available, not on every authUser change
   useEffect(() => {
-    loadUserData();
-  }, [authUser]);
+    if (authUser?.id) {
+      loadUserData();
+    }
+  }, [authUser?.id]); // Only depend on authUser.id to prevent excessive reloads
 
   const loadUserData = async () => {
     if (!authUser?.id) {
