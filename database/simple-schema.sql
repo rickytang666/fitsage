@@ -40,13 +40,29 @@ CREATE TABLE public.diary_logs (
   updated_at TIMESTAMP WITH TIME ZONE
 );
 
+-- 3. Add cached featured workouts table to eliminate unnecessary Gemini API calls
+CREATE TABLE public.featured_workouts_cache (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  suggestions JSONB, -- Cached AI suggestions
+  featured_workouts JSONB, -- Cached featured workouts array
+  last_generated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  diary_entries_hash TEXT, -- Hash of diary entries used to detect changes
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Add indexes for performance
 CREATE INDEX idx_diary_logs_user_id ON public.diary_logs(user_id);
 CREATE INDEX idx_diary_logs_date ON public.diary_logs(log_date);
 CREATE UNIQUE INDEX idx_diary_logs_user_date ON public.diary_logs(user_id, log_date);
 
+-- Indexes for featured workouts cache
+CREATE INDEX idx_featured_workouts_cache_user_id ON public.featured_workouts_cache(user_id);
+CREATE INDEX idx_featured_workouts_cache_last_generated ON public.featured_workouts_cache(last_generated);
+
 -- Enable Row Level Security
 ALTER TABLE public.diary_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.featured_workouts_cache ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies - users can only see their own logs
 CREATE POLICY "Users can view own logs" ON public.diary_logs
@@ -59,6 +75,19 @@ CREATE POLICY "Users can update own logs" ON public.diary_logs
   FOR UPDATE USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own logs" ON public.diary_logs
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- RLS Policies for featured workouts cache
+CREATE POLICY "Users can view own featured workouts cache" ON public.featured_workouts_cache
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own featured workouts cache" ON public.featured_workouts_cache
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own featured workouts cache" ON public.featured_workouts_cache
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own featured workouts cache" ON public.featured_workouts_cache
   FOR DELETE USING (auth.uid() = user_id);
 
 -- THAT'S IT! Super simple structure:

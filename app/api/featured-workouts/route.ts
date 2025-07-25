@@ -196,8 +196,17 @@ Rules:
 
     // Note: No artificial rate limiting - let Google's API handle actual limits
 
+    // Check if Gemini API key is available
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY is not set in environment variables');
+      throw new Error('Gemini API key is not configured');
+    }
+
+    console.log('🔑 Gemini API key is available');
+
     // Initialize the Google GenAI client using the pattern from your guide
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+    console.log('🤖 GoogleGenAI client initialized successfully');
 
     // Retry logic for Gemini API with exponential backoff
     let rawText = '';
@@ -206,14 +215,28 @@ Rules:
     
     while (attempts < maxAttempts) {
       try {
+        console.log(`🤖 Attempting Gemini API call (attempt ${attempts + 1}/${maxAttempts})...`);
+        console.log('📝 Prompt length:', prompt.length);
+        console.log('🎯 Context length:', contextText.length);
+        
         const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash-exp',
+          model: 'gemini-2.0-flash',
           contents: prompt,
         });
-        rawText = response.text;
+        
+        console.log('✅ Gemini API call successful');
+        console.log('📄 Response text length:', response.text?.length || 0);
+        
+        rawText = response.text || '';
         break; // Success, exit retry loop
         
       } catch (genError: any) {
+        console.error(`❌ Gemini API call failed (attempt ${attempts + 1}):`, {
+          error: genError.message,
+          name: genError.name,
+          status: genError.status,
+          code: genError.code
+        });
         // Handle rate limiting and service unavailable errors
         const isRateLimited = genError.message?.includes('429') || genError.message?.includes('rate');
         const isServiceUnavailable = genError.message?.includes('503') || genError.message?.includes('unavailable');

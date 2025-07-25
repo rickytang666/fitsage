@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import { geminiRateLimiter, waitForRateLimit, isRateLimitError } from '@/utils/rate-limiter';
 
 // Types matching our enhanced models
 type WorkoutData = {
@@ -83,6 +82,14 @@ FLEXIBILITY & RECOVERY:
 SPORTS:
 - "Basketball" (not "playing basketball")
 - "Tennis" (not "playing tennis")
+- "Table Tennis" (not "ping pong")
+- "Badminton" (not "playing badminton")
+- "Rugby" (not "playing rugby")
+- "Horse Riding" (not "horse riding")
+- "Gymnastics" (not "gymnastics class")
+- "Golf" (not "playing golf")
+- "Volleyball" (not "playing volleyball")
+- "Baseball" (not "playing baseball")
 - "Soccer" (not "football", "playing soccer")
 - "Golf" (not "playing golf")
 - "Volleyball" (not "playing volleyball")
@@ -144,80 +151,34 @@ ${diaryText}
 `;
 
   try {
-    // Rate limit logic
-    const rateLimitStatus = geminiRateLimiter.getStatus();
-    console.log('📏 Summarize rate limit status (diary limiter):', rateLimitStatus);
-    
-    if (!rateLimitStatus.canMakeRequest) {
-      console.log(`⏳ Rate limit exceeded, need to wait ${Math.ceil(rateLimitStatus.waitTime / 1000)}s`);
-      // Return early with rate limit message
-      const rateLimitLogData: Omit<LogData, 'id'> = {
-        diaryEntry: diaryText,
-        date: logDate,
-        workouts: [],
-        injuries: [],
-        suggestions: [
-          `😅 AI is temporarily busy! You've used ${rateLimitStatus.requestsInWindow}/${rateLimitStatus.maxRequests} requests this minute.`,
-          `⏰ Please wait ${Math.ceil(rateLimitStatus.waitTime / 1000)} seconds and try again.`,
-          `📝 Your diary entry has been saved successfully without AI analysis.`
-        ],
-      };
-      return NextResponse.json({ logData: rateLimitLogData }, { status: 429 });
-    }
-    
-    await waitForRateLimit();
-    geminiRateLimiter.recordRequest();
+    // TEMPORARILY BYPASS local rate limiting for debugging
+    console.log('🧪 Bypassing local rate limiter for debugging...');
 
     // Initialize the Google GenAI client using the pattern from your guide
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-    // Retry logic for Gemini API with exponential backoff
+    // Direct API call for debugging (no retries)
+    console.log('🤖 Making direct Gemini API call...');
     let rawText = '';
-    let attempts = 0;
-    const maxAttempts = 3;
     
-    while (attempts < maxAttempts) {
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash-exp',
-          contents: prompt,
-        });
-        rawText = response.text;
-        break; // Success, exit retry loop
-        
-      } catch (genError: any) {
-        // Handle rate limiting and service unavailable errors
-        const isRateLimited = genError.message?.includes('429') || genError.message?.includes('rate');
-        const isServiceUnavailable = genError.message?.includes('503') || genError.message?.includes('unavailable');
-        
-        if ((isRateLimited || isServiceUnavailable) && attempts < maxAttempts - 1) {
-          // Calculate delay: longer for rate limits, shorter for service issues
-          const baseDelay = isRateLimited ? 5000 : 1000; // 5s for rate limit, 1s for service issues
-          const delay = baseDelay * Math.pow(2, attempts); // Exponential backoff: 5s, 10s, 20s for rate limits
-          
-          const errorType = isRateLimited ? 'rate limit exceeded' : 'service unavailable';
-          console.log(`⚠️ Gemini API ${errorType}, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
-          attempts++;
-          continue;
-        }
-        
-        // Handle rate limit with specific error message
-        if (isRateLimited) {
-          throw new Error('Rate limit exceeded. Please wait a few minutes before trying again.');
-        }
-        
-        // Last attempt failed or other errors
-        if (attempts === maxAttempts - 1) {
-          throw genError;
-        }
-        
-        attempts++;
-        const delay = Math.pow(2, attempts) * 1000;
-        console.log(`⚠️ Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: prompt,      });
+      rawText = response.text || '';
+      console.log('✅ Gemini API call successful, response length:', rawText.length);
+      
+    } catch (genError: any) {
+      console.error('❌ Gemini API Raw Error Details:', {
+        message: genError.message,
+        status: genError.status,
+        code: genError.code,
+        name: genError.name,
+        fullError: JSON.stringify(genError, null, 2)
+      });
+      
+      // Throw the original error so we can see Google's exact message
+      throw genError;
     }
 
     if (!rawText) {

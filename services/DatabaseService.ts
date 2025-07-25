@@ -444,6 +444,134 @@ export class DatabaseService {
     // Fallback: return today (shouldn't happen in practice)
     return new Date(today);
   }
+
+  /**
+   * Generate a simple hash of diary entries for cache invalidation
+   */
+  static generateDiaryHash(diaryEntries: Log[]): string {
+    const content = diaryEntries
+      .slice(0, 3) // Only hash last 3 entries (what we use for context)
+      .map(entry => `${entry.date.toISOString()}:${entry.diaryEntry}`)
+      .join('|');
+    
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString(36);
+  }
+
+  /**
+   * Get cached featured workouts if they're still valid
+   */
+  static async getCachedFeaturedWorkouts(userId: string): Promise<{
+    suggestions: string[];
+    featuredWorkouts: any[];
+    isValid: boolean;
+  } | null> {
+    try {
+      console.log('🗄️ Checking cache for featured workouts...');
+      
+      const { data: cache, error } = await supabase
+        .from('featured_workouts_cache')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !cache) {
+        console.log('📭 No cache found');
+        return null;
+      }
+
+      // Check if cache is older than 24 hours
+      const cacheAge = Date.now() - new Date(cache.last_generated).getTime();
+      const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (cacheAge > maxCacheAge) {
+        console.log('⏰ Cache is too old, needs refresh');
+        return { suggestions: [], featuredWorkouts: [], isValid: false };
+      }
+
+      // Check if diary content has changed by comparing hashes
+      const currentDiaryEntries = await this.loadDiaryEntries(userId);
+      const currentHash = this.generateDiaryHash(currentDiaryEntries);
+
+      if (cache.diary_entries_hash !== currentHash) {
+        console.log('📝 Diary content changed, cache invalid');
+        return { suggestions: [], featuredWorkouts: [], isValid: false };
+      }
+
+      console.log('✅ Cache is valid, returning cached results');
+      return {
+        suggestions: cache.suggestions || [],
+        featuredWorkouts: cache.featured_workouts || [],
+        isValid: true
+      };
+    } catch (error) {
+      console.error('Error checking cache:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save featured workouts to cache
+   */
+  static async saveFeaturedWorkoutsCache(
+    userId: string, 
+    suggestions: string[], 
+    featuredWorkouts: any[],
+    diaryEntries: Log[]
+  ): Promise<boolean> {
+    try {
+      console.log('💾 Saving featured workouts to cache...');
+      
+      const hash = this.generateDiaryHash(diaryEntries);
+      const now = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('featured_workouts_cache')
+        .upsert({
+          user_id: userId,
+          suggestions: suggestions,
+          featured_workouts: featuredWorkouts,
+          diary_entries_hash: hash,
+          last_generated: now,
+          updated_at: now
+        });
+
+      if (error) {
+        console.error('Error saving cache:', error);
+        return false;
+      }
+
+      console.log('✅ Featured workouts cached successfully');
+      return true;
+    } catch (error) {
+      console.error('Error saving featured workouts cache:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear featured workouts cache (called when diary data changes)
+   */
+  static async clearFeaturedWorkoutsCache(userId: string): Promise<void> {
+    try {
+      console.log('🗑️ Clearing featured workouts cache...');
+      
+      await supabase
+        .from('featured_workouts_cache')
+        .delete()
+        .eq('user_id', userId);
+        
+      console.log('✅ Cache cleared');
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  }
 }
 
 export default DatabaseService;

@@ -148,6 +148,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user ?? null);
           setIsLoading(false);
+          
+          // 🚀 Preload featured workouts cache on first login (background task)
+          if (event === 'SIGNED_IN' && session?.user?.id) {
+            setTimeout(async () => {
+              try {
+                console.log('🔄 Background: Checking featured workouts cache for new session...');
+                
+                // Dynamic import to avoid circular dependencies
+                const { default: DatabaseService } = await import('@/services/DatabaseService');
+                
+                const cachedResults = await DatabaseService.getCachedFeaturedWorkouts(session.user.id);
+                if (!cachedResults || !cachedResults.isValid) {
+                  console.log('💾 Background: No valid cache found, will populate on first WorkoutsPage visit');
+                  // Don't pre-generate here, let WorkoutsPage handle it when user actually visits
+                } else {
+                  console.log('✅ Background: Valid cache exists, ready for instant loading');
+                }
+              } catch (error) {
+                console.log('⚠️ Background cache check failed (non-critical):', error);
+              }
+            }, 2000); // Wait 2 seconds after login to avoid interfering with main flow
+          }
         }
         // Ignore TOKEN_REFRESHED and other events to reduce API calls
       }
