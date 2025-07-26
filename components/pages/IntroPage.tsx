@@ -9,7 +9,7 @@ export default function IntroPage() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <span className={styles.logoIcon}>🏋️‍♂️</span>
+          <img src="/logo.svg" alt="FitSage Logo" className={styles.logoIcon} height={40} width={40} />
           <span className={styles.logoText}>FitSage</span>
         </div>
       </header>
@@ -18,7 +18,7 @@ export default function IntroPage() {
       <main className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Your AI-Powered Fitness Companion
+            Your <a href='https://deepmind.google/models/gemini/' target='_blank' className={styles.tech}>AI-Powered</a> Fitness Companion
           </h1>
           <p className={styles.heroSubtitle}>
             Transform your fitness journey with intelligent workout tracking, 
@@ -32,7 +32,7 @@ export default function IntroPage() {
             </div>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>🎯</span>
-              <span className={styles.featureText}>Goal Tracking</span>
+              <span className={styles.featureText}>Health Tracking</span>
             </div>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>📝</span>
@@ -87,9 +87,19 @@ export default function IntroPage() {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p className={styles.footerText}>
-          © 2025 FitSage. Start your fitness transformation today.
+        <p>
+          © {new Date().getFullYear()} FitSage. All rights reserved.
         </p>
+        <p>
+          Made with ❤️ and 💪 by the FitSage Team.
+        </p>
+        <div className={styles.techStack}>
+          <img src="https://skillicons.dev/icons?i=nextjs" alt="nextjs" />
+          <img src="https://skillicons.dev/icons?i=supabase" alt="supabase" />
+          <img src="https://skillicons.dev/icons?i=tailwind" alt="tailwind" />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250" alt="gemini"></img>
+          <img src="https://skillicons.dev/icons?i=vercel" alt="vercel" />
+        </div>
       </footer>
     </div>
   );

@@ -19,16 +19,15 @@ export default function LoginPage() {
             ← Back to Home
           </Link>
         </div>
-        
         <div className={styles.header}>
-          <h1 className={styles.title}>
-            🏋️‍♂️ FitSage
-          </h1>
+          <div className={styles.title}>
+            <img src="/logo.svg" alt="FitSage Logo" style={{ height: 48, width: 48, verticalAlign: 'middle', marginRight: 12 }} />
+            <h1>FitSage</h1>
+          </div>
           <h2 className={styles.subtitle}>
             Your personal fitness companion
           </h2>
         </div>
-        
         <div className={styles.formContainer}>
           <Suspense fallback={<div className={styles.loading}>Loading...</div>}>
             <SignIn />

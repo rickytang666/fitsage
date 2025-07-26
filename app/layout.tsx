@@ -1,31 +1,20 @@
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import LayoutWrapper from '@/components/LayoutWrapper'
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // Import request monitor for debugging (development only)
 import '@/utils/request-monitor';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: {
     template: '%s | FitSage',
-    default: 'FitSage - Your Fitness Buddy',
+    default: 'FitSage',
   },
   description: 'Track your workouts, nutrition, and fitness goals with FitSage, your personal fitness companion.',
   keywords: ['fitness', 'workout', 'tracking', 'health', 'nutrition', 'exercise'],
   icons: {
-    icon: '/fitsage_icon.svg',
+    icon: '/logo.svg',
   },
 };
 
@@ -36,7 +25,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&" />
+      </head>
+      <body>
         <AuthProvider>
           <LayoutWrapper>
             {children}

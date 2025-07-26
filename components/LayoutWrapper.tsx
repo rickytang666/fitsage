@@ -29,7 +29,7 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
   // If signing out, show loading state immediately to prevent any flashing
   if (isSigningOut) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Signing out...</p>
@@ -40,12 +40,12 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
 
   if (shouldShowSidebar) {
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen">
         {/* Sidebar */}
         <Sidebar />
         
         {/* Main content area */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-6 md:p-6 pt-20 md:pt-6">
           {children}
         </div>
       </div>
@@ -54,7 +54,7 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
 
   // No sidebar - just show content (for auth pages, intro page, or when not authenticated)
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {children}
     </div>
   );
@@ -63,7 +63,7 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>

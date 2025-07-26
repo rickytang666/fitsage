@@ -159,10 +159,10 @@ export default function HomePage() {
 
   const getBMIStatus = (bmi: number) => {
     if (bmi === 0) return { status: "Not set", color: "gray" };
-    if (bmi < 18.5) return { status: "Underweight", color: "blue" };
-    if (bmi < 25) return { status: "Normal", color: "green" };
+    if (bmi < 18.5) return { status: "Underweight", color: "lightskyblue" };
+    if (bmi < 25) return { status: "Normal", color: "springgreen" };
     if (bmi < 30) return { status: "Overweight", color: "yellow" };
-    return { status: "Obese", color: "red" };
+    return { status: "Obese", color: "salmon" };
   };
 
   // Calculate workout intensity based on multiple factors
@@ -270,7 +270,7 @@ export default function HomePage() {
         pointRadius: 6,
         pointHoverRadius: 8,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
       },
     ],
   };
@@ -289,6 +289,12 @@ export default function HomePage() {
         bodyColor: 'white',
         borderColor: 'rgb(249, 115, 22)',
         borderWidth: 1,
+        titleFont: {
+          family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+        },
+        bodyFont: {
+          family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+        },
         callbacks: {
           label: function(context: any) {
             const value = context.parsed.y;
@@ -313,8 +319,11 @@ export default function HomePage() {
           drawBorder: false,
         },
         ticks: {
-          color: '#666',
+          color: 'white',
           stepSize: 1,
+          font: {
+            family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          },
         },
       },
       x: {
@@ -323,7 +332,10 @@ export default function HomePage() {
           drawBorder: false,
         },
         ticks: {
-          color: '#666',
+          color: 'white',
+          font: {
+            family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          },
         },
       },
     },
@@ -366,13 +378,13 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       {/* Greeting Banner with Fitness Decorations */}
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-lg shadow-lg mb-8">
+      <div className="bg-orange-400 bg-opacity-60 shadow-lg mb-8 rounded-3xl">
         <div className="px-6 py-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">
               {greeting}, {user?.name || authUser?.email?.split('@')[0] || 'Fitness Enthusiast'}!
             </h1>
-            <p className="text-indigo-100 mt-2">Ready for your daily fitness journey?</p>
+            <p className="text-purple-200 text-lg mt-2">Ready for your daily fitness journey?</p>
           </div>
         </div>
       </div>
@@ -380,7 +392,7 @@ export default function HomePage() {
       {/* Profile Information */}
       <div className={styles.profileCard}>
         <div className={styles.profileContent}>
-          <h2>🔥 Profile Information</h2>
+          <h2><i className="material-symbols-outlined">person</i> Profile Information</h2>
           
           {!isEditing ? (
             // View Mode
@@ -408,7 +420,7 @@ export default function HomePage() {
               </div>
 
               <button onClick={handleEdit} className={styles.editButton}>
-                ✏️ Edit Profile
+                <i className="material-symbols-outlined">edit</i>Edit Profile
               </button>
             </div>
           ) : (
@@ -492,41 +504,43 @@ export default function HomePage() {
       </div>
 
       {/* Workout Chart */}
-      <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>📊 Weekly Workout Intensity</h2>
-        <p className={styles.chartSubtitle}>
-          Intensity is calculated based on calories burned, duration, sets/reps, and weight used
-        </p>
-        <div className={styles.chartContainer}>
-          {isLoadingChart ? (
-            <div className={styles.chartLoading}>
-              <div className={styles.loadingSpinner}></div>
-              <p>Loading your workout data...</p>
+      <div className={styles.chartSectionWrapper}>
+        <div className={styles.chartSection}>
+          <h2 className={styles.chartTitle}><span className='material-symbols-outlined'>chart_data</span> Weekly Workout Intensity</h2>
+          <p className={styles.chartSubtitle}>
+            Intensity is calculated based on calories burned, duration, sets/reps, and weight used
+          </p>
+          <div className={styles.chartContainer}>
+            {isLoadingChart ? (
+              <div className={styles.chartLoading}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading your workout data...</p>
+              </div>
+            ) : (
+              <Line data={chartData} options={chartOptions} />
+            )}
+          </div>
+          <div className={styles.intensityLegend}>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#ef4444'}}></span>
+              <span>Very High (3.1-4.0)</span>
             </div>
-          ) : (
-            <Line data={chartData} options={chartOptions} />
-          )}
-        </div>
-        <div className={styles.intensityLegend}>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#ef4444'}}></span>
-            <span>Very High (3.1-4.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#f97316'}}></span>
-            <span>High (2.1-3.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#eab308'}}></span>
-            <span>Moderate (1.1-2.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#22c55e'}}></span>
-            <span>Light (0.1-1.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#9ca3af'}}></span>
-            <span>No workout (0)</span>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#f97316'}}></span>
+              <span>High (2.1-3.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#eab308'}}></span>
+              <span>Moderate (1.1-2.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#22c55e'}}></span>
+              <span>Light (0.1-1.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#9ca3af'}}></span>
+              <span>No workout (0)</span>
+            </div>
           </div>
         </div>
       </div>
