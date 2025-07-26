@@ -4,9 +4,9 @@
   max-width: 64rem;
   margin: 0 auto;
   padding: 1rem 1rem 1.5rem;
-  background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
   min-height: 100vh;
-  color: black;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .header {
@@ -17,26 +17,22 @@
 .title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1f2937 !important;
   margin-bottom: 0.5rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
   font-size: 1.125rem;
-  color: #6b7280 !important;
   letter-spacing: 0.025em;
 }
 
 .entryForm {
-  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid #e5e7eb;
+  background: var(--card);
   border-radius: 1rem;
   padding: 2rem;
   margin-bottom: 3rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  color-scheme: light;
 }
 
 .formHeader {
@@ -49,7 +45,6 @@
 .formHeader h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937 !important;
   margin: 0;
 }
 
@@ -60,7 +55,6 @@
 .dateLabel {
   display: block;
   font-weight: 600;
-  color: #374151 !important;
   margin-bottom: 0.5rem;
 }
 
@@ -69,8 +63,8 @@
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   font-size: 1rem;
-  background-color: white !important;
-  color: #1f2937 !important;
+  background-color: white;
+  color: black;
   transition: border-color 0.15s ease-in-out;
 }
 
@@ -91,24 +85,23 @@
 .textArea {
   width: 100%;
   padding: 1rem;
-  border: 1px solid #d1d5db;
+  border: 2px solid #d1d5db;
+  background-color: var(--input-background);
   border-radius: 0.5rem;
   font-size: 1rem;
   font-family: inherit;
   resize: vertical;
-  background-color: white !important;
-  color: #1f2937 !important;
-  transition: border-color 0.15s ease-in-out;
+  transition: all 0.15s ease-in-out;
 }
 
 .textArea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--ring);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .textArea::placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 .textMeta {
@@ -117,16 +110,10 @@
   align-items: center;
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: #6b7280 !important;
-}
-
-.charCount {
-  color: #9ca3af !important;
 }
 
 .saveButton {
   background-color: #3b82f6;
-  color: white;
   padding: 0.875rem 2rem;
   border: none;
   border-radius: 0.5rem;
@@ -168,7 +155,6 @@
 .entriesTitle {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937 !important;
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -180,18 +166,16 @@
 }
 
 .entryCard {
-  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
-  border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   transition: box-shadow 0.15s ease-in-out;
-  color-scheme: light;
+  background-color: var(--card);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.6);
 }
 
 .entryCard:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.8);
 }
 
 .entryHeader {
@@ -204,7 +188,6 @@
 .entryDate {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1f2937 !important;
   margin: 0;
 }
 
@@ -220,7 +203,7 @@
   border: none;
   border-radius: 0.375rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: bolder;
   cursor: pointer;
   transition: background-color 0.15s ease-in-out;
 }
@@ -236,7 +219,7 @@
   border: none;
   border-radius: 0.375rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: bolder;
   cursor: pointer;
   transition: background-color 0.15s ease-in-out;
 }
@@ -250,7 +233,6 @@
 }
 
 .entryContent p {
-  color: #374151 !important;
   white-space: pre-wrap;
   margin: 0;
 }
@@ -260,7 +242,6 @@
   padding: 3rem;
   background-color: #f9fafb;
   border-radius: 0.75rem;
-  color: #6b7280 !important;
   border: 1px solid #e5e7eb;
 }
 
@@ -268,7 +249,6 @@
   text-align: center;
   padding: 3rem;
   font-size: 1.125rem;
-  color: #6b7280 !important;
 }
 
 .error {
@@ -291,23 +271,6 @@
   font-size: 0.875rem;
 }
 
-/* Dark mode protection */
-@media (prefers-color-scheme: dark) {
-  .container,
-  .entryForm,
-  .entryCard,
-  .emptyState {
-    background-color: white !important;
-    color: #1f2937 !important;
-  }
-  
-  .dateInput,
-  .textArea {
-    background-color: white !important;
-    color: #1f2937 !important;
-  }
-}
-
 /* New AI features styling */
 
 /* View Toggle */
@@ -321,7 +284,7 @@
 .viewToggle {
   display: flex;
   gap: 0.5rem;
-  background: #f3f4f6;
+  background: var(--card);
   padding: 0.25rem;
   border-radius: 0.5rem;
 }
@@ -335,12 +298,12 @@
   cursor: pointer;
   transition: all 0.2s;
   background: transparent;
-  color: #6b7280;
+  color: var(--muted-foreground);
 }
 
 .toggleButtonActive {
-  background: white;
-  color: #1f2937;
+  background: #505050;
+  color: white;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -352,7 +315,6 @@
 .sectionTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #374151;
   margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
@@ -371,8 +333,7 @@
 }
 
 .workoutCard {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #505050;
   border-radius: 0.5rem;
   padding: 0.75rem;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -385,7 +346,6 @@
 
 .workoutName {
   font-weight: 600;
-  color: #1f2937;
   margin-bottom: 0.5rem;
 }
 
@@ -399,9 +359,9 @@
   background: #dbeafe;
   color: #1e40af;
   padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: bolder;
 }
 
 /* Injuries Section */
@@ -416,19 +376,17 @@
 }
 
 .injuryItem {
-  background: #fef2f2;
+  background: rgba(255, 172, 172, 0.3);
   border-left: 4px solid #ef4444;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 0 0.375rem 0.375rem 0;
-  color: #7f1d1d;
 }
 
 .noInjuries {
-  background: #f0fdf4;
-  color: #166534;
+  background: rgba(172, 255, 190, 0.3);
   padding: 0.75rem;
-  border-radius: 0.375rem;
+  border-radius: 0 0.375rem 0.375rem 0;
   border-left: 4px solid #22c55e;
   margin: 0;
 }
@@ -445,12 +403,10 @@
 }
 
 .suggestionItem {
-  background: #fffbeb;
-  border-left: 4px solid #f59e0b;
+  background: rgba(255, 227, 172, 0.3);
+  border-left: 4px solid var(--primary);
   padding: 0.75rem;
   border-radius: 0 0.375rem 0.375rem 0;
-  color: #78350f;
-  font-style: italic;
 }
 
 .noSuggestions {
@@ -509,9 +465,8 @@
 }
 
 .expandButton {
-  background-color: #f3f4f6;
+  background-color: #404040;
   border: 1px solid #d1d5db;
-  color: #374151;
   padding: 0.375rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.75rem;
@@ -520,38 +475,35 @@
 }
 
 .expandButton:hover {
-  background-color: #e5e7eb;
+  background-color: #505050;
   border-color: #9ca3af;
 }
 
 .diaryContent {
   line-height: 1.6;
+  
 }
 
 .diaryTruncated {
   font-size: 0.9rem;
-  color: #374151;
   margin: 0;
 }
 
 .diaryFullText {
+  background-color: var(--card);
   margin: 0;
   padding: 0.75rem;
-  background: #f9fafb;
   border-radius: 0.375rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #374151;
   border-left: 3px solid #e5e7eb;
 }
 
 .diaryText h4 {
   margin-bottom: 0.75rem;
   font-size: 1rem;
-  color: #374151;
 }
 
 .diaryText p {
   line-height: 1.6;
-  color: #4b5563;
 }

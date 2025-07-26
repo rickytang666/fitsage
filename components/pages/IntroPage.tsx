@@ -9,7 +9,7 @@ export default function IntroPage() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <span className={styles.logoIcon}>🏋️‍♂️</span>
+          <img src="/logo.svg" alt="FitSage Logo" className={styles.logoIcon} height={40} width={40} />
           <span className={styles.logoText}>FitSage</span>
         </div>
       </header>
@@ -18,7 +18,7 @@ export default function IntroPage() {
       <main className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Your AI-Powered Fitness Companion
+            Your <span className={styles.tech}>AI-Powered</span> Fitness Companion
           </h1>
           <p className={styles.heroSubtitle}>
             Transform your fitness journey with intelligent workout tracking, 

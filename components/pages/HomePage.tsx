@@ -270,7 +270,7 @@ export default function HomePage() {
         pointRadius: 6,
         pointHoverRadius: 8,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
       },
     ],
   };
@@ -313,7 +313,7 @@ export default function HomePage() {
           drawBorder: false,
         },
         ticks: {
-          color: '#666',
+          color: 'white',
           stepSize: 1,
         },
       },
@@ -323,7 +323,7 @@ export default function HomePage() {
           drawBorder: false,
         },
         ticks: {
-          color: '#666',
+          color: 'white',
         },
       },
     },
@@ -366,13 +366,13 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       {/* Greeting Banner with Fitness Decorations */}
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-lg shadow-lg mb-8">
+      <div className="bg-orange-400 bg-opacity-60 shadow-lg mb-8 rounded-3xl">
         <div className="px-6 py-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white">
               {greeting}, {user?.name || authUser?.email?.split('@')[0] || 'Fitness Enthusiast'}!
             </h1>
-            <p className="text-indigo-100 mt-2">Ready for your daily fitness journey?</p>
+            <p className="text-indigo-200 mt-2">Ready for your daily fitness journey?</p>
           </div>
         </div>
       </div>
@@ -380,7 +380,7 @@ export default function HomePage() {
       {/* Profile Information */}
       <div className={styles.profileCard}>
         <div className={styles.profileContent}>
-          <h2>🔥 Profile Information</h2>
+          <h2><i className="material-symbols-outlined">person</i> Profile Information</h2>
           
           {!isEditing ? (
             // View Mode
@@ -408,7 +408,7 @@ export default function HomePage() {
               </div>
 
               <button onClick={handleEdit} className={styles.editButton}>
-                ✏️ Edit Profile
+                <i className="material-symbols-outlined">edit</i>Edit Profile
               </button>
             </div>
           ) : (
@@ -493,7 +493,7 @@ export default function HomePage() {
 
       {/* Workout Chart */}
       <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>📊 Weekly Workout Intensity</h2>
+        <h2 className={styles.chartTitle}><span className='material-symbols-outlined'>chart_data</span> Weekly Workout Intensity</h2>
         <p className={styles.chartSubtitle}>
           Intensity is calculated based on calories burned, duration, sets/reps, and weight used
         </p>

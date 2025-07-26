@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   description: 'Track your workouts, nutrition, and fitness goals with FitSage, your personal fitness companion.',
   keywords: ['fitness', 'workout', 'tracking', 'health', 'nutrition', 'exercise'],
   icons: {
-    icon: '/fitsage_icon.svg',
+    icon: '/logo.svg',
   },
 };
 
@@ -36,7 +36,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}>
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&" />
+      </head>
+      <body>
         <AuthProvider>
           <LayoutWrapper>
             {children}

@@ -23,29 +23,30 @@ export default function Sidebar() {
   
   return (
     <div className={styles.sidebar}>
-      <h1 className={styles.brand}>
-        FitSage
-      </h1>
-      
+      <div className={styles.brandRow}>
+        <img src="/logo.svg" alt="FitSage Logo" className={styles.logoIcon} height={36} width={36} />
+        <span className={styles.brandText}>FitSage</span>
+      </div>
       {/* Navigation Links */}
       <nav className={styles.nav}>
         {navigationItems.map((item) => {
           const active = isActiveLink(item.href);
-          
           return (
-            <Link 
+            <Link
               key={item.name}
               href={item.href}
-              className={`${styles.navLink} ${active ? styles.navLinkActive : ''}`}
-              style={active ? { '--link-color': item.color } as React.CSSProperties : { '--link-color': item.color } as React.CSSProperties}
+              className={styles.navLink}
             >
-              <span className={`${styles.navIcon} ${active ? styles.navIconActive : ''}`}></span>
-              {item.name}
+              <span className={`material-symbols-outlined ${styles.navMaterialIcon}`}>{
+                item.name === 'Home' ? 'home' :
+                item.name === 'Workouts' ? 'fitness_center' :
+                item.name === 'Diary' ? 'book' : ''
+              }</span>
+              <span className={styles.navTitle}>{item.name}</span>
             </Link>
           );
         })}
       </nav>
-      
       {/* Logout Button */}
       <div className={styles.signOutSection}>
         <button
@@ -54,9 +55,9 @@ export default function Sidebar() {
           }}
           className={styles.signOutButton}
         >
-          🚪 Sign Out
+          <span className="material-symbols-outlined">logout</span>
+          <span>Sign Out</span>
         </button>
-        
         {user && (
           <p className={styles.userEmail}>
             {user.email}

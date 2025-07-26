@@ -2,11 +2,11 @@
 
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #000000 !important;
+  background: var(--background);
+  color: var(--foreground);
   display: flex;
   flex-direction: column;
-  color-scheme: light;
+  font-family: var(--font-sans);
 }
 
 /* Header */
@@ -30,7 +30,7 @@
 .logoText {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff !important;
+  color: var(--primary);
 }
 
 /* Hero Section */
@@ -63,15 +63,20 @@
 .heroTitle {
   font-size: 3rem;
   font-weight: 800;
-  color: #ffffff !important;
+  color: var(--foreground);
   margin-bottom: 1rem;
   line-height: 1.2;
   animation: fadeInUp 1s ease-out 0.2s both;
 }
 
+.tech {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .heroSubtitle {
   font-size: 1.25rem;
-  color: #ffffff !important;
+  color: var(--foreground);
   margin-bottom: 2rem;
   opacity: 0.9;
   line-height: 1.6;
@@ -96,10 +101,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: var(--card);
   border-radius: 0.75rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border);
 }
 
 .featureIcon {
@@ -109,7 +113,7 @@
 .featureText {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #ffffff !important;
+  color: var(--foreground);
 }
 
 /* CTA Buttons */
@@ -122,8 +126,8 @@
 }
 
 .primaryButton {
-  background: #ffffff !important;
-  color: #667eea !important;
+  background: var(--foreground);
+  color: var(--background);
   padding: 0.75rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
@@ -131,36 +135,36 @@
   text-decoration: none;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .primaryButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
+  background: var(--card-foreground);
+  color: var(--background);
 }
 
 .secondaryButton {
-  background: transparent !important;
-  color: #ffffff !important;
+  background: transparent;
+  color: var(--foreground);
   padding: 0.75rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
   font-size: 1rem;
   text-decoration: none;
   transition: all 0.3s ease;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--border);
 }
 
 .secondaryButton:hover {
-  background: #ffffff !important;
-  color: #667eea !important;
+  background: var(--card-foreground);
+  color: var(--background);
 }
 
 /* Benefits Section */
 .benefits {
-  background: #ffffff !important;
   padding: 4rem 2rem;
-  color-scheme: light;
 }
 
 .benefitsContainer {
@@ -172,7 +176,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   text-align: center;
-  color: #000000 !important;
+  color: var(--foreground);
   margin-bottom: 3rem;
 }
 
@@ -185,9 +189,9 @@
 .benefitCard {
   text-align: center;
   padding: 2rem;
-  background: #f9fafb !important;
+  background: var(--card);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   transition: transform 0.3s ease;
 }
 
@@ -203,23 +207,23 @@
 .benefitTitle {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #000000 !important;
+  color: var(--foreground);
   margin-bottom: 1rem;
 }
 
 .benefitDescription {
   font-size: 1rem;
-  color: #000000 !important;
+  color: var(--foreground);
   line-height: 1.6;
   opacity: 0.8;
 }
 
 /* Footer */
 .footer {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--background);
   padding: 2rem;
   text-align: center;
-  color: white;
+  color: var(--foreground);
 }
 
 .footerText {
@@ -253,22 +257,4 @@
   }
 }
 
-/* Dark mode protection */
-@media (prefers-color-scheme: dark) {
-  .container,
-  .benefits,
-  .benefitCard {
-    color-scheme: light !important;
-  }
-  
-  .logoText,
-  .heroTitle,
-  .heroSubtitle,
-  .featureText,
-  .benefitsTitle,
-  .benefitTitle,
-  .benefitDescription,
-  .footerText {
-    color: inherit !important;
-  }
-}
+

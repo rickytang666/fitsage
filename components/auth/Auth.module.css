@@ -4,10 +4,10 @@
   width: 100%;
   margin: 0 auto;
   padding: 1.5rem;
-  background-color: white;
+  background-color: var(--card);
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  color: black;
+  color: var(--foreground);
 }
 
 /* Typography */
@@ -48,7 +48,6 @@
   border-radius: 0.375rem;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   font-size: 0.875rem;
-  background-color: white;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -59,19 +58,19 @@
 }
 
 .input::placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 .input::-webkit-input-placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 .input::-moz-placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 .input:-ms-input-placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 /* Buttons */
@@ -142,7 +141,7 @@
 
 .linkText {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--foreground);
 }
 
 .link {
@@ -155,6 +154,14 @@
 .link:hover {
   color: #4f46e5;
   text-decoration: underline;
+}
+
+/* Signup link section at the bottom */
+.signupLink {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--primary-foreground);
 }
 
 /* Additional utility classes */

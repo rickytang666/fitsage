@@ -145,7 +145,7 @@ export default function WorkoutsPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>💪 Workouts</h1>
-        <p className={styles.subtitle}>Choose your fitness journey</p>
+        <p className={styles.subtitle}>Plan out your fitness journey</p>
       </div>
 
       <div className={styles.statsCard}>
@@ -670,7 +670,7 @@ function FeaturedWorkouts({ userId, diaryEntries, isLoading }: {
 
       {/* Featured Workouts Section */}
       <div className={styles.workoutsSection}>
-        <h3 className={styles.workoutsTitle}>⭐ Recommended Workouts ({featuredWorkouts.length})</h3>
+        <h3 className="text-white">⭐ Recommended Workouts ({featuredWorkouts.length})</h3>
         <div className={styles.featuredWorkoutsList}>
           {featuredWorkouts.map((workout) => (
             <div key={workout.id} className={styles.featuredWorkoutCard}>

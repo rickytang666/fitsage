@@ -4,10 +4,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[var(--card)] text-[var(--foreground)]">
       {children}
       
-      <footer className="py-4 text-center text-sm text-gray-500 mt-auto">
+      <footer className="py-4 text-center text-sm mt-auto">
         <p>© {new Date().getFullYear()} FitSage. All rights reserved.</p>
       </footer>
     </div>
