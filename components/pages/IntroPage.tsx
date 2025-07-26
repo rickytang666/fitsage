@@ -18,7 +18,7 @@ export default function IntroPage() {
       <main className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Your <span className={styles.tech}>AI-Powered</span> Fitness Companion
+            Your <a href='https://deepmind.google/models/gemini/' target='_blank' className={styles.tech}>AI-Powered</a> Fitness Companion
           </h1>
           <p className={styles.heroSubtitle}>
             Transform your fitness journey with intelligent workout tracking, 
@@ -32,7 +32,7 @@ export default function IntroPage() {
             </div>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>🎯</span>
-              <span className={styles.featureText}>Goal Tracking</span>
+              <span className={styles.featureText}>Health Tracking</span>
             </div>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>📝</span>

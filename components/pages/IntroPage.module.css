@@ -62,7 +62,7 @@
 
 .heroTitle {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--foreground);
   margin-bottom: 1rem;
   line-height: 1.2;
@@ -71,7 +71,19 @@
 
 .tech {
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 800;
+  text-decoration: underline dashed 3px;
+  text-decoration-color: rgb(213, 142, 34);
+  text-underline-offset: 5px;
+}
+
+.tech:hover {
+  cursor: pointer;
+  text-decoration: none;
+  background-color: var(--ring);
+  color: var(--background);
+  transition: all 0.3s ease;
+  animation: fadeInUp 1s ease-out 0.1s both;
 }
 
 .heroSubtitle {

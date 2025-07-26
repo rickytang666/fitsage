@@ -100,13 +100,13 @@
 
 .signOutButton {
   width: 100%;
-  padding: 14px 16px;
-  background-color: #ef4444;
+  padding: 6px;
+  background-color: #ff5757;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 25px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -117,7 +117,7 @@
 }
 
 .signOutButton:hover {
-  background-color: #dc2626;
+  background-color: #d21313;
   box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 

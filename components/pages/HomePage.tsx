@@ -159,10 +159,10 @@ export default function HomePage() {
 
   const getBMIStatus = (bmi: number) => {
     if (bmi === 0) return { status: "Not set", color: "gray" };
-    if (bmi < 18.5) return { status: "Underweight", color: "blue" };
-    if (bmi < 25) return { status: "Normal", color: "green" };
+    if (bmi < 18.5) return { status: "Underweight", color: "lightskyblue" };
+    if (bmi < 25) return { status: "Normal", color: "springgreen" };
     if (bmi < 30) return { status: "Overweight", color: "yellow" };
-    return { status: "Obese", color: "red" };
+    return { status: "Obese", color: "salmon" };
   };
 
   // Calculate workout intensity based on multiple factors
@@ -372,7 +372,7 @@ export default function HomePage() {
             <h1 className="text-3xl font-bold text-white">
               {greeting}, {user?.name || authUser?.email?.split('@')[0] || 'Fitness Enthusiast'}!
             </h1>
-            <p className="text-indigo-200 mt-2">Ready for your daily fitness journey?</p>
+            <p className="text-purple-200 text-lg mt-2">Ready for your daily fitness journey?</p>
           </div>
         </div>
       </div>
