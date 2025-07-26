@@ -37,9 +37,7 @@
 }
 
 .backLink:hover {
-  background: var(--card-foreground);
   border-color: var(--primary);
-  color: var(--primary-foreground);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
