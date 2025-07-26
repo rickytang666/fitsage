@@ -20,10 +20,10 @@ export default function LoginPage() {
           </Link>
         </div>
         <div className={styles.header}>
-          <h1 className={styles.title}>
+          <div className={styles.title}>
             <img src="/logo.svg" alt="FitSage Logo" style={{ height: 48, width: 48, verticalAlign: 'middle', marginRight: 12 }} />
-            FitSage
-          </h1>
+            <h1>FitSage</h1>
+          </div>
           <h2 className={styles.subtitle}>
             Your personal fitness companion
           </h2>

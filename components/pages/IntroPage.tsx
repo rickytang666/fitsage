@@ -87,9 +87,19 @@ export default function IntroPage() {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p className={styles.footerText}>
-          © 2025 FitSage. Start your fitness transformation today.
+        <p>
+          © {new Date().getFullYear()} FitSage. All rights reserved.
         </p>
+        <p>
+          Made with ❤️ and 💪 by the FitSage Team.
+        </p>
+        <div className={styles.techStack}>
+          <img src="https://skillicons.dev/icons?i=nextjs" alt="nextjs" />
+          <img src="https://skillicons.dev/icons?i=supabase" alt="supabase" />
+          <img src="https://skillicons.dev/icons?i=tailwind" alt="tailwind" />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250" alt="gemini"></img>
+          <img src="https://skillicons.dev/icons?i=vercel" alt="vercel" />
+        </div>
       </footer>
     </div>
   );

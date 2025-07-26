@@ -35,7 +35,11 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={styles.navLink}
+              className={
+                active
+                  ? `${styles.navLink} ${styles.navLinkActive}`
+                  : styles.navLink
+              }
             >
               <span className={`material-symbols-outlined ${styles.navMaterialIcon}`}>{
                 item.name === 'Home' ? 'home' :
