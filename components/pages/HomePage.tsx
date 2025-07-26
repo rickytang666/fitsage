@@ -289,6 +289,12 @@ export default function HomePage() {
         bodyColor: 'white',
         borderColor: 'rgb(249, 115, 22)',
         borderWidth: 1,
+        titleFont: {
+          family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+        },
+        bodyFont: {
+          family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+        },
         callbacks: {
           label: function(context: any) {
             const value = context.parsed.y;
@@ -315,6 +321,9 @@ export default function HomePage() {
         ticks: {
           color: 'white',
           stepSize: 1,
+          font: {
+            family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          },
         },
       },
       x: {
@@ -324,6 +333,9 @@ export default function HomePage() {
         },
         ticks: {
           color: 'white',
+          font: {
+            family: '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          },
         },
       },
     },
@@ -492,41 +504,43 @@ export default function HomePage() {
       </div>
 
       {/* Workout Chart */}
-      <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}><span className='material-symbols-outlined'>chart_data</span> Weekly Workout Intensity</h2>
-        <p className={styles.chartSubtitle}>
-          Intensity is calculated based on calories burned, duration, sets/reps, and weight used
-        </p>
-        <div className={styles.chartContainer}>
-          {isLoadingChart ? (
-            <div className={styles.chartLoading}>
-              <div className={styles.loadingSpinner}></div>
-              <p>Loading your workout data...</p>
+      <div className={styles.chartSectionWrapper}>
+        <div className={styles.chartSection}>
+          <h2 className={styles.chartTitle}><span className='material-symbols-outlined'>chart_data</span> Weekly Workout Intensity</h2>
+          <p className={styles.chartSubtitle}>
+            Intensity is calculated based on calories burned, duration, sets/reps, and weight used
+          </p>
+          <div className={styles.chartContainer}>
+            {isLoadingChart ? (
+              <div className={styles.chartLoading}>
+                <div className={styles.loadingSpinner}></div>
+                <p>Loading your workout data...</p>
+              </div>
+            ) : (
+              <Line data={chartData} options={chartOptions} />
+            )}
+          </div>
+          <div className={styles.intensityLegend}>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#ef4444'}}></span>
+              <span>Very High (3.1-4.0)</span>
             </div>
-          ) : (
-            <Line data={chartData} options={chartOptions} />
-          )}
-        </div>
-        <div className={styles.intensityLegend}>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#ef4444'}}></span>
-            <span>Very High (3.1-4.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#f97316'}}></span>
-            <span>High (2.1-3.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#eab308'}}></span>
-            <span>Moderate (1.1-2.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#22c55e'}}></span>
-            <span>Light (0.1-1.0)</span>
-          </div>
-          <div className={styles.legendItem}>
-            <span className={styles.legendDot} style={{backgroundColor: '#9ca3af'}}></span>
-            <span>No workout (0)</span>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#f97316'}}></span>
+              <span>High (2.1-3.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#eab308'}}></span>
+              <span>Moderate (1.1-2.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#22c55e'}}></span>
+              <span>Light (0.1-1.0)</span>
+            </div>
+            <div className={styles.legendItem}>
+              <span className={styles.legendDot} style={{backgroundColor: '#9ca3af'}}></span>
+              <span>No workout (0)</span>
+            </div>
           </div>
         </div>
       </div>

@@ -45,7 +45,7 @@ function LayoutWrapperInner({ children }: LayoutWrapperProps) {
         <Sidebar />
         
         {/* Main content area */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-6 md:p-6 pt-20 md:pt-6">
           {children}
         </div>
       </div>

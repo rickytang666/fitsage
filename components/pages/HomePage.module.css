@@ -345,6 +345,16 @@
   cursor: not-allowed;
 }
 
+/* Chart section wrapper */
+.chartSectionWrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
 /* Chart section styles */
 .chartSection {
   background: var(--card);
@@ -352,9 +362,23 @@
   border: 1px solid #e5e7eb;
   border-radius: 1rem;
   padding: 1.5rem;
-  margin-top: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  color-scheme: light;
+  min-width: 500px;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Responsive chart section */
+@media (max-width: 768px) {
+  .chartSection {
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chartSection {
+    min-width: 500px;
+  }
 }
 
 .chartTitle {
