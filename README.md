@@ -9,23 +9,11 @@
   <h4>Your Smart Fitness Diary & Workout Companion</h4>
 </div>
 
-<div align="center">
-  <a href="https://www.fitsage.tech">
-    <img src="https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=vercel" alt="Live Demo"/>
-  </a>
-  <a href="https://github.com/rickytang666/fitsage/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"/>
-  </a>
-  <a href="https://nextjs.org">
-    <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js"/>
-  </a>
-  <a href="https://supabase.com">
-    <img src="https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase" alt="Supabase"/>
-  </a>
-  <a href="https://ai.google.dev/gemini">
-    <img src="https://img.shields.io/badge/Gemini-AI-orange?style=for-the-badge&logo=google" alt="Google Gemini"/>
-  </a>
-</div>
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=vercel)](https://www.fitsage.tech)
+![MIT License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green?style=for-the-badge&logo=supabase)](https://supabase.com)
+[![Gemini](https://img.shields.io/badge/Gemini-AI-orange?style=for-the-badge&logo=google)](https://ai.google.dev/gemini)
 
 ---
 
