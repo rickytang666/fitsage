@@ -42,7 +42,7 @@ The idea was simple: what if you could just write about your workout like you're
   <img src="./public/snapshots/intro.png" alt="FitSage Introduction" width="600"/>
   <p><em>Introduction page</em></p>
 </div>
-<div align="center">>
+<div align="center">
   <img src="./public/snapshots/recommendations.png" alt="AI Recommendations" width="600"/>
   <p><em>AI-powered suggestions and workout recommendations</em></p>
 </div>
