@@ -34,8 +34,6 @@ The idea was simple: what if you could just write about your workout like you're
 - **Personal Dashboard**: See your intensities, body stats, and recent workouts at a glance
 - **Secure Authentication**: Quick, safe sign-in and sign-out process
 
-
-
 ## Snapshots
 
 <div align="center">
@@ -55,7 +53,7 @@ The idea was simple: what if you could just write about your workout like you're
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - Supabase account (free tier works great)
 - Google Gemini API key
@@ -63,18 +61,21 @@ The idea was simple: what if you could just write about your workout like you're
 ### Installation
 
 1. **Clone this repo**
+
    ```bash
    git clone https://github.com/rickytang666/fitsage.git
    cd fitsage
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
+
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -83,10 +84,12 @@ The idea was simple: what if you could just write about your workout like you're
    ```
 
 4. **Set up your database**
+
    - Create a new Supabase project
    - Run the SQL from `database/schema.sql` in your Supabase SQL editor
 
 5. **Run locally**
+
    ```bash
    npm run dev
    ```
@@ -101,12 +104,12 @@ The idea was simple: what if you could just write about your workout like you're
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| **Frontend** | Next.js, Tailwind CSS, Chart.js
-| **Backend** | Supabase (auth, database)
-| **AI** | Google Gemini 2.5 Flash Lite
-| **Deployment** | Vercel
+| Category       | Technology                      |
+| -------------- | ------------------------------- |
+| **Frontend**   | Next.js, Tailwind CSS, Chart.js |
+| **Backend**    | Supabase (auth, database)       |
+| **AI**         | Google Gemini 2.5 Flash Lite    |
+| **Deployment** | Vercel                          |
 
 ## Contributing
 
@@ -114,8 +117,9 @@ Contributions and feedback are welcome! Please feel free to submit a Pull Reques
 
 ## Roadmap
 
-- **Date Filtering**: Better UX for viewing historical data
 - **Voice Input**: Add Whisper API to enable voice diary entries
+- **Light/Dark Mode**: Add light/dark mode toggle
+- **Date Filtering**: Better UX for viewing historical data
 - **Smart Recommendations**: Intelligent YouTube video suggestions based on your workouts
 - **Mobile App**: Native iOS/Android apps for better mobile experience
 
@@ -127,5 +131,5 @@ MIT Licensed © [FitSage](https://www.fitsage.tech)
 
 <div align="center">
   <p>Built with 💪 for fitness community</p>
-  <p><a href="https://www.fitsage.tech">Try FitSage</>
+  <p><a href="https://www.fitsage.tech">Try FitSage</a></p>
 </div>
