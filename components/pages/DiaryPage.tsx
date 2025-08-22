@@ -334,6 +334,8 @@ export default function DiaryPage() {
   const editEntry = (entry: Log) => {
     setCurrentEntry(entry);
     setEntryText(entry.diaryEntry);
+    // Force type mode when editing
+    setIsVoiceMode(false);
     // Fix timezone issue: format date properly for input
     const year = entry.date.getFullYear();
     const month = String(entry.date.getMonth() + 1).padStart(2, "0");
@@ -373,6 +375,8 @@ export default function DiaryPage() {
     setError("");
     setStatusMessage("");
     setIsDateValid(true);
+    // Reset to voice mode when not editing
+    setIsVoiceMode(false);
     // Set default date last to avoid validation trigger
     await setDefaultDate();
     // Clear canceling flag
@@ -502,6 +506,7 @@ export default function DiaryPage() {
               className={`${styles.toggleButton} ${
                 !isVoiceMode ? styles.toggleButtonActive : ""
               }`}
+              disabled={!!currentEntry}
             >
               <IconKeyboard size={16} className="mr-2" />
               Type Mode
@@ -511,6 +516,7 @@ export default function DiaryPage() {
               className={`${styles.toggleButton} ${
                 isVoiceMode ? styles.toggleButtonActive : ""
               }`}
+              disabled={!!currentEntry}
             >
               <IconMicrophone size={16} className="mr-2" />
               Voice Mode
