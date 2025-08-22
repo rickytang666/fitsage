@@ -108,10 +108,10 @@ export const featuredWorkoutsRateLimiter = new RateLimiter(); // For featured wo
  */
 export async function waitForRateLimit(limiter: RateLimiter = geminiRateLimiter): Promise<void> {
   const waitTime = limiter.getWaitTime();
-  if (waitTime > 0) {
-    console.log(`⏳ Rate limit active, waiting ${Math.ceil(waitTime / 1000)}s before next API call...`);
-    await new Promise(resolve => setTimeout(resolve, waitTime));
-  }
+      if (waitTime > 0) {
+      // Rate limit active, waiting before next API call
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
 }
 
 /**

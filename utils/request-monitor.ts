@@ -18,7 +18,7 @@ class RequestMonitor {
   enable() {
     if (process.env.NODE_ENV === 'development') {
       this.isEnabled = true;
-      console.log('🔍 Request monitoring enabled');
+      // Request monitoring enabled
       
       // Monitor fetch requests
       this.interceptFetch();
@@ -33,9 +33,9 @@ class RequestMonitor {
   private interceptFetch() {
     const originalFetch = window.fetch;
     
-    window.fetch = async (...args) => {
+    window.fetch = async (...args: Parameters<typeof window.fetch>) => {
       const [input, init] = args;
-      const url = typeof input === 'string' ? input : input.url;
+      const url = typeof input === 'string' ? input : (input as Request).url;
       const method = init?.method || 'GET';
       
       // Log the request

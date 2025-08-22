@@ -12,6 +12,7 @@ import {
   IconFileText,
   IconChartBar,
 } from "@tabler/icons-react";
+import logger from "@/utils/logger";
 
 export default function DiaryPage() {
   const { user: authUser } = useAuth();
@@ -161,7 +162,28 @@ export default function DiaryPage() {
       isEditing: boolean = false
     ) => {
       if (!authUser?.id) return;
+    setIsSaving(true);
+    setStatusMessage("Saving...");
+    setError(""); // Clear any previous errors
 
+    // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
+    if (isEditing) {
+      setCurrentEntry(null);
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      setIsDateValid(true);
+      await setDefaultDate();
+    } else {
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      await setDefaultDate();
+    }
+    setIsSaving(false);
+
+    // 🎯 Background AI processing - don't block user
+    (async () => {
       try {
         setStatusMessage("✅ Saved! Processing with AI...");
 
@@ -271,16 +293,16 @@ export default function DiaryPage() {
                 data.featuredWorkouts || [],
                 freshDiaryEntries
               );
-              console.log(
-                "✅ Featured workouts cache regenerated after diary update"
+              logger.debug(
+                "Featured workouts cache regenerated after diary update"
               );
               setStatusMessage("✅ Diary saved with AI insights!");
             } else {
               setStatusMessage("✅ Diary saved with AI insights!");
             }
           } catch (cacheError) {
-            console.log(
-              "⚠️ Cache regeneration failed (non-critical):",
+            logger.warn(
+              "Cache regeneration failed (non-critical):",
               cacheError
             );
             setStatusMessage("✅ Diary saved with AI insights!");
@@ -446,7 +468,7 @@ export default function DiaryPage() {
 
         // 🚀 REGENERATE FEATURED WORKOUTS CACHE after deletion
         try {
-          console.log("🗑️ Regenerating cache after diary deletion...");
+          logger.debug("Regenerating cache after diary deletion...");
           const freshDiaryEntries = await DatabaseService.loadDiaryEntries(
             authUser!.id
           );
@@ -474,12 +496,12 @@ export default function DiaryPage() {
                 data.featuredWorkouts || [],
                 freshDiaryEntries
               );
-              console.log("✅ Cache regenerated after deletion");
+              logger.debug("Cache regenerated after deletion");
             }
           }
         } catch (cacheError) {
-          console.log(
-            "⚠️ Cache regeneration after deletion failed (non-critical):",
+          logger.warn(
+            "Cache regeneration after deletion failed (non-critical):",
             cacheError
           );
         }

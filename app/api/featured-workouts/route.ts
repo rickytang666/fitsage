@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import DatabaseService from '@/services/DatabaseService';
 import { FeaturedWorkout } from '@/models/User';
+import logger from '@/utils/logger';
 
 // Configure the number of days to look back for context (as per design: past 3 days)
 const CONTEXT_DAYS = 3;
@@ -25,14 +26,14 @@ type AIResponseData = {
 export async function POST(req: Request) {
   const { userId, diaryEntries } = await req.json();
 
-  console.log('🔍 Featured workouts API called with userId:', userId);
-  console.log('📚 Received shared diary entries:', diaryEntries?.length || 0);
+  logger.api('Featured workouts API called with userId:', userId);
+  logger.debug('Received shared diary entries:', diaryEntries?.length || 0);
   
   // Note: Removed artificial rate limiting - let Google's API handle actual rate limits
   // This prevents confusing user experience where rate limit message shows even when API succeeds
 
   if (!userId) {
-    console.log('❌ No userId provided to API');
+    logger.error('No userId provided to API');
     return NextResponse.json(
       { error: 'Missing userId' },
       { status: 400 }
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
 
   try {
     // Step 4: Use shared diary entries instead of loading again
-    console.log(`🔍 Processing shared diary entries for context analysis...`);
+    logger.debug('Processing shared diary entries for context analysis...');
     
     // Use shared diary entries or load them if not provided (fallback)
     let allDiaryEntries;
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
       entry.date >= threeDaysAgo && entry.date <= today
     );
     
-    console.log(`🎯 Context collection strategy:`, {
+    logger.debug('Context collection strategy:', {
       dateRange: `${threeDaysAgo.toLocaleDateString()} - ${today.toLocaleDateString()}`,
       top3Recent: topRecentEntries.map(e => e.date.toLocaleDateString()),
       validAfterFiltering: validRecentEntries.map(e => e.date.toLocaleDateString()),
@@ -131,7 +132,7 @@ export async function POST(req: Request) {
       contextText = diaryTexts.join('\n\n');
     }
 
-    console.log('📝 Final workout context prepared:', { 
+    logger.debug('Final workout context prepared:', { 
       totalValidEntries: validRecentEntries.length,
       contextEntriesGenerated: contextEntries.length,
       contextLength: contextText.length,
@@ -198,15 +199,15 @@ Rules:
 
     // Check if Gemini API key is available
     if (!process.env.GEMINI_API_KEY) {
-      console.error('❌ GEMINI_API_KEY is not set in environment variables');
+      logger.error('GEMINI_API_KEY is not set in environment variables');
       throw new Error('Gemini API key is not configured');
     }
 
-    console.log('🔑 Gemini API key is available');
+    logger.debug('Gemini API key is available');
 
     // Initialize the Google GenAI client using the pattern from your guide
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-    console.log('🤖 GoogleGenAI client initialized successfully');
+    logger.debug('GoogleGenAI client initialized successfully');
 
     // Retry logic for Gemini API with exponential backoff
     let rawText = '';
@@ -215,23 +216,23 @@ Rules:
     
     while (attempts < maxAttempts) {
       try {
-        console.log(`🤖 Attempting Gemini API call (attempt ${attempts + 1}/${maxAttempts})...`);
-        console.log('📝 Prompt length:', prompt.length);
-        console.log('🎯 Context length:', contextText.length);
+        logger.api(`Attempting Gemini API call (attempt ${attempts + 1}/${maxAttempts})...`);
+        logger.debug('Prompt length:', prompt.length);
+        logger.debug('Context length:', contextText.length);
         
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-lite',
           contents: prompt,
         });
         
-        console.log('✅ Gemini API call successful');
-        console.log('📄 Response text length:', response.text?.length || 0);
+        logger.api('Gemini API call successful');
+        logger.debug('Response text length:', response.text?.length || 0);
         
         rawText = response.text || '';
         break; // Success, exit retry loop
         
       } catch (genError: any) {
-        console.error(`❌ Gemini API call failed (attempt ${attempts + 1}):`, {
+        logger.error(`Gemini API call failed (attempt ${attempts + 1}):`, {
           error: genError.message,
           name: genError.name,
           status: genError.status,
@@ -247,7 +248,7 @@ Rules:
           const delay = baseDelay * Math.pow(2, attempts); // Exponential backoff
           
           const errorType = isRateLimited ? 'rate limit exceeded' : 'service unavailable';
-          console.log(`⚠️ Featured workouts: Gemini API ${errorType}, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+          logger.warn(`Featured workouts: Gemini API ${errorType}, retrying in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
           
           await new Promise(resolve => setTimeout(resolve, delay));
           attempts++;
@@ -266,7 +267,7 @@ Rules:
         
         attempts++;
         const delay = Math.pow(2, attempts) * 1000;
-        console.log(`⚠️ Featured workouts: Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
+        logger.warn(`Featured workouts: Gemini API request failed, retrying in ${delay}ms (attempt ${attempts}/${maxAttempts})`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -346,8 +347,8 @@ Rules:
       }
 
     } catch (err) {
-      console.error('❌ Failed to parse Gemini JSON:', err);
-      console.error('Raw response:', rawText);
+      logger.error('Failed to parse Gemini JSON:', err);
+      logger.debug('Raw response:', rawText);
       
       // Return fallback response
       parsedData = {
@@ -380,7 +381,7 @@ Rules:
       };
     }
 
-    console.log('✅ Successfully generated AI workout recommendations:', {
+    logger.api('Successfully generated AI workout recommendations:', {
       suggestionsCount: parsedData.suggestions.length,
       workoutsCount: parsedData.featuredWorkouts.length,
       contextDays: CONTEXT_DAYS
@@ -433,7 +434,7 @@ Rules:
     });
 
   } catch (error) {
-    console.error('❗ Featured workouts API error:', error);
+    logger.error('Featured workouts API error:', error);
     
     // Determine appropriate error message and suggestions based on error type
     let suggestions = [

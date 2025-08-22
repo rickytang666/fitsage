@@ -1,13 +1,7 @@
-/**
- * Simple Database Service for FitSage
- * 
- * Simple structure:
- * - profiles table: stores user info (name, height, weight)
- * - diary_logs table: stores daily logs with workouts as JSON
- */
 
 import { createSupabaseClient } from '@/utils/supabase-client';
 import { User, Log, Workout } from '@/models/User';
+import logger from '@/utils/logger';
 
 const supabase = createSupabaseClient();
 
@@ -29,16 +23,16 @@ export class DatabaseService {
       if (profileError) {
         if (profileError.code === 'PGRST116') {
           // No profile found - this is normal for new users
-          console.log('No profile found for user, will create one later');
+          logger.debug('No profile found for user, will create one later');
           return null;
         } else {
-          console.error('Error loading profile:', profileError);
+          logger.error('Error loading profile:', profileError);
           return null;
         }
       }
 
       if (!profile) {
-        console.log('Profile data is empty');
+        logger.debug('Profile data is empty');
         return null;
       }
 
@@ -58,7 +52,7 @@ export class DatabaseService {
         .order('log_date', { ascending: false });
 
       if (logsError) {
-        console.error('Error loading logs:', logsError);
+        logger.error('Error loading logs:', logsError);
         // Don't fail completely, just return user with no logs
         return user;
       }
@@ -110,7 +104,7 @@ export class DatabaseService {
       return user;
 
     } catch (error) {
-      console.error('Error loading user:', error);
+      logger.error('Error loading user:', error);
       return null;
     }
   }
@@ -120,7 +114,7 @@ export class DatabaseService {
    */
   static async saveUserProfile(user: User): Promise<boolean> {
     try {
-      console.log('🔄 Saving user profile:', { id: user.id, name: user.name, height: user.height, weight: user.weight });
+      logger.db('Saving user profile:', { id: user.id, name: user.name, height: user.height, weight: user.weight });
       
       const { error } = await supabase
         .from('profiles')
@@ -133,14 +127,14 @@ export class DatabaseService {
         });
 
       if (error) {
-        console.error('❌ Error saving profile:', error);
+        logger.error('Error saving profile:', error);
         return false;
       }
 
-      console.log('✅ Profile saved successfully');
+      logger.db('Profile saved successfully');
       return true;
     } catch (error) {
-      console.error('❌ Error saving user profile:', error);
+      logger.error('Error saving user profile:', error);
       return false;
     }
   }
@@ -163,7 +157,7 @@ export class DatabaseService {
       
       if (!existingLog) {
         // Found an available date!
-        console.log(`📅 Found available date: ${dateStr}`);
+        logger.debug(`Found available date: ${dateStr}`);
         return new Date(currentDate);
       }
       
@@ -180,7 +174,7 @@ export class DatabaseService {
    */
   static async saveLog(log: Log, userId: string): Promise<boolean> {
     try {
-      console.log('🔄 Saving log:', {
+      logger.db('Saving log:', {
         logId: log.id,
         userId: userId,
         logDate: log.date,
@@ -209,7 +203,7 @@ export class DatabaseService {
         calories: workout.calories
       }));
 
-      console.log('📊 Workouts JSON:', workoutsJson);
+      logger.debug('Workouts JSON:', workoutsJson);
 
       const logData = {
         id: log.id,
@@ -222,7 +216,7 @@ export class DatabaseService {
         updated_at: new Date().toISOString()
       };
 
-      console.log('💾 About to save log data:', logData);
+      logger.debug('About to save log data:', logData);
 
       // Upsert log (handles both insert and update cases)
       const { data, error } = await supabase
@@ -231,15 +225,15 @@ export class DatabaseService {
         .select();
 
       if (error) {
-        console.error('❌ Error saving log:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        logger.error('Error saving log:', error);
+        logger.error('Error details:', JSON.stringify(error, null, 2));
         return false;
       }
 
-      console.log('✅ Log saved successfully:', data);
+      logger.db('Log saved successfully:', data);
       return true;
     } catch (error) {
-      console.error('❌ Exception while saving log:', error);
+      logger.error('Exception while saving log:', error);
       return false;
     }
   }
@@ -277,8 +271,8 @@ export class DatabaseService {
         // Parse workouts from JSON
         if (dbLog.workouts && Array.isArray(dbLog.workouts)) {
           dbLog.workouts.forEach((workoutData: any) => {
-            console.log('🔍 Debug loading workout from DB:', JSON.stringify(workoutData));
-            console.log('🔍 Calories value:', workoutData.calories, 'Type:', typeof workoutData.calories);
+                    logger.debug('Loading workout from DB:', workoutData);
+        logger.debug('Calories value:', workoutData.calories, 'Type:', typeof workoutData.calories);
             
             // Ensure calories is a valid number
             let caloriesValue = workoutData.calories;
@@ -298,7 +292,7 @@ export class DatabaseService {
                 calories: caloriesValue
               }
             );
-            console.log('🔍 Created workout object:', workout.calories, 'Type:', typeof workout.calories);
+            logger.debug('Created workout object:', workout.calories, 'Type:', typeof workout.calories);
             log.workouts.push(workout);
           });
         }
@@ -312,7 +306,7 @@ export class DatabaseService {
       });
 
     } catch (error) {
-      console.error('❌ Exception loading diary entries:', error);
+      logger.error('Exception loading diary entries:', error);
       return [];
     }
   }
@@ -334,7 +328,7 @@ export class DatabaseService {
 
       // If entry exists and it's not the same ID, this date is taken
       if (existingLog && existingLog.id !== entryId) {
-        console.error('❌ Date already has an entry');
+        logger.error('Date already has an entry');
         return false;
       }
 
@@ -353,15 +347,15 @@ export class DatabaseService {
         .upsert(logData);
 
       if (error) {
-        console.error('❌ Error saving diary entry:', error);
+        logger.error('Error saving diary entry:', error);
         return false;
       }
 
-      console.log('✅ Diary entry saved successfully');
+      logger.db('Diary entry saved successfully');
       return true;
 
     } catch (error) {
-      console.error('❌ Exception saving diary entry:', error);
+      logger.error('Exception saving diary entry:', error);
       return false;
     }
   }
@@ -377,15 +371,15 @@ export class DatabaseService {
         .eq('id', entryId);
 
       if (error) {
-        console.error('❌ Error deleting diary entry:', error);
+        logger.error('Error deleting diary entry:', error);
         return false;
       }
 
-      console.log('✅ Diary entry deleted successfully');
+      logger.db('Diary entry deleted successfully');
       return true;
 
     } catch (error) {
-      console.error('❌ Exception deleting diary entry:', error);
+      logger.error('Exception deleting diary entry:', error);
       return false;
     }
   }
@@ -473,7 +467,7 @@ export class DatabaseService {
     isValid: boolean;
   } | null> {
     try {
-      console.log('🗄️ Checking cache for featured workouts...');
+      logger.debug('Checking cache for featured workouts...');
       
       const { data: cache, error } = await supabase
         .from('featured_workouts_cache')
@@ -482,7 +476,7 @@ export class DatabaseService {
         .single();
 
       if (error || !cache) {
-        console.log('📭 No cache found');
+        logger.debug('No cache found');
         return null;
       }
 
@@ -491,7 +485,7 @@ export class DatabaseService {
       const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
 
       if (cacheAge > maxCacheAge) {
-        console.log('⏰ Cache is too old, needs refresh');
+        logger.debug('Cache is too old, needs refresh');
         return { suggestions: [], featuredWorkouts: [], isValid: false };
       }
 
@@ -500,18 +494,18 @@ export class DatabaseService {
       const currentHash = this.generateDiaryHash(currentDiaryEntries);
 
       if (cache.diary_entries_hash !== currentHash) {
-        console.log('📝 Diary content changed, cache invalid');
+        logger.debug('Diary content changed, cache invalid');
         return { suggestions: [], featuredWorkouts: [], isValid: false };
       }
 
-      console.log('✅ Cache is valid, returning cached results');
+      logger.debug('Cache is valid, returning cached results');
       return {
         suggestions: cache.suggestions || [],
         featuredWorkouts: cache.featured_workouts || [],
         isValid: true
       };
     } catch (error) {
-      console.error('Error checking cache:', error);
+      logger.error('Error checking cache:', error);
       return null;
     }
   }
@@ -526,7 +520,7 @@ export class DatabaseService {
     diaryEntries: Log[]
   ): Promise<boolean> {
     try {
-      console.log('💾 Saving featured workouts to cache...');
+      logger.db('Saving featured workouts to cache...');
       
       const hash = this.generateDiaryHash(diaryEntries);
       const now = new Date().toISOString();
@@ -543,14 +537,14 @@ export class DatabaseService {
         });
 
       if (error) {
-        console.error('Error saving cache:', error);
+        logger.error('Error saving cache:', error);
         return false;
       }
 
-      console.log('✅ Featured workouts cached successfully');
+      logger.db('Featured workouts cached successfully');
       return true;
     } catch (error) {
-      console.error('Error saving featured workouts cache:', error);
+      logger.error('Error saving featured workouts cache:', error);
       return false;
     }
   }
@@ -560,16 +554,16 @@ export class DatabaseService {
    */
   static async clearFeaturedWorkoutsCache(userId: string): Promise<void> {
     try {
-      console.log('🗑️ Clearing featured workouts cache...');
-      
+            logger.db('Clearing featured workouts cache...');
+        
       await supabase
         .from('featured_workouts_cache')
         .delete()
         .eq('user_id', userId);
         
-      console.log('✅ Cache cleared');
+      logger.db('Cache cleared');
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      logger.error('Error clearing cache:', error);
     }
   }
 }
