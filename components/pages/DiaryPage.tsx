@@ -4,8 +4,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { Log, Workout } from "../../models/User";
-import logger from "@/utils/logger";
 import styles from "./DiaryPage.module.css";
+import VoiceRecorder from "../voice/VoiceRecorder";
+import {
+  IconKeyboard,
+  IconMicrophone,
+  IconFileText,
+  IconChartBar,
+} from "@tabler/icons-react";
+import logger from "@/utils/logger";
 
 export default function DiaryPage() {
   const { user: authUser } = useAuth();
@@ -23,6 +30,7 @@ export default function DiaryPage() {
     new Set()
   ); // Track which entries are expanded
   const [isCanceling, setIsCanceling] = useState(false); // Track if we're canceling to prevent validation flash
+  const [isVoiceMode, setIsVoiceMode] = useState(false); // Track voice vs type mode
 
   // Generate a simple ID
   const generateId = () =>
@@ -145,17 +153,15 @@ export default function DiaryPage() {
     }
   };
 
-  // Save entry and handle edit mode
-  const saveEntry = useCallback(async () => {
-    if (!authUser?.id || !selectedDate || !entryText.trim() || !isDateValid) {
-      return;
-    }
-
-    const entryToSave = entryText.trim();
-    const dateToSave = selectedDate;
-    const currentEntryId = currentEntry?.id;
-    const isEditing = !!currentEntry;
-
+  // AI pipeline function
+  const processDiaryEntryWithAI = useCallback(
+    async (
+      diaryText: string,
+      date: string,
+      currentEntryId?: string,
+      isEditing: boolean = false
+    ) => {
+      if (!authUser?.id) return;
     setIsSaving(true);
     setStatusMessage("Saving...");
     setError(""); // Clear any previous errors
@@ -188,8 +194,8 @@ export default function DiaryPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            diaryText: entryToSave,
-            logDate: new Date(dateToSave).toISOString(),
+            diaryText: diaryText,
+            logDate: new Date(date).toISOString(),
           }),
         });
 
@@ -204,8 +210,8 @@ export default function DiaryPage() {
             // Save basic entry without AI analysis
             const fallbackLog = new Log(
               currentEntryId || generateId(),
-              entryToSave,
-              new Date(dateToSave),
+              diaryText,
+              new Date(date),
               [
                 "📝 Entry saved. AI analysis will be available when quota resets.",
               ]
@@ -228,7 +234,7 @@ export default function DiaryPage() {
         const log = new Log(
           currentEntryId || generateId(),
           logData.diaryEntry,
-          new Date(dateToSave),
+          new Date(date),
           logData.suggestions
         );
 
@@ -308,25 +314,99 @@ export default function DiaryPage() {
           setTimeout(() => setStatusMessage(""), 4000);
         }
       } catch (error) {
-        logger.error("Background AI processing error:", error);
+        console.error("Background AI processing error:", error);
         setStatusMessage("❌ AI processing failed");
         setTimeout(() => setStatusMessage(""), 4000);
       }
-    })();
+    },
+    [authUser?.id, loadDiaryEntries]
+  );
+
+  // Save entry and handle edit mode
+  const saveEntry = useCallback(async () => {
+    if (!authUser?.id || !selectedDate || !entryText.trim() || !isDateValid) {
+      return;
+    }
+
+    const entryToSave = entryText.trim();
+    const dateToSave = selectedDate;
+    const currentEntryId = currentEntry?.id;
+    const isEditing = !!currentEntry;
+
+    setIsSaving(true);
+    setStatusMessage("Saving...");
+    setError(""); // Clear any previous errors
+
+    // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
+    if (isEditing) {
+      setCurrentEntry(null);
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      setIsDateValid(true);
+      await setDefaultDate();
+    } else {
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      await setDefaultDate();
+    }
+    setIsSaving(false);
+
+    // 🎯 Use encapsulated AI pipeline
+    await processDiaryEntryWithAI(
+      entryToSave,
+      dateToSave,
+      currentEntryId,
+      isEditing
+    );
   }, [
     authUser?.id,
     selectedDate,
     entryText,
     isDateValid,
     currentEntry,
-    loadDiaryEntries,
     setDefaultDate,
+    processDiaryEntryWithAI,
   ]);
+
+  // Voice mode submission handler (empty implementation for now)
+  const handleVoiceSubmission = useCallback(
+    async (transcribedText: string) => {
+      if (
+        !authUser?.id ||
+        !selectedDate ||
+        !transcribedText.trim() ||
+        !isDateValid
+      ) {
+        return;
+      }
+
+      console.log("Voice submission received:", transcribedText);
+      // TODO: Implement Web Speech API + HF punctuation cleanup
+      // For now, just log the transcribed text
+
+      // 🎯 Use encapsulated AI pipeline (same as type mode)
+      await processDiaryEntryWithAI(transcribedText, selectedDate);
+
+      // After success, find next available date
+      await setDefaultDate();
+    },
+    [
+      authUser?.id,
+      selectedDate,
+      isDateValid,
+      processDiaryEntryWithAI,
+      setDefaultDate,
+    ]
+  );
 
   // Edit an existing entry
   const editEntry = (entry: Log) => {
     setCurrentEntry(entry);
     setEntryText(entry.diaryEntry);
+    // Force type mode when editing
+    setIsVoiceMode(false);
     // Fix timezone issue: format date properly for input
     const year = entry.date.getFullYear();
     const month = String(entry.date.getMonth() + 1).padStart(2, "0");
@@ -366,6 +446,8 @@ export default function DiaryPage() {
     setError("");
     setStatusMessage("");
     setIsDateValid(true);
+    // Reset to voice mode when not editing
+    setIsVoiceMode(false);
     // Set default date last to avoid validation trigger
     await setDefaultDate();
     // Clear canceling flag
@@ -444,9 +526,6 @@ export default function DiaryPage() {
     }
   };
 
-  // Auto-save when text changes (debounced) - REMOVED
-  // No more auto-save functionality - only save when user clicks save/update button
-
   // Initial load
   useEffect(() => {
     const initializePage = async () => {
@@ -487,6 +566,32 @@ export default function DiaryPage() {
 
       {/* Entry Form */}
       <div className={styles.entryForm}>
+        {/* Voice/Type Toggle */}
+        <div className="flex justify-center mb-4">
+          <div className={styles.viewToggle}>
+            <button
+              onClick={() => setIsVoiceMode(false)}
+              className={`${styles.toggleButton} ${
+                !isVoiceMode ? styles.toggleButtonActive : ""
+              }`}
+              disabled={!!currentEntry}
+            >
+              <IconKeyboard size={16} className="mr-2" />
+              Type Mode
+            </button>
+            <button
+              onClick={() => setIsVoiceMode(true)}
+              className={`${styles.toggleButton} ${
+                isVoiceMode ? styles.toggleButtonActive : ""
+              }`}
+              disabled={!!currentEntry}
+            >
+              <IconMicrophone size={16} className="mr-2" />
+              Voice Mode
+            </button>
+          </div>
+        </div>
+
         <div className={styles.formHeader}>
           <h2>{currentEntry ? "Edit Diary Entry" : "New Diary Entry"}</h2>
           {currentEntry && (
@@ -527,37 +632,49 @@ export default function DiaryPage() {
           <div className={styles.statusMessage}>{statusMessage}</div>
         )}
 
-        {/* Text Area */}
-        <div className={styles.textSection}>
-          <textarea
-            placeholder="Write about your fitness activities, how you felt, any insights..."
-            value={entryText}
-            onChange={(e) => setEntryText(e.target.value)}
-            className={styles.textArea}
-            rows={8}
+        {/* Voice Recorder or Text Area */}
+        {isVoiceMode ? (
+          <VoiceRecorder
+            onTextChange={setEntryText}
+            currentText={entryText}
+            onSubmit={handleVoiceSubmission}
           />
+        ) : (
+          <>
+            <div className={styles.textSection}>
+              <textarea
+                placeholder="Write about your fitness activities, how you felt, any insights..."
+                value={entryText}
+                onChange={(e) => setEntryText(e.target.value)}
+                className={styles.textArea}
+                rows={8}
+              />
 
-          <div className={styles.textMeta}>
-            <span className={styles.charCount}>
-              {entryText.length} characters
-            </span>
-          </div>
-        </div>
+              <div className={styles.textMeta}>
+                <span className={styles.charCount}>
+                  {entryText.length} characters
+                </span>
+              </div>
+            </div>
 
-        {/* Save Button */}
-        <button
-          onClick={saveEntry}
-          disabled={!entryText.trim() || !isDateValid || isSaving}
-          className={`${styles.saveButton} ${
-            !entryText.trim() || !isDateValid ? styles.saveButtonDisabled : ""
-          }`}
-        >
-          {isSaving
-            ? "Saving..."
-            : currentEntry
-            ? "Update Entry"
-            : "Save Entry"}
-        </button>
+            {/* Save Button - Only for Type Mode */}
+            <button
+              onClick={saveEntry}
+              disabled={!entryText.trim() || !isDateValid || isSaving}
+              className={`${styles.saveButton} ${
+                !entryText.trim() || !isDateValid
+                  ? styles.saveButtonDisabled
+                  : ""
+              }`}
+            >
+              {isSaving
+                ? "Saving..."
+                : currentEntry
+                ? "Update Entry"
+                : "Save Entry"}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Entries List */}
@@ -575,7 +692,8 @@ export default function DiaryPage() {
                 viewMode === "diary" ? styles.toggleButtonActive : ""
               }`}
             >
-              📝 Diary View
+              <IconFileText size={16} className="mr-2" />
+              Diary View
             </button>
             <button
               onClick={() => setViewMode("summary")}
@@ -583,7 +701,8 @@ export default function DiaryPage() {
                 viewMode === "summary" ? styles.toggleButtonActive : ""
               }`}
             >
-              📊 Summary View
+              <IconChartBar size={16} className="mr-2" />
+              Summary View
             </button>
           </div>
         </div>
