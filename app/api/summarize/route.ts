@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import logger from '@/utils/logger';
 
 // Types matching our enhanced models
 type WorkoutData = {
@@ -151,14 +152,11 @@ ${diaryText}
 `;
 
   try {
-    // TEMPORARILY BYPASS local rate limiting for debugging
-    console.log('🧪 Bypassing local rate limiter for debugging...');
-
-    // Initialize the Google GenAI client using the pattern from your guide
+    // Initialize the Google GenAI client
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-    // Direct API call for debugging (no retries)
-    console.log('🤖 Making direct Gemini API call...');
+    // Make API call
+    logger.api('Making Gemini API call...');
     let rawText = '';
     
     try {
@@ -166,15 +164,14 @@ ${diaryText}
         model: 'gemini-2.5-flash-lite',
         contents: prompt,      });
       rawText = response.text || '';
-      console.log('✅ Gemini API call successful, response length:', rawText.length);
+      logger.api('Gemini API call successful, response length:', rawText.length);
       
     } catch (genError: any) {
-      console.error('❌ Gemini API Raw Error Details:', {
+      logger.error('Gemini API Error Details:', {
         message: genError.message,
         status: genError.status,
         code: genError.code,
-        name: genError.name,
-        fullError: JSON.stringify(genError, null, 2)
+        name: genError.name
       });
       
       // Throw the original error so we can see Google's exact message
@@ -243,8 +240,8 @@ ${diaryText}
       });
 
     } catch (err) {
-      console.error('❌ Failed to parse Gemini JSON:', err);
-      console.error('Raw response:', rawText);
+      logger.error('Failed to parse Gemini JSON:', err);
+      logger.debug('Raw response:', rawText);
       
       // Return fallback response
       parsedData = {
@@ -270,7 +267,7 @@ ${diaryText}
       suggestions: parsedData.suggestions,
     };
 
-    console.log('✅ Successfully processed diary with Gemini:', {
+    logger.api('Successfully processed diary with Gemini:', {
       workoutsFound: workoutsWithIds.length,
       injuriesFound: parsedData.injuries.length,
       suggestionsGenerated: parsedData.suggestions.length,
@@ -279,7 +276,7 @@ ${diaryText}
     // Log workout structure for debugging
     workoutsWithIds.forEach((workout, index) => {
       const workoutType = (workout.sets && workout.reps) ? 'sets-based' : 'duration-based';
-      console.log(`🏋️ Workout ${index + 1}: "${workout.name}" (${workoutType})`, {
+      logger.debug(`Workout ${index + 1}: "${workout.name}" (${workoutType})`, {
         durationMinutes: workout.durationMinutes,
         calories: workout.calories,
         sets: workout.sets,
@@ -291,7 +288,7 @@ ${diaryText}
     return NextResponse.json({ logData });
 
   } catch (error) {
-    console.error('❗ Gemini API error:', error);
+    logger.error('Gemini API error:', error);
     
     // Determine appropriate error message based on error type
     let errorMessage = '❗ AI processing failed. Your diary has been saved as-is.';

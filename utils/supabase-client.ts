@@ -13,7 +13,7 @@ let supabaseClientInstance: ReturnType<typeof createClientComponentClient<Databa
 export const createSupabaseClient = () => {
   if (!supabaseClientInstance) {
     supabaseClientInstance = createClientComponentClient<Database>();
-    console.log('🔧 Supabase client created with optimized settings');
+    // Client created with optimized settings
   }
   return supabaseClientInstance;
 };
