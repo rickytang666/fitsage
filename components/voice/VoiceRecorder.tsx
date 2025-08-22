@@ -11,11 +11,13 @@ import {
 interface VoiceRecorderProps {
   onTextChange: (text: string) => void;
   currentText: string;
+  onSubmit: (transcribedText: string) => Promise<void>;
 }
 
 export default function VoiceRecorder({
   onTextChange,
   currentText,
+  onSubmit,
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
 
@@ -28,6 +30,12 @@ export default function VoiceRecorder({
       // Stop recording
       setIsRecording(false);
       console.log("Stopped recording");
+
+      // TODO: This is where we'll get the transcribed text from Web Speech API
+      // For now, simulate with a placeholder text
+      const mockTranscribedText =
+        "Today I went to the gym and did 4 sets of bench press, like 55 pounds";
+      onSubmit(mockTranscribedText);
     }
   };
 

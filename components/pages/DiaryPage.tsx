@@ -152,39 +152,16 @@ export default function DiaryPage() {
     }
   };
 
-  // Save entry and handle edit mode
-  const saveEntry = useCallback(async () => {
-    if (!authUser?.id || !selectedDate || !entryText.trim() || !isDateValid) {
-      return;
-    }
+  // AI pipeline function
+  const processDiaryEntryWithAI = useCallback(
+    async (
+      diaryText: string,
+      date: string,
+      currentEntryId?: string,
+      isEditing: boolean = false
+    ) => {
+      if (!authUser?.id) return;
 
-    const entryToSave = entryText.trim();
-    const dateToSave = selectedDate;
-    const currentEntryId = currentEntry?.id;
-    const isEditing = !!currentEntry;
-
-    setIsSaving(true);
-    setStatusMessage("Saving...");
-    setError(""); // Clear any previous errors
-
-    // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
-    if (isEditing) {
-      setCurrentEntry(null);
-      setEntryText("");
-      setError("");
-      setStatusMessage("");
-      setIsDateValid(true);
-      await setDefaultDate();
-    } else {
-      setEntryText("");
-      setError("");
-      setStatusMessage("");
-      await setDefaultDate();
-    }
-    setIsSaving(false);
-
-    // 🎯 Background AI processing - don't block user
-    (async () => {
       try {
         setStatusMessage("✅ Saved! Processing with AI...");
 
@@ -195,8 +172,8 @@ export default function DiaryPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            diaryText: entryToSave,
-            logDate: new Date(dateToSave).toISOString(),
+            diaryText: diaryText,
+            logDate: new Date(date).toISOString(),
           }),
         });
 
@@ -211,8 +188,8 @@ export default function DiaryPage() {
             // Save basic entry without AI analysis
             const fallbackLog = new Log(
               currentEntryId || generateId(),
-              entryToSave,
-              new Date(dateToSave),
+              diaryText,
+              new Date(date),
               [
                 "📝 Entry saved. AI analysis will be available when quota resets.",
               ]
@@ -235,7 +212,7 @@ export default function DiaryPage() {
         const log = new Log(
           currentEntryId || generateId(),
           logData.diaryEntry,
-          new Date(dateToSave),
+          new Date(date),
           logData.suggestions
         );
 
@@ -319,16 +296,88 @@ export default function DiaryPage() {
         setStatusMessage("❌ AI processing failed");
         setTimeout(() => setStatusMessage(""), 4000);
       }
-    })();
+    },
+    [authUser?.id, loadDiaryEntries]
+  );
+
+  // Save entry and handle edit mode
+  const saveEntry = useCallback(async () => {
+    if (!authUser?.id || !selectedDate || !entryText.trim() || !isDateValid) {
+      return;
+    }
+
+    const entryToSave = entryText.trim();
+    const dateToSave = selectedDate;
+    const currentEntryId = currentEntry?.id;
+    const isEditing = !!currentEntry;
+
+    setIsSaving(true);
+    setStatusMessage("Saving...");
+    setError(""); // Clear any previous errors
+
+    // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
+    if (isEditing) {
+      setCurrentEntry(null);
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      setIsDateValid(true);
+      await setDefaultDate();
+    } else {
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
+      await setDefaultDate();
+    }
+    setIsSaving(false);
+
+    // 🎯 Use encapsulated AI pipeline
+    await processDiaryEntryWithAI(
+      entryToSave,
+      dateToSave,
+      currentEntryId,
+      isEditing
+    );
   }, [
     authUser?.id,
     selectedDate,
     entryText,
     isDateValid,
     currentEntry,
-    loadDiaryEntries,
     setDefaultDate,
+    processDiaryEntryWithAI,
   ]);
+
+  // Voice mode submission handler (empty implementation for now)
+  const handleVoiceSubmission = useCallback(
+    async (transcribedText: string) => {
+      if (
+        !authUser?.id ||
+        !selectedDate ||
+        !transcribedText.trim() ||
+        !isDateValid
+      ) {
+        return;
+      }
+
+      console.log("Voice submission received:", transcribedText);
+      // TODO: Implement Web Speech API + HF punctuation cleanup
+      // For now, just log the transcribed text
+
+      // 🎯 Use encapsulated AI pipeline (same as type mode)
+      await processDiaryEntryWithAI(transcribedText, selectedDate);
+
+      // After success, find next available date
+      await setDefaultDate();
+    },
+    [
+      authUser?.id,
+      selectedDate,
+      isDateValid,
+      processDiaryEntryWithAI,
+      setDefaultDate,
+    ]
+  );
 
   // Edit an existing entry
   const editEntry = (entry: Log) => {
@@ -455,9 +504,6 @@ export default function DiaryPage() {
     }
   };
 
-  // Auto-save when text changes (debounced) - REMOVED
-  // No more auto-save functionality - only save when user clicks save/update button
-
   // Initial load
   useEffect(() => {
     const initializePage = async () => {
@@ -566,7 +612,11 @@ export default function DiaryPage() {
 
         {/* Voice Recorder or Text Area */}
         {isVoiceMode ? (
-          <VoiceRecorder onTextChange={setEntryText} currentText={entryText} />
+          <VoiceRecorder
+            onTextChange={setEntryText}
+            currentText={entryText}
+            onSubmit={handleVoiceSubmission}
+          />
         ) : (
           <>
             <div className={styles.textSection}>
