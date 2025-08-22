@@ -117,7 +117,7 @@ Contributions and feedback are welcome! Please feel free to submit a Pull Reques
 
 ## Roadmap
 
-- **Voice Input**: Add Whisper API to enable voice diary entries
+- **Voice Input**: Enable voice input for diary entries
 - **Light/Dark Mode**: Add light/dark mode toggle
 - **Date Filtering**: Better UX for viewing historical data
 - **Smart Recommendations**: Intelligent YouTube video suggestions based on your workouts

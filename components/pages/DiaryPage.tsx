@@ -1,32 +1,43 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../auth/AuthProvider';
-import DatabaseService from '../../services/DatabaseService';
-import { Log, Workout } from '../../models/User';
-import styles from './DiaryPage.module.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { useAuth } from "../auth/AuthProvider";
+import DatabaseService from "../../services/DatabaseService";
+import { Log, Workout } from "../../models/User";
+import styles from "./DiaryPage.module.css";
+import VoiceRecorder from "../voice/VoiceRecorder";
+import {
+  IconKeyboard,
+  IconMicrophone,
+  IconFileText,
+  IconChartBar,
+} from "@tabler/icons-react";
 
 export default function DiaryPage() {
   const { user: authUser } = useAuth();
   const [diaryEntries, setDiaryEntries] = useState<Log[]>([]);
   const [currentEntry, setCurrentEntry] = useState<Log | null>(null);
-  const [entryText, setEntryText] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [entryText, setEntryText] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState<string>("");
   const [isDateValid, setIsDateValid] = useState(true);
-  const [viewMode, setViewMode] = useState<'diary' | 'summary'>('summary'); // Default to summary view
-  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set()); // Track which entries are expanded
+  const [viewMode, setViewMode] = useState<"diary" | "summary">("summary"); // Default to summary view
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
+    new Set()
+  ); // Track which entries are expanded
   const [isCanceling, setIsCanceling] = useState(false); // Track if we're canceling to prevent validation flash
+  const [isVoiceMode, setIsVoiceMode] = useState(false); // Track voice vs type mode
 
   // Generate a simple ID
-  const generateId = () => `diary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const generateId = () =>
+    `diary_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   // Toggle expanded state for diary entries
   const toggleEntryExpansion = (entryId: string) => {
-    setExpandedEntries(prev => {
+    setExpandedEntries((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(entryId)) {
         newSet.delete(entryId);
@@ -40,85 +51,102 @@ export default function DiaryPage() {
   // Format date for display (fix timezone issues)
   const formatDate = (date: Date): string => {
     // Create a new date using the date components to avoid timezone issues
-    const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return localDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    const localDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    return localDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   // Load all diary entries
   const loadDiaryEntries = useCallback(async () => {
     if (!authUser?.id) return;
-    
+
     setIsLoading(true);
     try {
       const entries = await DatabaseService.loadDiaryEntries(authUser.id);
       setDiaryEntries(entries);
     } catch (error) {
-      console.error('Error loading diary entries:', error);
-      setError('Failed to load diary entries');
+      console.error("Error loading diary entries:", error);
+      setError("Failed to load diary entries");
     } finally {
       setIsLoading(false);
     }
   }, [authUser?.id]);
 
   // Find nearest available date and set as default
-  const setDefaultDate = useCallback(async (forceToday: boolean = false) => {
-    if (!authUser?.id) return;
-    
-    try {
-      // Always start from today when looking for available dates
-      const startDate = new Date();
-      const availableDate = await DatabaseService.findNearestAvailableDate(authUser.id, startDate);
-      // Fix timezone issue: format date properly for input
-      const year = availableDate.getFullYear();
-      const month = String(availableDate.getMonth() + 1).padStart(2, '0');
-      const day = String(availableDate.getDate()).padStart(2, '0');
-      setSelectedDate(`${year}-${month}-${day}`);
-    } catch (error) {
-      console.error('Error finding available date:', error);
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      setSelectedDate(`${year}-${month}-${day}`);
-    }
-  }, [authUser?.id]);
+  const setDefaultDate = useCallback(
+    async (forceToday: boolean = false) => {
+      if (!authUser?.id) return;
+
+      try {
+        // Always start from today when looking for available dates
+        const startDate = new Date();
+        const availableDate = await DatabaseService.findNearestAvailableDate(
+          authUser.id,
+          startDate
+        );
+        // Fix timezone issue: format date properly for input
+        const year = availableDate.getFullYear();
+        const month = String(availableDate.getMonth() + 1).padStart(2, "0");
+        const day = String(availableDate.getDate()).padStart(2, "0");
+        setSelectedDate(`${year}-${month}-${day}`);
+      } catch (error) {
+        console.error("Error finding available date:", error);
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        setSelectedDate(`${year}-${month}-${day}`);
+      }
+    },
+    [authUser?.id]
+  );
 
   // Validate selected date
-  const validateDate = useCallback(async (dateStr: string, excludeEntryId?: string) => {
-    if (!authUser?.id || !dateStr) return false;
+  const validateDate = useCallback(
+    async (dateStr: string, excludeEntryId?: string) => {
+      if (!authUser?.id || !dateStr) return false;
 
-    const selectedDateObj = new Date(dateStr);
-    const today = new Date();
-    
-    // Check if future date
-    if (selectedDateObj > today) {
-      setError('Cannot create entries for future dates');
-      setIsDateValid(false);
-      return false;
-    }
+      const selectedDateObj = new Date(dateStr);
+      const today = new Date();
 
-    // Check if date is available
-    const isAvailable = await DatabaseService.isDateAvailable(authUser.id, selectedDateObj, excludeEntryId);
-    if (!isAvailable) {
-      setError('This date already has an entry. Choose a different date.');
-      setIsDateValid(false);
-      return false;
-    }
+      // Check if future date
+      if (selectedDateObj > today) {
+        setError("Cannot create entries for future dates");
+        setIsDateValid(false);
+        return false;
+      }
 
-    setError('');
-    setIsDateValid(true);
-    return true;
-  }, [authUser?.id]);
+      // Check if date is available
+      const isAvailable = await DatabaseService.isDateAvailable(
+        authUser.id,
+        selectedDateObj,
+        excludeEntryId
+      );
+      if (!isAvailable) {
+        setError("This date already has an entry. Choose a different date.");
+        setIsDateValid(false);
+        return false;
+      }
+
+      setError("");
+      setIsDateValid(true);
+      return true;
+    },
+    [authUser?.id]
+  );
 
   // Handle date change
   const handleDateChange = async (dateStr: string) => {
     setSelectedDate(dateStr);
-    
+
     if (dateStr) {
       await validateDate(dateStr, currentEntry?.id);
     }
@@ -136,21 +164,21 @@ export default function DiaryPage() {
     const isEditing = !!currentEntry;
 
     setIsSaving(true);
-    setStatusMessage('Saving...');
-    setError(''); // Clear any previous errors
+    setStatusMessage("Saving...");
+    setError(""); // Clear any previous errors
 
     // 🚀 EXIT EDITOR IMMEDIATELY - Clear form first
     if (isEditing) {
       setCurrentEntry(null);
-      setEntryText('');
-      setError('');
-      setStatusMessage('');
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
       setIsDateValid(true);
       await setDefaultDate();
     } else {
-      setEntryText('');
-      setError('');
-      setStatusMessage('');
+      setEntryText("");
+      setError("");
+      setStatusMessage("");
       await setDefaultDate();
     }
     setIsSaving(false);
@@ -158,13 +186,13 @@ export default function DiaryPage() {
     // 🎯 Background AI processing - don't block user
     (async () => {
       try {
-        setStatusMessage('✅ Saved! Processing with AI...');
-        
+        setStatusMessage("✅ Saved! Processing with AI...");
+
         // Call Gemini API to process the diary entry
-        const geminiResponse = await fetch('/api/summarize', {
-          method: 'POST',
+        const geminiResponse = await fetch("/api/summarize", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             diaryText: entryToSave,
@@ -175,28 +203,32 @@ export default function DiaryPage() {
         if (!geminiResponse.ok) {
           // Handle AI failures gracefully
           if (geminiResponse.status === 429) {
-            setStatusMessage('✅ Saved! (AI analysis delayed due to rate limits)');
-            setTimeout(() => setStatusMessage(''), 4000);
-            
+            setStatusMessage(
+              "✅ Saved! (AI analysis delayed due to rate limits)"
+            );
+            setTimeout(() => setStatusMessage(""), 4000);
+
             // Save basic entry without AI analysis
             const fallbackLog = new Log(
               currentEntryId || generateId(),
               entryToSave,
               new Date(dateToSave),
-              ['📝 Entry saved. AI analysis will be available when quota resets.']
+              [
+                "📝 Entry saved. AI analysis will be available when quota resets.",
+              ]
             );
-            
+
             await DatabaseService.saveLog(fallbackLog, authUser.id);
             await loadDiaryEntries();
             return;
           }
-          throw new Error('AI processing failed');
+          throw new Error("AI processing failed");
         }
 
         const { logData } = await geminiResponse.json();
-        
+
         if (!logData) {
-          throw new Error('Invalid AI response');
+          throw new Error("Invalid AI response");
         }
 
         // Create Log object with AI-processed data
@@ -232,21 +264,25 @@ export default function DiaryPage() {
 
         if (success) {
           await loadDiaryEntries();
-          setStatusMessage('✅ Saved with AI insights! Updating recommendations...');
-          
+          setStatusMessage(
+            "✅ Saved with AI insights! Updating recommendations..."
+          );
+
           // 🚀 REGENERATE FEATURED WORKOUTS CACHE in background
           try {
             // Get fresh diary entries for cache generation
-            const freshDiaryEntries = await DatabaseService.loadDiaryEntries(authUser.id);
-            
+            const freshDiaryEntries = await DatabaseService.loadDiaryEntries(
+              authUser.id
+            );
+
             // Generate new featured workouts and cache them
-            const response = await fetch('/api/featured-workouts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
+            const response = await fetch("/api/featured-workouts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 userId: authUser.id,
                 diaryEntries: freshDiaryEntries,
-                regenerateCache: true
+                regenerateCache: true,
               }),
             });
 
@@ -258,28 +294,41 @@ export default function DiaryPage() {
                 data.featuredWorkouts || [],
                 freshDiaryEntries
               );
-              console.log('✅ Featured workouts cache regenerated after diary update');
-              setStatusMessage('✅ Diary saved with AI insights!');
+              console.log(
+                "✅ Featured workouts cache regenerated after diary update"
+              );
+              setStatusMessage("✅ Diary saved with AI insights!");
             } else {
-              setStatusMessage('✅ Diary saved with AI insights!');
+              setStatusMessage("✅ Diary saved with AI insights!");
             }
           } catch (cacheError) {
-            console.log('⚠️ Cache regeneration failed (non-critical):', cacheError);
-            setStatusMessage('✅ Diary saved with AI insights!');
+            console.log(
+              "⚠️ Cache regeneration failed (non-critical):",
+              cacheError
+            );
+            setStatusMessage("✅ Diary saved with AI insights!");
           }
-          
-          setTimeout(() => setStatusMessage(''), 4000);
+
+          setTimeout(() => setStatusMessage(""), 4000);
         } else {
-          setStatusMessage('❌ Failed to save processed diary entry');
-          setTimeout(() => setStatusMessage(''), 4000);
+          setStatusMessage("❌ Failed to save processed diary entry");
+          setTimeout(() => setStatusMessage(""), 4000);
         }
       } catch (error) {
-        console.error('Background AI processing error:', error);
-        setStatusMessage('❌ AI processing failed');
-        setTimeout(() => setStatusMessage(''), 4000);
+        console.error("Background AI processing error:", error);
+        setStatusMessage("❌ AI processing failed");
+        setTimeout(() => setStatusMessage(""), 4000);
       }
     })();
-  }, [authUser?.id, selectedDate, entryText, isDateValid, currentEntry, loadDiaryEntries, setDefaultDate]);
+  }, [
+    authUser?.id,
+    selectedDate,
+    entryText,
+    isDateValid,
+    currentEntry,
+    loadDiaryEntries,
+    setDefaultDate,
+  ]);
 
   // Edit an existing entry
   const editEntry = (entry: Log) => {
@@ -287,26 +336,29 @@ export default function DiaryPage() {
     setEntryText(entry.diaryEntry);
     // Fix timezone issue: format date properly for input
     const year = entry.date.getFullYear();
-    const month = String(entry.date.getMonth() + 1).padStart(2, '0');
-    const day = String(entry.date.getDate()).padStart(2, '0');
+    const month = String(entry.date.getMonth() + 1).padStart(2, "0");
+    const day = String(entry.date.getDate()).padStart(2, "0");
     setSelectedDate(`${year}-${month}-${day}`);
-    setError('');
-    setStatusMessage('');
+    setError("");
+    setStatusMessage("");
     setIsDateValid(true);
-    
+
     // Start scrolling immediately, no delay
-    window.scrollTo({ 
-      top: 0, 
-      behavior: 'smooth' 
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
     });
-    
+
     // Focus the textarea after a short delay to let the form update
     setTimeout(() => {
-      const textarea = document.querySelector('textarea');
+      const textarea = document.querySelector("textarea");
       if (textarea) {
         textarea.focus();
         // Move cursor to end of text
-        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        textarea.setSelectionRange(
+          textarea.value.length,
+          textarea.value.length
+        );
       }
     }, 200);
   };
@@ -317,9 +369,9 @@ export default function DiaryPage() {
     setIsCanceling(true);
     // Clear everything immediately to prevent validation flash
     setCurrentEntry(null);
-    setEntryText('');
-    setError('');
-    setStatusMessage('');
+    setEntryText("");
+    setError("");
+    setStatusMessage("");
     setIsDateValid(true);
     // Set default date last to avoid validation trigger
     await setDefaultDate();
@@ -329,7 +381,7 @@ export default function DiaryPage() {
 
   // Delete entry
   const deleteEntry = async (entryId: string) => {
-    if (!window.confirm('Are you sure you want to delete this diary entry?')) {
+    if (!window.confirm("Are you sure you want to delete this diary entry?")) {
       return;
     }
 
@@ -338,24 +390,26 @@ export default function DiaryPage() {
       if (success) {
         // Reload entries to show updated list
         await loadDiaryEntries();
-        
+
         // 🚀 REGENERATE FEATURED WORKOUTS CACHE after deletion
         try {
-          console.log('🗑️ Regenerating cache after diary deletion...');
-          const freshDiaryEntries = await DatabaseService.loadDiaryEntries(authUser!.id);
-          
+          console.log("🗑️ Regenerating cache after diary deletion...");
+          const freshDiaryEntries = await DatabaseService.loadDiaryEntries(
+            authUser!.id
+          );
+
           // Clear cache since data changed
           await DatabaseService.clearFeaturedWorkoutsCache(authUser!.id);
-          
+
           // Generate new cache if there are still entries
           if (freshDiaryEntries.length > 0) {
-            const response = await fetch('/api/featured-workouts', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
+            const response = await fetch("/api/featured-workouts", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
                 userId: authUser!.id,
                 diaryEntries: freshDiaryEntries,
-                regenerateCache: true
+                regenerateCache: true,
               }),
             });
 
@@ -367,16 +421,19 @@ export default function DiaryPage() {
                 data.featuredWorkouts || [],
                 freshDiaryEntries
               );
-              console.log('✅ Cache regenerated after deletion');
+              console.log("✅ Cache regenerated after deletion");
             }
           }
         } catch (cacheError) {
-          console.log('⚠️ Cache regeneration after deletion failed (non-critical):', cacheError);
+          console.log(
+            "⚠️ Cache regeneration after deletion failed (non-critical):",
+            cacheError
+          );
         }
-        
+
         // Small delay to ensure database changes are reflected
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         // If we were editing this entry, clear the form and find new default date
         if (currentEntry?.id === entryId) {
           await cancelEdit();
@@ -386,11 +443,11 @@ export default function DiaryPage() {
           await setDefaultDate(true);
         }
       } else {
-        setError('Failed to delete diary entry.');
+        setError("Failed to delete diary entry.");
       }
     } catch (error) {
-      console.error('Error deleting entry:', error);
-      setError('An error occurred while deleting the entry.');
+      console.error("Error deleting entry:", error);
+      setError("An error occurred while deleting the entry.");
     }
   };
 
@@ -406,7 +463,7 @@ export default function DiaryPage() {
         await setDefaultDate();
       }
     };
-    
+
     initializePage();
   }, [authUser?.id, loadDiaryEntries, setDefaultDate]);
 
@@ -430,18 +487,41 @@ export default function DiaryPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>📝 My Fitness Diary</h1>
-        <p className={styles.subtitle}>Track your fitness journey one entry at a time</p>
+        <p className={styles.subtitle}>
+          Track your fitness journey one entry at a time
+        </p>
       </div>
 
       {/* Entry Form */}
       <div className={styles.entryForm}>
-        <div className={styles.formHeader}>
-          <h2>{currentEntry ? 'Edit Diary Entry' : 'New Diary Entry'}</h2>
-          {currentEntry && (
-            <button 
-              onClick={cancelEdit}
-              className={styles.cancelButton}
+        {/* Voice/Type Toggle */}
+        <div className="flex justify-center mb-4">
+          <div className={styles.viewToggle}>
+            <button
+              onClick={() => setIsVoiceMode(false)}
+              className={`${styles.toggleButton} ${
+                !isVoiceMode ? styles.toggleButtonActive : ""
+              }`}
             >
+              <IconKeyboard size={16} className="mr-2" />
+              Type Mode
+            </button>
+            <button
+              onClick={() => setIsVoiceMode(true)}
+              className={`${styles.toggleButton} ${
+                isVoiceMode ? styles.toggleButtonActive : ""
+              }`}
+            >
+              <IconMicrophone size={16} className="mr-2" />
+              Voice Mode
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.formHeader}>
+          <h2>{currentEntry ? "Edit Diary Entry" : "New Diary Entry"}</h2>
+          {currentEntry && (
+            <button onClick={cancelEdit} className={styles.cancelButton}>
               Cancel Edit
             </button>
           )}
@@ -460,53 +540,63 @@ export default function DiaryPage() {
             max={(() => {
               const today = new Date();
               const year = today.getFullYear();
-              const month = String(today.getMonth() + 1).padStart(2, '0');
-              const day = String(today.getDate()).padStart(2, '0');
+              const month = String(today.getMonth() + 1).padStart(2, "0");
+              const day = String(today.getDate()).padStart(2, "0");
               return `${year}-${month}-${day}`;
             })()}
-            className={`${styles.dateInput} ${!isDateValid ? styles.dateInputError : ''}`}
+            className={`${styles.dateInput} ${
+              !isDateValid ? styles.dateInputError : ""
+            }`}
           />
         </div>
 
         {/* Error Message */}
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.error}>{error}</div>}
 
         {/* Status Message */}
         {statusMessage && (
-          <div className={styles.statusMessage}>
-            {statusMessage}
-          </div>
+          <div className={styles.statusMessage}>{statusMessage}</div>
         )}
 
-        {/* Text Area */}
-        <div className={styles.textSection}>
-          <textarea
-            placeholder="Write about your fitness activities, how you felt, any insights..."
-            value={entryText}
-            onChange={(e) => setEntryText(e.target.value)}
-            className={styles.textArea}
-            rows={8}
-          />
-          
-          <div className={styles.textMeta}>
-            <span className={styles.charCount}>
-              {entryText.length} characters
-            </span>
-          </div>
-        </div>
+        {/* Voice Recorder or Text Area */}
+        {isVoiceMode ? (
+          <VoiceRecorder onTextChange={setEntryText} currentText={entryText} />
+        ) : (
+          <>
+            <div className={styles.textSection}>
+              <textarea
+                placeholder="Write about your fitness activities, how you felt, any insights..."
+                value={entryText}
+                onChange={(e) => setEntryText(e.target.value)}
+                className={styles.textArea}
+                rows={8}
+              />
 
-        {/* Save Button */}
-        <button
-          onClick={saveEntry}
-          disabled={!entryText.trim() || !isDateValid || isSaving}
-          className={`${styles.saveButton} ${(!entryText.trim() || !isDateValid) ? styles.saveButtonDisabled : ''}`}
-        >
-          {isSaving ? 'Saving...' : currentEntry ? 'Update Entry' : 'Save Entry'}
-        </button>
+              <div className={styles.textMeta}>
+                <span className={styles.charCount}>
+                  {entryText.length} characters
+                </span>
+              </div>
+            </div>
+
+            {/* Save Button - Only for Type Mode */}
+            <button
+              onClick={saveEntry}
+              disabled={!entryText.trim() || !isDateValid || isSaving}
+              className={`${styles.saveButton} ${
+                !entryText.trim() || !isDateValid
+                  ? styles.saveButtonDisabled
+                  : ""
+              }`}
+            >
+              {isSaving
+                ? "Saving..."
+                : currentEntry
+                ? "Update Entry"
+                : "Save Entry"}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Entries List */}
@@ -515,24 +605,30 @@ export default function DiaryPage() {
           <h2 className={styles.entriesTitle}>
             Previous Entries ({diaryEntries.length})
           </h2>
-          
+
           {/* View Toggle */}
           <div className={styles.viewToggle}>
             <button
-              onClick={() => setViewMode('diary')}
-              className={`${styles.toggleButton} ${viewMode === 'diary' ? styles.toggleButtonActive : ''}`}
+              onClick={() => setViewMode("diary")}
+              className={`${styles.toggleButton} ${
+                viewMode === "diary" ? styles.toggleButtonActive : ""
+              }`}
             >
-              📝 Diary View
+              <IconFileText size={16} className="mr-2" />
+              Diary View
             </button>
             <button
-              onClick={() => setViewMode('summary')}
-              className={`${styles.toggleButton} ${viewMode === 'summary' ? styles.toggleButtonActive : ''}`}
+              onClick={() => setViewMode("summary")}
+              className={`${styles.toggleButton} ${
+                viewMode === "summary" ? styles.toggleButtonActive : ""
+              }`}
             >
-              📊 Summary View
+              <IconChartBar size={16} className="mr-2" />
+              Summary View
             </button>
           </div>
         </div>
-        
+
         {isLoading ? (
           <div className={styles.loading}>Loading your diary entries...</div>
         ) : diaryEntries.length > 0 ? (
@@ -540,9 +636,7 @@ export default function DiaryPage() {
             {diaryEntries.map((entry) => (
               <div key={entry.id} className={styles.entryCard}>
                 <div className={styles.entryHeader}>
-                  <h3 className={styles.entryDate}>
-                    {formatDate(entry.date)}
-                  </h3>
+                  <h3 className={styles.entryDate}>{formatDate(entry.date)}</h3>
                   <div className={styles.entryActions}>
                     <button
                       onClick={() => editEntry(entry)}
@@ -558,9 +652,9 @@ export default function DiaryPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Diary View - Show original text */}
-                {viewMode === 'diary' && (
+                {viewMode === "diary" && (
                   <div className={styles.entryContent}>
                     <div className={styles.diaryText}>
                       <div className={styles.diaryHeader}>
@@ -570,13 +664,18 @@ export default function DiaryPage() {
                             onClick={() => toggleEntryExpansion(entry.id)}
                             className={styles.expandButton}
                           >
-                            {expandedEntries.has(entry.id) ? 'Show Less' : 'View Full Entry'}
+                            {expandedEntries.has(entry.id)
+                              ? "Show Less"
+                              : "View Full Entry"}
                           </button>
                         )}
                       </div>
                       <div className={styles.diaryContent}>
-                        {expandedEntries.has(entry.id) || entry.diaryEntry.length <= 200 ? (
-                          <p className={styles.diaryFullText}>{entry.diaryEntry}</p>
+                        {expandedEntries.has(entry.id) ||
+                        entry.diaryEntry.length <= 200 ? (
+                          <p className={styles.diaryFullText}>
+                            {entry.diaryEntry}
+                          </p>
                         ) : (
                           <p className={styles.diaryTruncated}>
                             {entry.diaryEntry.substring(0, 200)}...
@@ -588,7 +687,7 @@ export default function DiaryPage() {
                 )}
 
                 {/* Summary View - Show AI-processed data */}
-                {viewMode === 'summary' && (
+                {viewMode === "summary" && (
                   <div className={styles.summaryContent}>
                     {/* Workouts Section */}
                     {entry.workouts && entry.workouts.length > 0 && (
@@ -596,8 +695,13 @@ export default function DiaryPage() {
                         <h4 className={styles.sectionTitle}>💪 Workouts</h4>
                         <div className={styles.workoutsGrid}>
                           {entry.workouts.map((workout) => (
-                            <div key={workout.id} className={styles.workoutCard}>
-                              <div className={styles.workoutName}>{workout.name}</div>
+                            <div
+                              key={workout.id}
+                              className={styles.workoutCard}
+                            >
+                              <div className={styles.workoutName}>
+                                {workout.name}
+                              </div>
                               <div className={styles.workoutDetails}>
                                 {workout.isDurationBased && (
                                   <span className={styles.workoutStat}>
@@ -622,13 +726,19 @@ export default function DiaryPage() {
                                   </>
                                 )}
                                 <span className={styles.workoutStat}>
-                                  🔥 {(() => {
+                                  🔥{" "}
+                                  {(() => {
                                     const cal = workout.calories;
-                                    if (typeof cal === 'number' && !isNaN(cal) && cal > 0) {
+                                    if (
+                                      typeof cal === "number" &&
+                                      !isNaN(cal) &&
+                                      cal > 0
+                                    ) {
                                       return cal;
                                     }
                                     return 200; // Fallback
-                                  })()} cal
+                                  })()}{" "}
+                                  cal
                                 </span>
                               </div>
                             </div>
@@ -639,22 +749,30 @@ export default function DiaryPage() {
 
                     {/* Injuries Section */}
                     <div className={styles.injuriesSection}>
-                      <h4 className={styles.sectionTitle}>🩹 Injuries & Pain</h4>
+                      <h4 className={styles.sectionTitle}>
+                        🩹 Injuries & Pain
+                      </h4>
                       {entry.injuries && entry.injuries.length > 0 ? (
                         <ul className={styles.injuriesList}>
                           {entry.injuries.map((injury, index) => (
-                            <li key={index} className={styles.injuryItem}>{injury}</li>
+                            <li key={index} className={styles.injuryItem}>
+                              {injury}
+                            </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className={styles.noInjuries}>✅ No injuries reported</p>
+                        <p className={styles.noInjuries}>
+                          ✅ No injuries reported
+                        </p>
                       )}
                     </div>
 
                     {/* Suggestions Section */}
                     <div className={styles.suggestionsSection}>
                       <h4 className={styles.sectionTitle}>💡 AI Suggestions</h4>
-                      {entry.suggestions && Array.isArray(entry.suggestions) && entry.suggestions.length > 0 ? (
+                      {entry.suggestions &&
+                      Array.isArray(entry.suggestions) &&
+                      entry.suggestions.length > 0 ? (
                         <div className={styles.suggestionsList}>
                           {entry.suggestions.map((suggestion, index) => (
                             <div key={index} className={styles.suggestionItem}>
@@ -663,7 +781,9 @@ export default function DiaryPage() {
                           ))}
                         </div>
                       ) : (
-                        <p className={styles.noSuggestions}>💭 No suggestions available</p>
+                        <p className={styles.noSuggestions}>
+                          💭 No suggestions available
+                        </p>
                       )}
                     </div>
                   </div>
@@ -673,7 +793,9 @@ export default function DiaryPage() {
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <p>No diary entries yet. Start by writing your first entry above!</p>
+            <p>
+              No diary entries yet. Start by writing your first entry above!
+            </p>
           </div>
         )}
       </div>
