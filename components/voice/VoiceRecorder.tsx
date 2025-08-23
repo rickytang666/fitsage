@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import logger from "@/utils/logger";
 
 import {
   IconMicrophone,
@@ -66,6 +67,7 @@ export default function VoiceRecorder({
   const [interimTranscript, setInterimTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingPunctuation, setIsProcessingPunctuation] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const finalTranscriptRef = useRef("");
@@ -173,15 +175,44 @@ export default function VoiceRecorder({
     }
   };
 
-  const stopRecording = () => {
+  const addPunctuation = async (text: string): Promise<string> => {
+    try {
+      setIsProcessingPunctuation(true);
+
+      const response = await fetch("/api/punctuation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+
+      if (!response.ok) {
+        logger.warn("Punctuation API failed, using original text");
+        return text;
+      }
+
+      const data = await response.json();
+      logger.debug("Punctuation processing completed successfully");
+      return data.punctuatedText || text;
+    } catch (error) {
+      logger.warn("Punctuation processing failed:", error);
+      return text; // Fallback to original text
+    } finally {
+      setIsProcessingPunctuation(false);
+    }
+  };
+
+  const stopRecording = async () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
     setIsRecording(false);
 
-    // Send final transcript to AI
+    // Process final transcript with punctuation
     if (finalTranscript.trim()) {
-      onSubmit(finalTranscript.trim());
+      const punctuatedText = await addPunctuation(finalTranscript.trim());
+      onSubmit(punctuatedText);
       // Clear transcripts after sending
       setFinalTranscript("");
       setInterimTranscript("");
@@ -248,23 +279,23 @@ export default function VoiceRecorder({
         {/* Main Button */}
         <button
           onClick={handleRecordClick}
-          disabled={isLoading}
+          disabled={isLoading || isProcessingPunctuation}
           className="w-20 h-20 rounded-full transition-all duration-200 flex items-center justify-center text-white shadow-lg disabled:opacity-50"
           style={{
             backgroundColor: "var(--primary)",
           }}
           onMouseEnter={(e) => {
-            if (!isLoading) {
+            if (!isLoading && !isProcessingPunctuation) {
               e.currentTarget.style.backgroundColor = "var(--sidebar-primary)";
             }
           }}
           onMouseLeave={(e) => {
-            if (!isLoading) {
+            if (!isLoading && !isProcessingPunctuation) {
               e.currentTarget.style.backgroundColor = "var(--primary)";
             }
           }}
         >
-          {isLoading ? (
+          {isLoading || isProcessingPunctuation ? (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
           ) : !isRecording ? (
             <IconMicrophone size={32} />
@@ -280,6 +311,8 @@ export default function VoiceRecorder({
         >
           {isLoading
             ? "Requesting microphone access..."
+            : isProcessingPunctuation
+            ? "Adding punctuation..."
             : !isRecording
             ? "Click to start recording"
             : "Click to stop and send to AI"}
