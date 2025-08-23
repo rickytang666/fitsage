@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Punctuation API error:', error);
     return NextResponse.json({
-      originalText: '',
-      punctuatedText: '', // Fallback to original
+      originalText: text,
+      punctuatedText: text, // Fallback to original
       success: false
     }, { status: 500 });
   }
