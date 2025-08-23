@@ -12,6 +12,7 @@ import {
   IconFileText,
   IconChartBar,
 } from "@tabler/icons-react";
+import logger from "@/utils/logger";
 
 export default function DiaryPage() {
   const { user: authUser } = useAuth();
@@ -72,9 +73,9 @@ export default function DiaryPage() {
     try {
       const entries = await DatabaseService.loadDiaryEntries(authUser.id);
       setDiaryEntries(entries);
-      console.log(`📚 Loaded ${entries.length} diary entries`);
+      logger.info(`📚 Loaded ${entries.length} diary entries`);
     } catch (error) {
-      console.error("Error loading diary entries:", error);
+      logger.error("Error loading diary entries:", error);
       setError("Failed to load diary entries");
     } finally {
       setIsLoading(false);
@@ -99,7 +100,7 @@ export default function DiaryPage() {
         const day = String(availableDate.getDate()).padStart(2, "0");
         setSelectedDate(`${year}-${month}-${day}`);
       } catch (error) {
-        console.error("Error finding available date:", error);
+        logger.error("Error finding available date:", error);
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -309,7 +310,7 @@ export default function DiaryPage() {
             setTimeout(() => setStatusMessage(""), 4000);
           }
         } catch (error) {
-          console.error("Background AI processing error:", error);
+          logger.error("Background AI processing error:", error);
           setStatusMessage("❌ AI processing failed");
           setTimeout(() => setStatusMessage(""), 4000);
         }
@@ -497,7 +498,7 @@ export default function DiaryPage() {
         setError("Failed to delete diary entry.");
       }
     } catch (error) {
-      console.error("Error deleting entry:", error);
+      logger.error("Error deleting entry:", error);
       setError("An error occurred while deleting the entry.");
     }
   };
@@ -609,48 +610,48 @@ export default function DiaryPage() {
         )}
 
         {/* Voice Recorder or Text Area */}
-        {isVoiceMode ? (
-          <VoiceRecorder
-            onTextChange={setEntryText}
-            currentText={entryText}
-            onSubmit={handleVoiceSubmission}
-          />
-        ) : (
-          <>
-            <div className={styles.textSection}>
-              <textarea
-                placeholder="Write about your fitness activities, how you felt, any insights..."
-                value={entryText}
-                onChange={(e) => setEntryText(e.target.value)}
-                className={styles.textArea}
-                rows={8}
-              />
+        {isDateValid ? (
+          isVoiceMode ? (
+            <VoiceRecorder
+              onTextChange={setEntryText}
+              currentText={entryText}
+              onSubmit={handleVoiceSubmission}
+            />
+          ) : (
+            <>
+              <div className={styles.textSection}>
+                <textarea
+                  placeholder="Write about your fitness activities, how you felt, any insights..."
+                  value={entryText}
+                  onChange={(e) => setEntryText(e.target.value)}
+                  className={styles.textArea}
+                  rows={8}
+                />
 
-              <div className={styles.textMeta}>
-                <span className={styles.charCount}>
-                  {entryText.length} characters
-                </span>
+                <div className={styles.textMeta}>
+                  <span className={styles.charCount}>
+                    {entryText.length} characters
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Save Button - Only for Type Mode */}
-            <button
-              onClick={saveEntry}
-              disabled={!entryText.trim() || !isDateValid || isSaving}
-              className={`${styles.saveButton} ${
-                !entryText.trim() || !isDateValid
-                  ? styles.saveButtonDisabled
-                  : ""
-              }`}
-            >
-              {isSaving
-                ? "Saving..."
-                : currentEntry
-                ? "Update Entry"
-                : "Save Entry"}
-            </button>
-          </>
-        )}
+              {/* Save Button - Only for Type Mode */}
+              <button
+                onClick={saveEntry}
+                disabled={!entryText.trim() || isSaving}
+                className={`${styles.saveButton} ${
+                  !entryText.trim() || isSaving ? styles.saveButtonDisabled : ""
+                }`}
+              >
+                {isSaving
+                  ? "Saving..."
+                  : currentEntry
+                  ? "Update Entry"
+                  : "Save Entry"}
+              </button>
+            </>
+          )
+        ) : null}
       </div>
 
       {/* Entries List */}

@@ -17,8 +17,11 @@ async function query(data: any) {
 }
 
 export async function POST(request: NextRequest) {
+  let text = ''; // Declare outside try block for scope access
+  
   try {
-    const { text } = await request.json();
+    const requestData = await request.json();
+    text = requestData.text;
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(

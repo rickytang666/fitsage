@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import logger from "@/utils/logger";
-
-import {
-  IconMicrophone,
-  IconPlayerStop,
-  IconCircle,
-} from "@tabler/icons-react";
+import { IconMicrophone, IconPlayerStop } from "@tabler/icons-react";
 
 // Type declarations for Web Speech API
 type SpeechRecognitionErrorEvent = Event & {
@@ -68,9 +62,17 @@ export default function VoiceRecorder({
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPunctuation, setIsProcessingPunctuation] = useState(false);
+  // const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const finalTranscriptRef = useRef("");
+
+  // const addDebugLog = (message: string) => {
+  //   const timestamp = new Date().toLocaleTimeString();
+  //   const logEntry = `[${timestamp}] ${message}`;
+  //   setDebugLogs((prev) => [...prev.slice(-20), logEntry]); // Keep last 20 logs
+  //   console.log(message);
+  // };
 
   // Check if Web Speech API is supported
   useEffect(() => {
@@ -90,23 +92,41 @@ export default function VoiceRecorder({
     recognitionRef.current.interimResults = true;
 
     const handleStart = () => {
+      // addDebugLog("🎤 Recording started");
       setIsLoading(false);
       setIsRecording(true);
       setInterimTranscript("");
     };
 
     const handleEnd = () => {
+      // addDebugLog("🛑 Recording ended naturally");
+      // addDebugLog(`📝 Final transcript accumulated: "${finalTranscriptRef.current}"`);
+      // addDebugLog(`📝 Final transcript length: ${finalTranscriptRef.current.length}`);
+
       setIsRecording(false);
       setInterimTranscript("");
+
+      // Process any remaining final transcript when recording ends naturally
+      if (finalTranscriptRef.current.trim()) {
+        // addDebugLog("✅ Processing final transcript on natural end");
+        processFinalTranscript(finalTranscriptRef.current.trim());
+      } else {
+        // addDebugLog("❌ No final transcript to process");
+      }
     };
 
     const handleError = (event: SpeechRecognitionErrorEvent) => {
+      // addDebugLog(`❌ Speech recognition error: ${event.error}`);
+      // addDebugLog(`📝 Final transcript at error: "${finalTranscriptRef.current}"`);
       setIsRecording(false);
       setIsLoading(false);
       setInterimTranscript("");
     };
 
     const handleResult = (event: SpeechRecognitionEvent) => {
+      // addDebugLog(`🎯 Speech result received, resultIndex: ${event.resultIndex}`);
+      // addDebugLog(`📊 Total results: ${event.results.length}`);
+
       let currentInterimTranscript = "";
       let newFinalTranscript = "";
 
@@ -114,6 +134,8 @@ export default function VoiceRecorder({
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const transcriptText = result[0].transcript;
+
+        // addDebugLog(`  Result ${i}: "${transcriptText}" (isFinal: ${result.isFinal})`);
 
         if (result.isFinal) {
           newFinalTranscript += transcriptText + " ";
@@ -124,11 +146,16 @@ export default function VoiceRecorder({
 
       // Update final transcript if we have new final results
       if (newFinalTranscript) {
+        // addDebugLog(`✅ Adding to final transcript: "${newFinalTranscript}"`);
         finalTranscriptRef.current += newFinalTranscript;
+        // addDebugLog(`📝 Total accumulated transcript: "${finalTranscriptRef.current}"`);
         setFinalTranscript(finalTranscriptRef.current);
       }
 
       // Update interim transcript
+      // if (currentInterimTranscript) {
+      //   addDebugLog(`🔄 Interim transcript: "${currentInterimTranscript}"`);
+      // }
       setInterimTranscript(currentInterimTranscript);
     };
 
@@ -166,11 +193,14 @@ export default function VoiceRecorder({
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
       // Always clear transcripts when starting a new recording session
+      // addDebugLog("🧹 Clearing transcripts for new session");
       setFinalTranscript("");
       setInterimTranscript("");
       finalTranscriptRef.current = "";
+      // addDebugLog("🚀 Starting speech recognition");
       recognitionRef.current?.start();
     } catch (error) {
+      // addDebugLog(`❌ Failed to start recording: ${error}`);
       setIsLoading(false);
     }
   };
@@ -188,35 +218,45 @@ export default function VoiceRecorder({
       });
 
       if (!response.ok) {
-        logger.warn("Punctuation API failed, using original text");
+        console.warn("Punctuation API failed, using original text");
         return text;
       }
 
       const data = await response.json();
-      logger.debug("Punctuation processing completed successfully");
       return data.punctuatedText || text;
     } catch (error) {
-      logger.warn("Punctuation processing failed:", error);
+      console.warn("Punctuation processing failed:", error);
       return text; // Fallback to original text
     } finally {
       setIsProcessingPunctuation(false);
     }
   };
 
+  const processFinalTranscript = async (text: string) => {
+    const punctuatedText = await addPunctuation(text.trim());
+    await onSubmit(punctuatedText);
+
+    // Clear transcripts after sending
+    setFinalTranscript("");
+    setInterimTranscript("");
+    finalTranscriptRef.current = "";
+  };
+
   const stopRecording = async () => {
+    // addDebugLog("🛑 Manual stop clicked");
+    // addDebugLog(`📝 Final transcript at manual stop: "${finalTranscriptRef.current}"`);
+
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
     setIsRecording(false);
 
     // Process final transcript with punctuation
-    if (finalTranscript.trim()) {
-      const punctuatedText = await addPunctuation(finalTranscript.trim());
-      onSubmit(punctuatedText);
-      // Clear transcripts after sending
-      setFinalTranscript("");
-      setInterimTranscript("");
-      finalTranscriptRef.current = "";
+    if (finalTranscriptRef.current.trim()) {
+      // addDebugLog("✅ Processing final transcript on manual stop");
+      await processFinalTranscript(finalTranscriptRef.current.trim());
+    } else {
+      // addDebugLog("❌ No final transcript to process on manual stop");
     }
   };
 
@@ -232,8 +272,9 @@ export default function VoiceRecorder({
     return (
       <div className="w-full mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
         <p className="text-yellow-800 text-center">
-          Web Speech API is not supported in your browser. Please use Chrome,
-          Edge, or Safari for voice recording.
+          Web Speech API speech recognition is not supported in this browser.
+          Safari does not support speech recognition. Please use Chrome or Edge
+          for voice recording.
         </p>
       </div>
     );
@@ -256,22 +297,18 @@ export default function VoiceRecorder({
                 className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
                 style={{
                   borderColor: "var(--primary)",
-                  animationDelay: "0.5s",
-                }}
-              />
-              <div
-                className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
-                style={{
-                  borderColor: "var(--primary)",
                   animationDelay: "1s",
                 }}
               />
             </>
           )}
-          <IconCircle
-            size={32}
+          {/* Core ring - always visible */}
+          <div
+            className="w-8 h-8 rounded-full border-2 bg-transparent"
             style={{
-              color: isRecording ? "var(--primary)" : "var(--muted-foreground)",
+              borderColor: isRecording
+                ? "var(--primary)"
+                : "var(--muted-foreground)",
             }}
           />
         </div>
@@ -317,6 +354,27 @@ export default function VoiceRecorder({
             ? "Click to start recording"
             : "Click to stop and send to AI"}
         </p>
+
+        {/* Cancel Button - Only show when recording */}
+        {isRecording && (
+          <button
+            onClick={() => {
+              // Remove event listeners first to prevent handleEnd from firing
+              if (recognitionRef.current) {
+                recognitionRef.current.onend = null;
+                recognitionRef.current.onresult = null;
+                recognitionRef.current.stop();
+              }
+              setIsRecording(false);
+              setInterimTranscript("");
+              setFinalTranscript("");
+              finalTranscriptRef.current = "";
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Cancel Recording
+          </button>
+        )}
       </div>
     </div>
   );
