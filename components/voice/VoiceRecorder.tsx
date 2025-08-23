@@ -3,11 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import logger from "@/utils/logger";
 
-import {
-  IconMicrophone,
-  IconPlayerStop,
-  IconCircle,
-} from "@tabler/icons-react";
+import { IconMicrophone, IconPlayerStop } from "@tabler/icons-react";
 
 // Type declarations for Web Speech API
 type SpeechRecognitionErrorEvent = Event & {
@@ -98,6 +94,11 @@ export default function VoiceRecorder({
     const handleEnd = () => {
       setIsRecording(false);
       setInterimTranscript("");
+
+      // Process any remaining final transcript when recording ends naturally
+      if (finalTranscriptRef.current.trim()) {
+        processFinalTranscript(finalTranscriptRef.current.trim());
+      }
     };
 
     const handleError = (event: SpeechRecognitionErrorEvent) => {
@@ -129,6 +130,7 @@ export default function VoiceRecorder({
       }
 
       // Update interim transcript
+
       setInterimTranscript(currentInterimTranscript);
     };
 
@@ -166,9 +168,11 @@ export default function VoiceRecorder({
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
       // Always clear transcripts when starting a new recording session
+
       setFinalTranscript("");
       setInterimTranscript("");
       finalTranscriptRef.current = "";
+
       recognitionRef.current?.start();
     } catch (error) {
       setIsLoading(false);
@@ -203,6 +207,16 @@ export default function VoiceRecorder({
     }
   };
 
+  const processFinalTranscript = async (text: string) => {
+    const punctuatedText = await addPunctuation(text.trim());
+    await onSubmit(punctuatedText);
+
+    // Clear transcripts after sending
+    setFinalTranscript("");
+    setInterimTranscript("");
+    finalTranscriptRef.current = "";
+  };
+
   const stopRecording = async () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
@@ -210,13 +224,8 @@ export default function VoiceRecorder({
     setIsRecording(false);
 
     // Process final transcript with punctuation
-    if (finalTranscript.trim()) {
-      const punctuatedText = await addPunctuation(finalTranscript.trim());
-      onSubmit(punctuatedText);
-      // Clear transcripts after sending
-      setFinalTranscript("");
-      setInterimTranscript("");
-      finalTranscriptRef.current = "";
+    if (finalTranscriptRef.current.trim()) {
+      await processFinalTranscript(finalTranscriptRef.current.trim());
     }
   };
 
@@ -232,8 +241,9 @@ export default function VoiceRecorder({
     return (
       <div className="w-full mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
         <p className="text-yellow-800 text-center">
-          Web Speech API is not supported in your browser. Please use Chrome,
-          Edge, or Safari for voice recording.
+          Web Speech API speech recognition is not supported in this browser.
+          Safari does not support speech recognition. Please use Chrome or Edge
+          for voice recording.
         </p>
       </div>
     );
@@ -256,22 +266,17 @@ export default function VoiceRecorder({
                 className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
                 style={{
                   borderColor: "var(--primary)",
-                  animationDelay: "0.5s",
-                }}
-              />
-              <div
-                className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
-                style={{
-                  borderColor: "var(--primary)",
                   animationDelay: "1s",
                 }}
               />
             </>
           )}
-          <IconCircle
-            size={32}
+          <div
+            className="w-8 h-8 rounded-full border-3"
             style={{
-              color: isRecording ? "var(--primary)" : "var(--muted-foreground)",
+              borderColor: isRecording
+                ? "var(--primary)"
+                : "var(--muted-foreground)",
             }}
           />
         </div>
