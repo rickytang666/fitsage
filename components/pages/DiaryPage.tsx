@@ -72,6 +72,7 @@ export default function DiaryPage() {
     try {
       const entries = await DatabaseService.loadDiaryEntries(authUser.id);
       setDiaryEntries(entries);
+      console.log(`📚 Loaded ${entries.length} diary entries`);
     } catch (error) {
       console.error("Error loading diary entries:", error);
       setError("Failed to load diary entries");
@@ -173,12 +174,10 @@ export default function DiaryPage() {
         setError("");
         setStatusMessage("");
         setIsDateValid(true);
-        await setDefaultDate();
       } else {
         setEntryText("");
         setError("");
         setStatusMessage("");
-        await setDefaultDate();
       }
       setIsSaving(false);
 
@@ -263,6 +262,8 @@ export default function DiaryPage() {
 
           if (success) {
             await loadDiaryEntries();
+            // Update default date after entries are reloaded
+            await setDefaultDate();
             setStatusMessage(
               "✅ Saved with AI insights! Updating recommendations..."
             );
@@ -293,18 +294,12 @@ export default function DiaryPage() {
                   data.featuredWorkouts || [],
                   freshDiaryEntries
                 );
-                console.log(
-                  "Featured workouts cache regenerated after diary update"
-                );
+
                 setStatusMessage("✅ Diary saved with AI insights!");
               } else {
                 setStatusMessage("✅ Diary saved with AI insights!");
               }
             } catch (cacheError) {
-              console.warn(
-                "Cache regeneration failed (non-critical):",
-                cacheError
-              );
               setStatusMessage("✅ Diary saved with AI insights!");
             }
 
@@ -383,23 +378,10 @@ export default function DiaryPage() {
         return;
       }
 
-      console.log("Voice submission received:", transcribedText);
-      // TODO: Implement Web Speech API + HF punctuation cleanup
-      // For now, just log the transcribed text
-
       // 🎯 Use encapsulated AI pipeline (same as type mode)
       await processDiaryEntryWithAI(transcribedText, selectedDate);
-
-      // After success, find next available date
-      await setDefaultDate();
     },
-    [
-      authUser?.id,
-      selectedDate,
-      isDateValid,
-      processDiaryEntryWithAI,
-      setDefaultDate,
-    ]
+    [authUser?.id, selectedDate, isDateValid, processDiaryEntryWithAI]
   );
 
   // Edit an existing entry
@@ -467,9 +449,18 @@ export default function DiaryPage() {
         // Reload entries to show updated list
         await loadDiaryEntries();
 
+        // Update default date after entries are reloaded
+        // If we were editing this entry, clear the form and find new default date
+        if (currentEntry?.id === entryId) {
+          await cancelEdit();
+        } else {
+          // Even if we weren't editing the deleted entry, refresh the default date
+          // Force starting from today to pick up the newly available date
+          await setDefaultDate(true);
+        }
+
         // 🚀 REGENERATE FEATURED WORKOUTS CACHE after deletion
         try {
-          console.log("Regenerating cache after diary deletion...");
           const freshDiaryEntries = await DatabaseService.loadDiaryEntries(
             authUser!.id
           );
@@ -497,26 +488,10 @@ export default function DiaryPage() {
                 data.featuredWorkouts || [],
                 freshDiaryEntries
               );
-              console.log("Cache regenerated after deletion");
             }
           }
         } catch (cacheError) {
-          console.warn(
-            "Cache regeneration after deletion failed (non-critical):",
-            cacheError
-          );
-        }
-
-        // Small delay to ensure database changes are reflected
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // If we were editing this entry, clear the form and find new default date
-        if (currentEntry?.id === entryId) {
-          await cancelEdit();
-        } else {
-          // Even if we weren't editing the deleted entry, refresh the default date
-          // Force starting from today to pick up the newly available date
-          await setDefaultDate(true);
+          // Cache regeneration failed (non-critical)
         }
       } else {
         setError("Failed to delete diary entry.");

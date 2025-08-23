@@ -203,8 +203,6 @@ export class DatabaseService {
         calories: workout.calories
       }));
 
-      logger.debug('Workouts JSON:', workoutsJson);
-
       const logData = {
         id: log.id,
         user_id: userId,
@@ -215,8 +213,6 @@ export class DatabaseService {
         suggestions: log.suggestions, // Add suggestions field
         updated_at: new Date().toISOString()
       };
-
-      logger.debug('About to save log data:', logData);
 
       // Upsert log (handles both insert and update cases)
       const { data, error } = await supabase
@@ -271,9 +267,6 @@ export class DatabaseService {
         // Parse workouts from JSON
         if (dbLog.workouts && Array.isArray(dbLog.workouts)) {
           dbLog.workouts.forEach((workoutData: any) => {
-                    logger.debug('Loading workout from DB:', workoutData);
-        logger.debug('Calories value:', workoutData.calories, 'Type:', typeof workoutData.calories);
-            
             // Ensure calories is a valid number
             let caloriesValue = workoutData.calories;
             if (typeof caloriesValue !== 'number' || isNaN(caloriesValue) || caloriesValue <= 0) {
@@ -292,7 +285,6 @@ export class DatabaseService {
                 calories: caloriesValue
               }
             );
-            logger.debug('Created workout object:', workout.calories, 'Type:', typeof workout.calories);
             log.workouts.push(workout);
           });
         }
