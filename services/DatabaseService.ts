@@ -187,7 +187,7 @@ export class DatabaseService {
       const isDateAvailable = await this.isDateAvailable(userId, log.date, log.id);
       
       if (!isDateAvailable) {
-        console.error('❌ Date is not available for this entry');
+        logger.error('❌ Date is not available for this entry');
         return false;
       }
 
@@ -215,9 +215,13 @@ export class DatabaseService {
       };
 
       // Upsert log (handles both insert and update cases)
+      // Use onConflict to specify which constraint to match on
       const { data, error } = await supabase
         .from('diary_logs')
-        .upsert(logData)
+        .upsert(logData, { 
+          onConflict: 'user_id,log_date',
+          ignoreDuplicates: false 
+        })
         .select();
 
       if (error) {
@@ -246,7 +250,7 @@ export class DatabaseService {
         .order('log_date', { ascending: false });
 
       if (error) {
-        console.error('❌ Error loading diary entries:', error);
+        logger.error('❌ Error loading diary entries:', error);
         return [];
       }
 
