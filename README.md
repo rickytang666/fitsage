@@ -28,6 +28,7 @@ The idea was simple: what if you could just write about your workout like you're
 ## Features
 
 - **AI-Powered Diary**: Write freely without worrying about grammar, get structured workout summaries and suggestions in seconds
+- **Voice Recording**: Use your voice to create diary entries through real-time speech-to-text conversion and punctuation restoration
 - **Smart Workout Recognition**: Recognizes 40+ workout types from casual mentions to structured exercises
 - **Progress Visualization**: Simple charts showing your activity patterns and trends
 - **Personalized Suggestions**: AI-generated tips based on your actual workout history
@@ -57,6 +58,7 @@ The idea was simple: what if you could just write about your workout like you're
 - npm or yarn
 - Supabase account (free tier works great)
 - Google Gemini API key
+- Hugging Face API token
 
 ### Installation
 
@@ -74,13 +76,14 @@ The idea was simple: what if you could just write about your workout like you're
    ```
 
 3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
+   Create a `.env.local` file in the root directory (refer to `.env.example` for the structure):
 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    GOOGLE_GENAI_API_KEY=your_gemini_api_key
+   HF_API_TOKEN=your_huggingface_api_token
    ```
 
 4. **Set up your database**
@@ -97,19 +100,15 @@ The idea was simple: what if you could just write about your workout like you're
 6. **Open your browser**
    Navigate to `http://localhost:3000`
 
-### Environment Setup Details
-
-- **Supabase**: Used for authentication and data storage. The free tier includes 500MB database and 50,000 monthly active users.
-- **Google Gemini**: Powers the AI features. The 2.5 Flash Lite model is fast and cost-effective for this use case.
-
 ## Tech Stack
 
-| Category       | Technology                      |
-| -------------- | ------------------------------- |
-| **Frontend**   | Next.js, Tailwind CSS, Chart.js |
-| **Backend**    | Supabase (auth, database)       |
-| **AI**         | Google Gemini 2.5 Flash Lite    |
-| **Deployment** | Vercel                          |
+| Category       | Technology                                                                |
+| -------------- | ------------------------------------------------------------------------- |
+| **Frontend**   | Next.js, Tailwind CSS, Chart.js                                           |
+| **Backend**    | Supabase (auth, database)                                                 |
+| **AI**         | Google Gemini 2.5 Flash Lite                                              |
+| **Voice**      | Web Speech API, Hugging Face Model (fullstop-punctuation-multilang-large) |
+| **Deployment** | Vercel                                                                    |
 
 ## Contributing
 
@@ -117,8 +116,8 @@ Contributions and feedback are welcome! Please feel free to submit a Pull Reques
 
 ## Roadmap
 
-- **Voice Input**: Enable voice input for diary entries
 - **Light/Dark Mode**: Add light/dark mode toggle
+- **Improved Context**: Add fitness goals, optional equipment list upload, and body stats to the context for better recommendations
 - **Date Filtering**: Better UX for viewing historical data
 - **Smart Recommendations**: Intelligent YouTube video suggestions based on your workouts
 - **Mobile App**: Native iOS/Android apps for better mobile experience
