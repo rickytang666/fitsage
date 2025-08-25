@@ -83,33 +83,30 @@ export default function DiaryPage() {
   }, [authUser?.id]);
 
   // Find nearest available date and set as default
-  const setDefaultDate = useCallback(
-    async (forceToday: boolean = false) => {
-      if (!authUser?.id) return;
+  const setDefaultDate = useCallback(async () => {
+    if (!authUser?.id) return;
 
-      try {
-        // Always start from today when looking for available dates
-        const startDate = new Date();
-        const availableDate = await DatabaseService.findNearestAvailableDate(
-          authUser.id,
-          startDate
-        );
-        // Fix timezone issue: format date properly for input
-        const year = availableDate.getFullYear();
-        const month = String(availableDate.getMonth() + 1).padStart(2, "0");
-        const day = String(availableDate.getDate()).padStart(2, "0");
-        setSelectedDate(`${year}-${month}-${day}`);
-      } catch (error) {
-        logger.error("Error finding available date:", error);
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        const day = String(today.getDate()).padStart(2, "0");
-        setSelectedDate(`${year}-${month}-${day}`);
-      }
-    },
-    [authUser?.id]
-  );
+    try {
+      // Always start from today when looking for available dates
+      const startDate = new Date();
+      const availableDate = await DatabaseService.findNearestAvailableDate(
+        authUser.id,
+        startDate
+      );
+      // Fix timezone issue: format date properly for input
+      const year = availableDate.getFullYear();
+      const month = String(availableDate.getMonth() + 1).padStart(2, "0");
+      const day = String(availableDate.getDate()).padStart(2, "0");
+      setSelectedDate(`${year}-${month}-${day}`);
+    } catch (error) {
+      logger.error("Error finding available date:", error);
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      setSelectedDate(`${year}-${month}-${day}`);
+    }
+  }, [authUser?.id]);
 
   // Validate selected date
   const validateDate = useCallback(
@@ -239,17 +236,17 @@ export default function DiaryPage() {
           );
 
           // Add workouts with proper structure
-          logData.workouts.forEach((workoutData: any) => {
+          logData.workouts.forEach((workoutData: Record<string, unknown>) => {
             const workout = new Workout(
-              workoutData.id,
-              workoutData.name,
-              new Date(workoutData.date),
+              workoutData.id as string,
+              workoutData.name as string,
+              new Date(workoutData.date as string),
               {
-                durationMinutes: workoutData.durationMinutes,
-                sets: workoutData.sets,
-                reps: workoutData.reps,
-                weight: workoutData.weight,
-                calories: workoutData.calories || 200,
+                durationMinutes: workoutData.durationMinutes as number,
+                sets: workoutData.sets as number,
+                reps: workoutData.reps as number,
+                weight: workoutData.weight as number,
+                calories: (workoutData.calories as number) || 200,
               }
             );
             log.workouts.push(workout);
@@ -300,7 +297,7 @@ export default function DiaryPage() {
               } else {
                 setStatusMessage("✅ Diary saved with AI insights!");
               }
-            } catch (cacheError) {
+            } catch {
               setStatusMessage("✅ Diary saved with AI insights!");
             }
 
@@ -457,7 +454,7 @@ export default function DiaryPage() {
         } else {
           // Even if we weren't editing the deleted entry, refresh the default date
           // Force starting from today to pick up the newly available date
-          await setDefaultDate(true);
+          await setDefaultDate();
         }
 
         // 🚀 REGENERATE FEATURED WORKOUTS CACHE after deletion
@@ -491,7 +488,7 @@ export default function DiaryPage() {
               );
             }
           }
-        } catch (cacheError) {
+        } catch {
           // Cache regeneration failed (non-critical)
         }
       } else {
@@ -612,11 +609,7 @@ export default function DiaryPage() {
         {/* Voice Recorder or Text Area */}
         {isDateValid ? (
           isVoiceMode ? (
-            <VoiceRecorder
-              onTextChange={setEntryText}
-              currentText={entryText}
-              onSubmit={handleVoiceSubmission}
-            />
+            <VoiceRecorder onSubmit={handleVoiceSubmission} />
           ) : (
             <>
               <div className={styles.textSection}>

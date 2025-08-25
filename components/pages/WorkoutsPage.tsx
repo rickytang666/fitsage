@@ -213,7 +213,14 @@ function PastSevenDaysWorkouts({
   diaryEntries,
   isLoading,
 }: {
-  diaryEntries: any[];
+  diaryEntries: Array<{
+    id: string;
+    date: Date;
+    workouts: Workout[];
+    diaryEntry: string;
+    injuries: string[];
+    suggestions: string[];
+  }>;
   isLoading: boolean;
 }) {
   const [workouts, setWorkouts] = useState<
@@ -252,7 +259,7 @@ function PastSevenDaysWorkouts({
 
         // Filter and collect workouts from past 7 days
         const pastWeekWorkouts: Array<{ workout: Workout; date: Date }> = [];
-        diaryEntries.forEach((entry: any) => {
+        diaryEntries.forEach((entry) => {
           if (entry.date >= startDate && entry.date <= endDate) {
             entry.workouts.forEach((workout: Workout) => {
               pastWeekWorkouts.push({ workout, date: entry.date });
@@ -345,7 +352,14 @@ function FeaturedWorkouts({
   isLoading,
 }: {
   userId: string;
-  diaryEntries: any[];
+  diaryEntries: Array<{
+    id: string;
+    date: Date;
+    workouts: Workout[];
+    diaryEntry: string;
+    injuries: string[];
+    suggestions: string[];
+  }>;
   isLoading: boolean;
 }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);

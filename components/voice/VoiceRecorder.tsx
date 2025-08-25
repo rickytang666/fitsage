@@ -46,16 +46,10 @@ declare global {
 }
 
 interface VoiceRecorderProps {
-  onTextChange: (text: string) => void;
-  currentText: string;
   onSubmit: (transcribedText: string) => Promise<void>;
 }
 
-export default function VoiceRecorder({
-  onTextChange,
-  currentText,
-  onSubmit,
-}: VoiceRecorderProps) {
+export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState("");
   const [interimTranscript, setInterimTranscript] = useState("");

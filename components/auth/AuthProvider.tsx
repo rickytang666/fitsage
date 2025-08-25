@@ -6,7 +6,7 @@ import { createSupabaseClient } from "@/utils/supabase-client";
 import logger from "@/utils/logger";
 
 // Create Supabase client instance INSIDE the provider to prevent multiple instances
-let supabaseInstance: any = null;
+let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
 const getSupabaseClient = () => {
   if (!supabaseInstance) {
     supabaseInstance = createSupabaseClient();

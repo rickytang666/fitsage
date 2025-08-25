@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-async function query(data: any) {
+interface QueryData {
+  inputs: string;
+}
+
+interface Token {
+  word: string;
+  entity_group: string;
+}
+
+async function query(data: QueryData) {
 	const response = await fetch(
 		"https://api-inference.huggingface.co/models/oliverguhr/fullstop-punctuation-multilang-large",
 		{
@@ -51,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function reconstructText(originalText: string, tokens: any[]): string {
+function reconstructText(originalText: string, tokens: Token[]): string {
   if (!Array.isArray(tokens) || tokens.length === 0) {
     return originalText;
   }

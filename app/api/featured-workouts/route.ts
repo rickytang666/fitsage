@@ -295,28 +295,31 @@ Rules:
       // Validate difficulty levels and clean workout data
       parsedData.featuredWorkouts = parsedData.featuredWorkouts.map(workout => {
         // Clean up the workout data
-        const cleanedWorkout: any = {
-          ...workout,
+        const cleanedWorkout: AIResponseData['featuredWorkouts'][0] = {
+          name: workout.name,
           difficultyLevel: ['all level', 'beginner', 'intermediate', 'advanced'].includes(workout.difficultyLevel) 
             ? workout.difficultyLevel 
             : 'all level' // Default fallback
         };
 
-        // Remove zero or invalid values for optional fields
-        if (!cleanedWorkout.durationMinutes || cleanedWorkout.durationMinutes <= 0) {
-          delete cleanedWorkout.durationMinutes;
+        // Add optional fields only if they have valid values
+        if (workout.durationMinutes && workout.durationMinutes > 0) {
+          cleanedWorkout.durationMinutes = workout.durationMinutes;
         }
-        if (!cleanedWorkout.sets || cleanedWorkout.sets <= 0) {
-          delete cleanedWorkout.sets;
+        if (workout.sets && workout.sets > 0) {
+          cleanedWorkout.sets = workout.sets;
         }
-        if (!cleanedWorkout.reps || cleanedWorkout.reps <= 0) {
-          delete cleanedWorkout.reps;
+        if (workout.reps && workout.reps > 0) {
+          cleanedWorkout.reps = workout.reps;
         }
-        if (!cleanedWorkout.weight || cleanedWorkout.weight <= 0) {
-          delete cleanedWorkout.weight;
+        if (workout.weight && workout.weight > 0) {
+          cleanedWorkout.weight = workout.weight;
         }
-        if (!cleanedWorkout.estimatedCalories || cleanedWorkout.estimatedCalories <= 0) {
-          delete cleanedWorkout.estimatedCalories;
+        if (workout.estimatedCalories && workout.estimatedCalories > 0) {
+          cleanedWorkout.estimatedCalories = workout.estimatedCalories;
+        }
+        if (workout.description) {
+          cleanedWorkout.description = workout.description;
         }
 
         return cleanedWorkout;

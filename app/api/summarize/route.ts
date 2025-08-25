@@ -205,7 +205,14 @@ ${diaryText}
 
       // Validate and clean workout data structure
       parsedData.workouts = parsedData.workouts.map((workout, index) => {
-        const cleanedWorkout: any = {
+        const cleanedWorkout: {
+          name: string;
+          durationMinutes: number;
+          calories: number;
+          sets?: number;
+          reps?: number;
+          weight?: number;
+        } = {
           name: workout.name || `Workout ${index + 1}`,
           durationMinutes: workout.durationMinutes || 30, // Default 30 minutes if missing
           calories: workout.calories || 200, // Default 200 calories if missing

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
-import { User, Log, Workout } from "../../models/User";
+import { User, Workout } from "../../models/User";
 import logger from "@/utils/logger";
 import styles from "./HomePage.module.css";
 import {
@@ -308,7 +308,7 @@ export default function HomePage() {
             '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
         },
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { parsed: { y: number } }) {
             const value = context.parsed.y;
             let intensityLevel = "No workout";
             if (value > 0) {
@@ -596,7 +596,7 @@ export default function HomePage() {
       {/* Motivational Quote */}
       <div className={styles.motivationalQuote}>
         <p className={styles.quoteText}>
-          "The only bad workout is the one that didn't happen."
+          &ldquo;The only bad workout is the one that didn&apos;t happen.&rdquo;
         </p>
       </div>
     </div>
