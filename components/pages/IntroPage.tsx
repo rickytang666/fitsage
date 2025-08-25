@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import styles from './IntroPage.module.css';
+import Link from "next/link";
+import styles from "./IntroPage.module.css";
 
 export default function IntroPage() {
   return (
@@ -9,7 +9,13 @@ export default function IntroPage() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <img src="/logo.svg" alt="FitSage Logo" className={styles.logoIcon} height={40} width={40} />
+          <img
+            src="/logo.svg"
+            alt="FitSage Logo"
+            className={styles.logoIcon}
+            height={40}
+            width={40}
+          />
           <span className={styles.logoText}>FitSage</span>
         </div>
       </header>
@@ -18,13 +24,22 @@ export default function IntroPage() {
       <main className={styles.hero}>
         <div className={styles.heroContent}>
           <h1 className={styles.heroTitle}>
-            Your <a href='https://deepmind.google/models/gemini/' target='_blank' className={styles.tech}>AI-Powered</a> Fitness Companion
+            Your{" "}
+            <a
+              href="https://deepmind.google/models/gemini/"
+              target="_blank"
+              className={styles.tech}
+            >
+              AI-Powered
+            </a>{" "}
+            Fitness Companion
           </h1>
           <p className={styles.heroSubtitle}>
-            Transform your fitness journey with intelligent workout tracking, 
-            personalized insights, and progress monitoring all in one place.
+            Transform your fitness journey with intelligent workout tracking,
+            voice-based diary entries, personalized insights, and progress
+            monitoring all in one place.
           </p>
-          
+
           <div className={styles.features}>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>📊</span>
@@ -33,6 +48,10 @@ export default function IntroPage() {
             <div className={styles.feature}>
               <span className={styles.featureIcon}>🎯</span>
               <span className={styles.featureText}>Health Tracking</span>
+            </div>
+            <div className={styles.feature}>
+              <span className={styles.featureIcon}>🎤</span>
+              <span className={styles.featureText}>Voice Recording</span>
             </div>
             <div className={styles.feature}>
               <span className={styles.featureIcon}>📝</span>
@@ -68,6 +87,14 @@ export default function IntroPage() {
               </p>
             </div>
             <div className={styles.benefitCard}>
+              <div className={styles.benefitIcon}>🎤</div>
+              <h3 className={styles.benefitTitle}>Natural Voice Diary</h3>
+              <p className={styles.benefitDescription}>
+                Speak naturally about your workouts with real-time
+                speech-to-text processing
+              </p>
+            </div>
+            <div className={styles.benefitCard}>
               <div className={styles.benefitIcon}>🧠</div>
               <h3 className={styles.benefitTitle}>AI-Powered</h3>
               <p className={styles.benefitDescription}>
@@ -87,18 +114,33 @@ export default function IntroPage() {
 
       {/* Footer */}
       <footer className={styles.footer}>
-        <p>
-          © {new Date().getFullYear()} FitSage. All rights reserved.
-        </p>
-        <p>
-          Made with ❤️ and 💪 by the FitSage Team.
-        </p>
+        <p>© {new Date().getFullYear()} FitSage. All rights reserved.</p>
+        <p>Made with ❤️ and 💪 by the FitSage Team.</p>
         <div className={styles.techStack}>
-          <img src="https://skillicons.dev/icons?i=nextjs" alt="nextjs" />
-          <img src="https://skillicons.dev/icons?i=supabase" alt="supabase" />
-          <img src="https://skillicons.dev/icons?i=tailwind" alt="tailwind" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250" alt="gemini"></img>
-          <img src="https://skillicons.dev/icons?i=vercel" alt="vercel" />
+          <img
+            src="https://go-skill-icons.vercel.app/api/icons?i=nextjs&theme=dark"
+            alt="nextjs"
+          />
+          <img
+            src="https://go-skill-icons.vercel.app/api/icons?i=supabase&theme=dark"
+            alt="supabase"
+          />
+          <img
+            src="https://go-skill-icons.vercel.app/api/icons?i=tailwind&theme=dark"
+            alt="tailwind"
+          />
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250"
+            alt="gemini"
+          ></img>
+          <img
+            src="https://go-skill-icons.vercel.app/api/icons?i=hf&theme=dark"
+            alt="huggingface"
+          />
+          <img
+            src="https://go-skill-icons.vercel.app/api/icons?i=vercel&theme=dark"
+            alt="vercel"
+          />
         </div>
       </footer>
     </div>
