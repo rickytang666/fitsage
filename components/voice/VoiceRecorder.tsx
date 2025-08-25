@@ -355,6 +355,31 @@ export default function VoiceRecorder({
             : "Click to stop and send to AI"}
         </p>
 
+        {/* DEBUG: Real-time Transcript Display */}
+        {/* {(finalTranscript || interimTranscript) && (
+          <div className="w-full max-w-md mt-4 p-4 bg-white border border-gray-300 rounded-lg shadow-sm">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+              Live Transcript:
+            </h4>
+            {finalTranscript && (
+              <div className="mb-3">
+                <div className="text-xs text-gray-500 mb-1">Final:</div>
+                <div className="text-sm text-gray-800 bg-green-50 p-2 rounded border-l-4 border-green-400">
+                  {finalTranscript}
+                </div>
+              </div>
+            )}
+            {interimTranscript && (
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Interim:</div>
+                <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded border-l-4 border-blue-400 italic">
+                  {interimTranscript}
+                </div>
+              </div>
+            )}
+          </div>
+        )} */}
+
         {/* Cancel Button - Only show when recording */}
         {isRecording && (
           <button
@@ -375,6 +400,30 @@ export default function VoiceRecorder({
             Cancel Recording
           </button>
         )}
+
+        {/* DEBUG: Debug Logs Display */}
+        {/* {debugLogs.length > 0 && (
+          <div className="w-full max-w-md mt-4 p-3 bg-gray-100 border border-gray-300 rounded-lg max-h-60 overflow-y-auto">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-semibold text-gray-700">
+                Debug Logs:
+              </h4>
+              <button
+                onClick={() => setDebugLogs([])}
+                className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              >
+                Clear Logs
+              </button>
+            </div>
+            <div className="space-y-1">
+              {debugLogs.map((log, index) => (
+                <div key={index} className="text-xs text-gray-600 font-mono">
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        )} */}
       </div>
     </div>
   );
