@@ -6,6 +6,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import styles from "./Sidebar.module.css";
+import {
+  IconHome,
+  IconBarbellFilled,
+  IconBook2,
+  IconLogout2,
+  IconLayoutSidebarRightExpandFilled,
+} from "@tabler/icons-react";
 
 // Navigation items definition
 const navigationItems = [
@@ -50,11 +57,7 @@ export default function Sidebar() {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
         >
-          <span
-            className={`material-symbols-outlined ${styles.mobileMenuIcon}`}
-          >
-            {isMobileMenuOpen ? "close" : "menu"}
-          </span>
+          <IconLayoutSidebarRightExpandFilled width={36} height={36} />
         </button>
       </div>
 
@@ -82,16 +85,16 @@ export default function Sidebar() {
                         : styles.mobileNavLink
                     }
                   >
-                    <span
-                      className={`material-symbols-outlined ${styles.mobileNavIcon}`}
-                    >
-                      {item.name === "Home"
-                        ? "home"
-                        : item.name === "Workouts"
-                        ? "fitness_center"
-                        : item.name === "Diary"
-                        ? "book"
-                        : ""}
+                    <span>
+                      {item.name === "Home" ? (
+                        <IconHome />
+                      ) : item.name === "Workouts" ? (
+                        <IconBarbellFilled />
+                      ) : item.name === "Diary" ? (
+                        <IconBook2 />
+                      ) : (
+                        ""
+                      )}
                     </span>
                     <span className={styles.mobileNavTitle}>{item.name}</span>
                   </Link>
@@ -106,7 +109,7 @@ export default function Sidebar() {
                 }}
                 className={styles.mobileSignOutButton}
               >
-                <span className="material-symbols-outlined">logout</span>
+                <IconLogout2 />
                 <span>Sign Out</span>
               </button>
               {user && <p className={styles.mobileUserEmail}>{user.email}</p>}
@@ -141,16 +144,16 @@ export default function Sidebar() {
                     : styles.navLink
                 }
               >
-                <span
-                  className={`material-symbols-outlined ${styles.navMaterialIcon}`}
-                >
-                  {item.name === "Home"
-                    ? "home"
-                    : item.name === "Workouts"
-                    ? "fitness_center"
-                    : item.name === "Diary"
-                    ? "book"
-                    : ""}
+                <span>
+                  {item.name === "Home" ? (
+                    <IconHome />
+                  ) : item.name === "Workouts" ? (
+                    <IconBarbellFilled />
+                  ) : item.name === "Diary" ? (
+                    <IconBook2 />
+                  ) : (
+                    ""
+                  )}
                 </span>
                 <span className={styles.navTitle}>{item.name}</span>
               </Link>
@@ -165,7 +168,7 @@ export default function Sidebar() {
             }}
             className={styles.signOutButton}
           >
-            <span className="material-symbols-outlined">logout</span>
+            <IconLogout2 />
             <span>Sign Out</span>
           </button>
           {user && <p className={styles.userEmail}>{user.email}</p>}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import SignIn from "@/components/auth/SignIn";
 import styles from "./LoginPage.module.css";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -17,7 +18,8 @@ export default function LoginPage() {
         {/* Back Button */}
         <div className={styles.backButton}>
           <Link href="/" className={styles.backLink}>
-            ← Back to Home
+            <IconArrowLeft />
+            <span>Back to Home</span>
           </Link>
         </div>
         <div className={styles.header}>

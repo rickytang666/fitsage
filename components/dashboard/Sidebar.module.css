@@ -35,24 +35,6 @@
   letter-spacing: 0.02em;
 }
 
-.mobileMenuButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background-color 0.2s ease;
-}
-
-.mobileMenuButton:hover {
-  background-color: var(--primary);
-}
-
-.mobileMenuIcon {
-  font-size: 24px;
-  color: var(--foreground);
-}
-
 /* Mobile Menu Overlay */
 .mobileMenuOverlay {
   position: fixed;
@@ -255,12 +237,7 @@
 }
 
 .navIcon {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  background-color: var(--link-color);
-  margin-right: 10px;
-  opacity: 1;
+  font-size: 20px;
 }
 
 .navIconActive {

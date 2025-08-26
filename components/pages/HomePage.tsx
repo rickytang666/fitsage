@@ -6,6 +6,7 @@ import DatabaseService from "../../services/DatabaseService";
 import { User, Workout } from "../../models/User";
 import logger from "@/utils/logger";
 import styles from "./HomePage.module.css";
+import { IconUser, IconPencil, IconChartHistogram } from "@tabler/icons-react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -416,8 +417,7 @@ export default function HomePage() {
       <div className={styles.profileCard}>
         <div className={styles.profileContent}>
           <h2>
-            <i className="material-symbols-outlined">person</i> Profile
-            Information
+            <IconUser className="mr-1" /> Profile Information
           </h2>
 
           {!isEditing ? (
@@ -446,7 +446,7 @@ export default function HomePage() {
               </div>
 
               <button onClick={handleEdit} className={styles.editButton}>
-                <i className="material-symbols-outlined">edit</i>Edit Profile
+                <IconPencil className="mr-1" /> Edit Profile
               </button>
             </div>
           ) : (
@@ -539,8 +539,8 @@ export default function HomePage() {
       <div className={styles.chartSectionWrapper}>
         <div className={styles.chartSection}>
           <h2 className={styles.chartTitle}>
-            <span className="material-symbols-outlined">chart_data</span> Weekly
-            Workout Intensity
+            <IconChartHistogram className="w-6 h-6 mr-2" />
+            Weekly Workout Intensity
           </h2>
           <p className={styles.chartSubtitle}>
             Intensity is calculated based on calories burned, duration,

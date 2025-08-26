@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import SignUp from "@/components/auth/SignUp";
 import styles from "./SignUpPage.module.css";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 export default function SignUpPage() {
   return (
@@ -10,7 +11,8 @@ export default function SignUpPage() {
         {/* Back Button */}
         <div className={styles.backButton}>
           <Link href="/" className={styles.backLink}>
-            ← Back to Home
+            <IconArrowLeft />
+            <span>Back to Home</span>
           </Link>
         </div>
         <div className={styles.header}>
