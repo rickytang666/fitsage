@@ -1,12 +1,13 @@
-import { Metadata } from 'next';
-import { Suspense } from 'react';
-import Link from 'next/link';
-import SignIn from '@/components/auth/SignIn';
-import styles from './LoginPage.module.css';
+import { Metadata } from "next";
+import { Suspense } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import SignIn from "@/components/auth/SignIn";
+import styles from "./LoginPage.module.css";
 
 export const metadata: Metadata = {
-  title: 'Sign In',
-  description: 'Sign in to your FitSage account to track your fitness journey.',
+  title: "Sign In",
+  description: "Sign in to your FitSage account to track your fitness journey.",
 };
 
 export default function LoginPage() {
@@ -21,12 +22,19 @@ export default function LoginPage() {
         </div>
         <div className={styles.header}>
           <div className={styles.title}>
-            <img src="/logo.svg" alt="FitSage Logo" style={{ height: 48, width: 48, verticalAlign: 'middle', marginRight: 12 }} />
+            <Image
+              src="/logo.svg"
+              alt="FitSage Logo"
+              style={{
+                verticalAlign: "middle",
+                marginRight: 12,
+              }}
+              width={48}
+              height={48}
+            />
             <h1>FitSage</h1>
           </div>
-          <h2 className={styles.subtitle}>
-            Your personal fitness companion
-          </h2>
+          <h2 className={styles.subtitle}>Your personal fitness companion</h2>
         </div>
         <div className={styles.formContainer}>
           <Suspense fallback={<div className={styles.loading}>Loading...</div>}>

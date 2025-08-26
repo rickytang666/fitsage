@@ -11,6 +11,19 @@ const nextConfig = {
   experimental: {
     esmExternals: true,
   },
-}
+  images: {
+    dangerouslyAllowSVG: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "go-skill-icons.vercel.app",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+      },
+    ],
+  },
+};
 
 export default nextConfig;

@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array - only run once!
+  }, [supabase]); // Depend on supabase instance (singleton) to satisfy exhaustive-deps
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./IntroPage.module.css";
 
 export default function IntroPage() {
@@ -9,7 +10,7 @@ export default function IntroPage() {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <img
+          <Image
             src="/logo.svg"
             alt="FitSage Logo"
             className={styles.logoIcon}
@@ -117,29 +118,41 @@ export default function IntroPage() {
         <p>© {new Date().getFullYear()} FitSage. All rights reserved.</p>
         <p>Made with ❤️ and 💪 by the FitSage Team.</p>
         <div className={styles.techStack}>
-          <img
+          <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=nextjs&theme=dark"
             alt="nextjs"
+            width={35}
+            height={35}
           />
-          <img
+          <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=supabase&theme=dark"
             alt="supabase"
+            width={35}
+            height={35}
           />
-          <img
+          <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=tailwind&theme=dark"
             alt="tailwind"
+            width={35}
+            height={35}
           />
-          <img
+          <Image
             src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250"
             alt="gemini"
-          ></img>
-          <img
+            width={35}
+            height={35}
+          />
+          <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=hf&theme=dark"
             alt="huggingface"
+            width={35}
+            height={35}
           />
-          <img
+          <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=vercel&theme=dark"
             alt="vercel"
+            width={35}
+            height={35}
           />
         </div>
       </footer>

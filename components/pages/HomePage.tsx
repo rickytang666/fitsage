@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { User, Workout } from "../../models/User";
@@ -55,21 +55,7 @@ export default function HomePage() {
     else setGreeting("Good evening");
   }, []);
 
-  // Single effect to load both user data and chart data together
-  useEffect(() => {
-    const loadAllData = async () => {
-      if (authUser?.id) {
-        // Load user data first
-        await loadUserData();
-        // Then load chart data
-        await loadWeeklyChartData();
-      }
-    };
-
-    loadAllData();
-  }, [authUser?.id]); // Only depend on authUser.id to prevent excessive reloads
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (!authUser?.id) {
       return;
     }
@@ -109,7 +95,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [authUser?.id, authUser?.email]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -169,52 +155,55 @@ export default function HomePage() {
   };
 
   // Calculate workout intensity based on multiple factors
-  const calculateWorkoutIntensity = (workouts: Workout[]): number => {
-    if (!workouts || workouts.length === 0) return 0;
+  const calculateWorkoutIntensity = useCallback(
+    (workouts: Workout[]): number => {
+      if (!workouts || workouts.length === 0) return 0;
 
-    let totalIntensity = 0;
+      let totalIntensity = 0;
 
-    workouts.forEach((workout) => {
-      let intensity = 0;
+      workouts.forEach((workout) => {
+        let intensity = 0;
 
-      // Base intensity from calories (normalized to 0-1 scale)
-      // 100 calories = 0.5 intensity, 500+ calories = 2.0 intensity
-      const calorieIntensity = Math.min((workout.calories || 0) / 250, 2.0);
-      intensity += calorieIntensity;
+        // Base intensity from calories (normalized to 0-1 scale)
+        // 100 calories = 0.5 intensity, 500+ calories = 2.0 intensity
+        const calorieIntensity = Math.min((workout.calories || 0) / 250, 2.0);
+        intensity += calorieIntensity;
 
-      // Duration intensity (normalized to 0-1 scale)
-      // 30 minutes = 0.5 intensity, 90+ minutes = 1.5 intensity
-      if (workout.durationMinutes) {
-        const durationIntensity = Math.min(workout.durationMinutes / 60, 1.5);
-        intensity += durationIntensity;
-      }
+        // Duration intensity (normalized to 0-1 scale)
+        // 30 minutes = 0.5 intensity, 90+ minutes = 1.5 intensity
+        if (workout.durationMinutes) {
+          const durationIntensity = Math.min(workout.durationMinutes / 60, 1.5);
+          intensity += durationIntensity;
+        }
 
-      // Sets/reps intensity (for strength training)
-      if (workout.sets && workout.reps) {
-        // More sets and reps = higher intensity
-        const setsRepsIntensity = Math.min(
-          (workout.sets * workout.reps) / 50,
-          1.0
-        );
-        intensity += setsRepsIntensity;
-      }
+        // Sets/reps intensity (for strength training)
+        if (workout.sets && workout.reps) {
+          // More sets and reps = higher intensity
+          const setsRepsIntensity = Math.min(
+            (workout.sets * workout.reps) / 50,
+            1.0
+          );
+          intensity += setsRepsIntensity;
+        }
 
-      // Weight intensity bonus (for strength training)
-      if (workout.weight && workout.weight > 0) {
-        // Higher weight = slight intensity bonus
-        const weightBonus = Math.min(workout.weight / 100, 0.5);
-        intensity += weightBonus;
-      }
+        // Weight intensity bonus (for strength training)
+        if (workout.weight && workout.weight > 0) {
+          // Higher weight = slight intensity bonus
+          const weightBonus = Math.min(workout.weight / 100, 0.5);
+          intensity += weightBonus;
+        }
 
-      totalIntensity += intensity;
-    });
+        totalIntensity += intensity;
+      });
 
-    // Cap maximum daily intensity at 4.0 and round to 1 decimal
-    return Math.round(Math.min(totalIntensity, 4.0) * 10) / 10;
-  };
+      // Cap maximum daily intensity at 4.0 and round to 1 decimal
+      return Math.round(Math.min(totalIntensity, 4.0) * 10) / 10;
+    },
+    []
+  );
 
   // Load workout data for the past 7 days and calculate intensity
-  const loadWeeklyChartData = async () => {
+  const loadWeeklyChartData = useCallback(async () => {
     if (!authUser?.id) return;
 
     setIsLoadingChart(true);
@@ -263,7 +252,21 @@ export default function HomePage() {
     } finally {
       setIsLoadingChart(false);
     }
-  };
+  }, [authUser?.id, calculateWorkoutIntensity]);
+
+  // Single effect to load both user data and chart data together
+  useEffect(() => {
+    const loadAllData = async () => {
+      if (authUser?.id) {
+        // Load user data first
+        await loadUserData();
+        // Then load chart data
+        await loadWeeklyChartData();
+      }
+    };
+
+    loadAllData();
+  }, [authUser?.id, loadUserData, loadWeeklyChartData]);
 
   // Chart data
   const chartData = {

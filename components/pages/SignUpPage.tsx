@@ -1,6 +1,7 @@
-import Link from 'next/link';
-import SignUp from '@/components/auth/SignUp';
-import styles from './SignUpPage.module.css';
+import Link from "next/link";
+import Image from "next/image";
+import SignUp from "@/components/auth/SignUp";
+import styles from "./SignUpPage.module.css";
 
 export default function SignUpPage() {
   return (
@@ -14,12 +15,19 @@ export default function SignUpPage() {
         </div>
         <div className={styles.header}>
           <div className={styles.title}>
-            <img src="/logo.svg" alt="FitSage Logo" style={{ height: 48, width: 48, verticalAlign: 'middle', marginRight: 12 }} />
+            <Image
+              src="/logo.svg"
+              alt="FitSage Logo"
+              style={{
+                verticalAlign: "middle",
+                marginRight: 12,
+              }}
+              width={48}
+              height={48}
+            />
             <h1>FitSage</h1>
           </div>
-          <h2 className={styles.subtitle}>
-            Start your fitness journey today
-          </h2>
+          <h2 className={styles.subtitle}>Start your fitness journey today</h2>
         </div>
         <div className={styles.formContainer}>
           <SignUp />
