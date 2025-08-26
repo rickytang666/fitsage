@@ -231,16 +231,15 @@ Rules:
         rawText = response.text || '';
         break; // Success, exit retry loop
         
-      } catch (genError: any) {
+      } catch (genError: unknown) {
+        const error = genError instanceof Error ? genError : new Error('Unknown error occurred');
         logger.error(`Gemini API call failed (attempt ${attempts + 1}):`, {
-          error: genError.message,
-          name: genError.name,
-          status: genError.status,
-          code: genError.code
+          error: error.message,
+          name: error.name
         });
         // Handle rate limiting and service unavailable errors
-        const isRateLimited = genError.message?.includes('429') || genError.message?.includes('rate');
-        const isServiceUnavailable = genError.message?.includes('503') || genError.message?.includes('unavailable');
+        const isRateLimited = error.message?.includes('429') || error.message?.includes('rate');
+        const isServiceUnavailable = error.message?.includes('503') || error.message?.includes('unavailable');
         
         if ((isRateLimited || isServiceUnavailable) && attempts < maxAttempts - 1) {
           // Calculate delay: longer for rate limits, shorter for service issues
@@ -262,7 +261,7 @@ Rules:
         
         // Last attempt failed or other errors
         if (attempts === maxAttempts - 1) {
-          throw genError;
+          throw error;
         }
         
         attempts++;

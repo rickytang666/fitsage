@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { IconMicrophone, IconPlayerStop } from "@tabler/icons-react";
 
 // Type declarations for Web Speech API
@@ -51,8 +51,8 @@ interface VoiceRecorderProps {
 
 export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [finalTranscript, setFinalTranscript] = useState("");
-  const [interimTranscript, setInterimTranscript] = useState("");
+  // const [finalTranscript, setFinalTranscript] = useState("");
+  // const [interimTranscript, setInterimTranscript] = useState("");
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingPunctuation, setIsProcessingPunctuation] = useState(false);
@@ -67,6 +67,46 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
   //   setDebugLogs((prev) => [...prev.slice(-20), logEntry]); // Keep last 20 logs
   //   console.log(message);
   // };
+
+  const addPunctuation = async (text: string): Promise<string> => {
+    try {
+      setIsProcessingPunctuation(true);
+
+      const response = await fetch("/api/punctuation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: text.trim() }),
+      });
+
+      if (!response.ok) {
+        console.warn("Punctuation API failed, using original text");
+        return text;
+      }
+
+      const data = await response.json();
+      return data.punctuatedText || text;
+    } catch {
+      console.warn("Punctuation processing failed");
+      return text; // Fallback to original text
+    } finally {
+      setIsProcessingPunctuation(false);
+    }
+  };
+
+  const processFinalTranscript = useCallback(
+    async (text: string) => {
+      const punctuatedText = await addPunctuation(text.trim());
+      await onSubmit(punctuatedText);
+
+      // Clear transcripts after sending
+      // setFinalTranscript("");
+      // setInterimTranscript("");
+      finalTranscriptRef.current = "";
+    },
+    [onSubmit]
+  );
 
   // Check if Web Speech API is supported
   useEffect(() => {
@@ -89,7 +129,7 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
       // addDebugLog("🎤 Recording started");
       setIsLoading(false);
       setIsRecording(true);
-      setInterimTranscript("");
+      // setInterimTranscript("");
     };
 
     const handleEnd = () => {
@@ -98,7 +138,7 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
       // addDebugLog(`📝 Final transcript length: ${finalTranscriptRef.current.length}`);
 
       setIsRecording(false);
-      setInterimTranscript("");
+      // setInterimTranscript("");
 
       // Process any remaining final transcript when recording ends naturally
       if (finalTranscriptRef.current.trim()) {
@@ -109,19 +149,18 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
       }
     };
 
-    const handleError = (event: SpeechRecognitionErrorEvent) => {
+    const handleError = () => {
       // addDebugLog(`❌ Speech recognition error: ${event.error}`);
       // addDebugLog(`📝 Final transcript at error: "${finalTranscriptRef.current}"`);
       setIsRecording(false);
       setIsLoading(false);
-      setInterimTranscript("");
+      // setInterimTranscript("");
     };
 
     const handleResult = (event: SpeechRecognitionEvent) => {
       // addDebugLog(`🎯 Speech result received, resultIndex: ${event.resultIndex}`);
       // addDebugLog(`📊 Total results: ${event.results.length}`);
 
-      let currentInterimTranscript = "";
       let newFinalTranscript = "";
 
       // Process results
@@ -134,7 +173,7 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
         if (result.isFinal) {
           newFinalTranscript += transcriptText + " ";
         } else {
-          currentInterimTranscript += transcriptText;
+          // currentInterimTranscript += transcriptText;
         }
       }
 
@@ -143,14 +182,14 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
         // addDebugLog(`✅ Adding to final transcript: "${newFinalTranscript}"`);
         finalTranscriptRef.current += newFinalTranscript;
         // addDebugLog(`📝 Total accumulated transcript: "${finalTranscriptRef.current}"`);
-        setFinalTranscript(finalTranscriptRef.current);
+        // setFinalTranscript(finalTranscriptRef.current);
       }
 
       // Update interim transcript
       // if (currentInterimTranscript) {
       //   addDebugLog(`🔄 Interim transcript: "${currentInterimTranscript}"`);
       // }
-      setInterimTranscript(currentInterimTranscript);
+      // setInterimTranscript(currentInterimTranscript);
     };
 
     // Attach event listeners
@@ -170,12 +209,12 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
           recognitionRef.current.onend = null;
           recognitionRef.current.onerror = null;
           recognitionRef.current.onresult = null;
-        } catch (error) {
+        } catch {
           // Silent cleanup
         }
       }
     };
-  }, []);
+  }, [processFinalTranscript]);
 
   const startRecording = async () => {
     if (!isSupported) {
@@ -188,52 +227,15 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       // Always clear transcripts when starting a new recording session
       // addDebugLog("🧹 Clearing transcripts for new session");
-      setFinalTranscript("");
-      setInterimTranscript("");
+      // setFinalTranscript("");
+      // setInterimTranscript("");
       finalTranscriptRef.current = "";
       // addDebugLog("🚀 Starting speech recognition");
       recognitionRef.current?.start();
-    } catch (error) {
+    } catch {
       // addDebugLog(`❌ Failed to start recording: ${error}`);
       setIsLoading(false);
     }
-  };
-
-  const addPunctuation = async (text: string): Promise<string> => {
-    try {
-      setIsProcessingPunctuation(true);
-
-      const response = await fetch("/api/punctuation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: text.trim() }),
-      });
-
-      if (!response.ok) {
-        console.warn("Punctuation API failed, using original text");
-        return text;
-      }
-
-      const data = await response.json();
-      return data.punctuatedText || text;
-    } catch (error) {
-      console.warn("Punctuation processing failed:", error);
-      return text; // Fallback to original text
-    } finally {
-      setIsProcessingPunctuation(false);
-    }
-  };
-
-  const processFinalTranscript = async (text: string) => {
-    const punctuatedText = await addPunctuation(text.trim());
-    await onSubmit(punctuatedText);
-
-    // Clear transcripts after sending
-    setFinalTranscript("");
-    setInterimTranscript("");
-    finalTranscriptRef.current = "";
   };
 
   const stopRecording = async () => {
@@ -385,8 +387,8 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
                 recognitionRef.current.stop();
               }
               setIsRecording(false);
-              setInterimTranscript("");
-              setFinalTranscript("");
+              // setInterimTranscript("");
+              // setFinalTranscript("");
               finalTranscriptRef.current = "";
             }}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"

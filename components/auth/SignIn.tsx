@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 import styles from "./Auth.module.css";
@@ -194,7 +194,7 @@ export default function SignIn() {
 
       <div className={styles.linkSection}>
         <p className={styles.linkText}>
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/auth/signup" className={styles.link}>
             Sign up
           </Link>

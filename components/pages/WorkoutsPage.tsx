@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { Workout } from "../../models/User";
@@ -10,9 +10,18 @@ import styles from "./WorkoutsPage.module.css";
 export default function WorkoutsPage() {
   const { user: authUser } = useAuth();
   // Centralized diary entries state - shared across all components
-  const [allDiaryEntries, setAllDiaryEntries] = useState<any[]>([]);
+  const [allDiaryEntries, setAllDiaryEntries] = useState<
+    Array<{
+      id: string;
+      date: Date;
+      workouts: Workout[];
+      diaryEntry: string;
+      injuries: string[];
+      suggestions: string[];
+    }>
+  >([]);
   const [isLoadingDiary, setIsLoadingDiary] = useState(true);
-  const [diaryError, setDiaryError] = useState<string>("");
+  // Removed unused diaryError state
 
   const [weekStats, setWeekStats] = useState({
     totalWorkouts: 0,
@@ -28,7 +37,7 @@ export default function WorkoutsPage() {
 
       logger.debug("Loading all diary entries for WorkoutsPage...");
       setIsLoadingDiary(true);
-      setDiaryError("");
+      // Removed unused diaryError state
 
       try {
         // Add a small delay to prevent rapid consecutive calls
@@ -43,7 +52,7 @@ export default function WorkoutsPage() {
         setAllDiaryEntries(entries);
       } catch (error) {
         logger.error("Error loading diary entries:", error);
-        setDiaryError("Failed to load diary entries");
+        // Removed unused diaryError state
         setAllDiaryEntries([]);
       } finally {
         setIsLoadingDiary(false);
@@ -56,8 +65,7 @@ export default function WorkoutsPage() {
   }, [authUser?.id]);
 
   // Calculate this week's statistics using shared diary entries
-  // Calculate this week's statistics using shared diary entries
-  const calculateWeekStats = async () => {
+  const calculateWeekStats = useCallback(async () => {
     if (!authUser?.id || allDiaryEntries.length === 0) return;
 
     try {
@@ -108,14 +116,14 @@ export default function WorkoutsPage() {
         isLoading: false,
       });
     }
-  };
+  }, [authUser?.id, allDiaryEntries]);
 
   // Load stats when component mounts
   useEffect(() => {
     if (authUser?.id && allDiaryEntries.length > 0) {
       calculateWeekStats();
     }
-  }, [authUser?.id, allDiaryEntries]); // Recalculate when diary entries change
+  }, [authUser?.id, allDiaryEntries, calculateWeekStats]);
 
   // Format duration for display
   const formatDuration = (totalMinutes: number): string => {
@@ -152,7 +160,7 @@ export default function WorkoutsPage() {
       </div>
 
       <div className={styles.statsCard}>
-        <h2 className={styles.statsTitle}>This Week's Progress</h2>
+        <h2 className={styles.statsTitle}>This Week&apos;s Progress</h2>
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
             <div className={styles.statValue}>
@@ -363,22 +371,28 @@ function FeaturedWorkouts({
   isLoading: boolean;
 }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [featuredWorkouts, setFeaturedWorkouts] = useState<any[]>([]);
+  const [featuredWorkouts, setFeaturedWorkouts] = useState<
+    Array<{
+      id: string;
+      name: string;
+      durationMinutes?: number;
+      sets?: number;
+      reps?: number;
+      weight?: number;
+      estimatedCalories?: number;
+      difficultyLevel: string;
+      description?: string;
+    }>
+  >([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingFromCache, setIsLoadingFromCache] = useState(false);
-  const [error, setError] = useState<string>("");
+  // Removed unused error and isRateLimited state
   const [errorType, setErrorType] = useState<
     "rate_limit" | "service_error" | null
   >(null);
-  const [isRateLimited, setIsRateLimited] = useState(false);
 
-  const loadFeaturedWorkouts = async () => {
+  const loadFeaturedWorkouts = useCallback(async () => {
     logger.debug("FeaturedWorkouts: Starting load process...");
-
-    // Clear previous state
-    setError("");
-    setErrorType(null);
-    setIsRateLimited(false);
 
     if (isLoading) {
       return;
@@ -448,15 +462,11 @@ function FeaturedWorkouts({
         return;
       } catch (cacheError) {
         logger.error("Cache check failed for empty diary:", cacheError);
-        setError("Unable to load workout cache");
         setIsLoadingFromCache(false);
         setIsProcessing(false);
         return;
       }
     }
-
-    setError("");
-    setIsRateLimited(false);
 
     try {
       // 🚀 FIRST: Try to get cached results
@@ -494,10 +504,6 @@ function FeaturedWorkouts({
       if (response.status === 429) {
         // Handle rate limiting - show normal suggestions with error banner
         setErrorType("rate_limit");
-        setError(
-          "AI recommendations are temporarily limited due to quota. Using fallback suggestions."
-        );
-        setIsRateLimited(true);
 
         // Show helpful suggestions instead of error-focused ones
         setSuggestions([
@@ -586,19 +592,13 @@ function FeaturedWorkouts({
         setFeaturedWorkouts(data.featuredWorkouts || []);
         if (data.meta?.error) {
           setErrorType("service_error");
-          setError(data.meta.error);
         } else if (data.meta?.rateLimited) {
           setErrorType("rate_limit");
-          setError("AI recommendations are rate limited");
-          setIsRateLimited(true);
         }
       }
     } catch (err) {
       logger.error("Failed to load featured workouts:", err);
       setErrorType("service_error");
-      setError(
-        "Unable to connect to AI service. Using fallback recommendations."
-      );
 
       // Show quality fallback suggestions and workouts even on service errors
       setSuggestions([
@@ -647,13 +647,13 @@ function FeaturedWorkouts({
       setIsProcessing(false);
       setIsLoadingFromCache(false);
     }
-  };
+  }, [userId, diaryEntries, isLoading]);
 
   useEffect(() => {
     if (!isLoading && diaryEntries.length > 0) {
       loadFeaturedWorkouts();
     }
-  }, [userId, diaryEntries, isLoading]);
+  }, [loadFeaturedWorkouts, isLoading, diaryEntries]);
 
   // Manual retry function
   const retryFeaturedWorkouts = async () => {

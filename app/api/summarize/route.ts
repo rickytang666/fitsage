@@ -166,16 +166,15 @@ ${diaryText}
       rawText = response.text || '';
       logger.api('Gemini API call successful, response length:', rawText.length);
       
-    } catch (genError: any) {
+    } catch (genError: unknown) {
+      const error = genError instanceof Error ? genError : new Error('Unknown error occurred');
       logger.error('Gemini API Error Details:', {
-        message: genError.message,
-        status: genError.status,
-        code: genError.code,
-        name: genError.name
+        message: error.message,
+        name: error.name
       });
       
       // Throw the original error so we can see Google's exact message
-      throw genError;
+      throw error;
     }
 
     if (!rawText) {
