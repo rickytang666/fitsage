@@ -24,26 +24,26 @@ export default function IntroPage() {
 
       {/* Hero Section */}
       <main className="mt-20 flex-1 flex items-center justify-center p-8 text-center">
-        <div className="max-w-[50%] mx-auto animate-[fadeInUp_1s_ease-out]">
-          <h1 className="text-5xl font-semibold text-foreground mb-4 leading-tight animate-[fadeInUp_1s_ease-out_0.2s_both]">
+        <div className="max-w-[80%] md:max-w-[60%] lg:max-w-[50%] mx-auto">
+          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4 leading-tight">
             Your{" "}
             <a
               href="https://deepmind.google/models/gemini/"
               target="_blank"
-              className="text-primary font-extrabold underline decoration-dashed decoration-3 underline-offset-2 decoration-primary hover:cursor-pointer hover:no-underline hover:bg-primary hover:text-primary-foreground transition-all duration-300 ease-in-out animate-[fadeInUp_1s_ease-out_0.1s_both]"
+              className="text-primary font-extrabold underline decoration-dashed decoration-3 underline-offset-2 decoration-primary hover:cursor-pointer hover:no-underline hover:bg-primary hover:text-primary-foreground transition-all duration-300 ease-in-out"
             >
               AI-Powered
             </a>{" "}
             Fitness Companion
           </h1>
-          <p className="text-xl text-foreground mb-8 opacity-90 leading-relaxed animate-[fadeInUp_1s_ease-out_0.4s_both]">
+          <p className="text-lg sm:text-xl text-foreground mb-8 opacity-90 leading-relaxed">
             Transform your fitness journey with intelligent workout tracking,
             voice-based diary entries, personalized insights, and progress
             monitoring all in one place.
           </p>
 
           <div
-            className="grid gap-4 mb-12 max-w-4xl mx-auto animate-[fadeInUp_1s_ease-out_0.8s_both]"
+            className="grid gap-4 mb-12 max-w-4xl mx-auto"
             style={{
               gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
             }}
@@ -80,7 +80,7 @@ export default function IntroPage() {
             </div>
           </div>
 
-          <div className="flex gap-4 justify-center flex-wrap animate-[fadeInUp_1s_ease-out_0.6s_both]">
+          <div className="flex gap-4 justify-center flex-wrap">
             <Link
               href="/auth/signup"
               className="bg-primary text-foreground px-8 py-3 rounded-lg font-semibold text-base no-underline transition-all duration-300 ease-in-out border-2 border-transparent shadow-md hover:scale-105 hover:shadow-lg hover:bg-ring"
@@ -99,19 +99,19 @@ export default function IntroPage() {
 
       {/* Benefits Section */}
       <section className="py-16 px-8">
-        <div className="max-w-[80%] mx-auto">
-          <h2 className="text-4xl font-bold text-center text-foreground mb-12">
+        <div className="max-w-[90%] md:max-w-[80%] lg:max-w-[70%] mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-foreground mb-12">
             Why Choose FitSage?
           </h2>
           <div
             className="grid gap-8"
             style={{
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
             }}
           >
             <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
               <div className="text-5xl mb-4">🚀</div>
-              <h3 className="text-xl font-bold text-foreground mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                 Easy to Use
               </h3>
               <p className="text-base text-foreground leading-relaxed opacity-80">
@@ -120,7 +120,7 @@ export default function IntroPage() {
             </div>
             <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
               <div className="text-5xl mb-4">🎤</div>
-              <h3 className="text-xl font-bold text-foreground mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                 Natural Voice Diary
               </h3>
               <p className="text-base text-foreground leading-relaxed opacity-80">
@@ -130,7 +130,7 @@ export default function IntroPage() {
             </div>
             <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
               <div className="text-5xl mb-4">🧠</div>
-              <h3 className="text-xl font-bold text-foreground mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                 AI-Powered
               </h3>
               <p className="text-base text-foreground leading-relaxed opacity-80">
@@ -139,7 +139,7 @@ export default function IntroPage() {
             </div>
             <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
               <div className="text-5xl mb-4">📈</div>
-              <h3 className="text-xl font-bold text-foreground mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-4">
                 Track Progress
               </h3>
               <p className="text-base text-foreground leading-relaxed opacity-80">
@@ -151,45 +151,45 @@ export default function IntroPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-accent text-center text-foreground text-base py-6 space-y-4">
+      <footer className="bg-accent text-center text-sm md:text-base py-6 space-y-4">
         <p>© {new Date().getFullYear()} FitSage. All rights reserved.</p>
         <p>Made with ❤️ and 💪 by the FitSage Team.</p>
         <div className="flex justify-center gap-2">
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=nextjs&theme=dark"
             alt="nextjs"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=supabase&theme=dark"
             alt="supabase"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=tailwind&theme=dark"
             alt="tailwind"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=gemini&theme=dark"
             alt="gemini"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=hf&theme=dark"
             alt="huggingface"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=vercel&theme=dark"
             alt="vercel"
-            width={35}
-            height={35}
+            width={30}
+            height={30}
           />
         </div>
       </footer>

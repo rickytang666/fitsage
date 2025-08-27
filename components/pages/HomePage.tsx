@@ -430,7 +430,7 @@ export default function HomePage() {
       <div className="bg-primary/80 shadow-lg mb-8 rounded-3xl">
         <div className="px-6 py-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl sm:text-3xl font-bold">
               {greeting},{" "}
               {user?.name ||
                 authUser?.email?.split("@")[0] ||
@@ -447,7 +447,7 @@ export default function HomePage() {
       {/* Profile Information */}
       <div className="mx-auto max-w-md bg-card backdrop-blur-xl border border-border rounded-3xl shadow-lg p-8 mb-8">
         <div className="text-center">
-          <h2 className="flex items-center justify-center text-2xl font-semibold mb-6">
+          <h2 className="flex items-center justify-center text-xl sm:text-2xl font-semibold mb-6">
             <IconUser className="mr-2" /> Profile Information
           </h2>
 
@@ -455,26 +455,34 @@ export default function HomePage() {
             // View Mode
             <div className="space-y-3">
               <div className="flex justify-between items-center py-3 border-b border-border">
-                <label className="font-medium text-foreground">Name:</label>
+                <label className="font-medium text-foreground text-sm sm:text-base">
+                  Name:
+                </label>
                 <span className="text-foreground">{user.name}</span>
               </div>
 
               <div className="flex justify-between items-center py-3 border-b border-border">
-                <label className="font-medium text-foreground">Height:</label>
+                <label className="font-medium text-foreground text-sm sm:text-base">
+                  Height:
+                </label>
                 <span className="text-foreground">
                   {user.height > 0 ? `${user.height} cm` : "Not set"}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-3 border-b border-border">
-                <label className="font-medium text-foreground">Weight:</label>
+                <label className="font-medium text-foreground text-sm sm:text-base">
+                  Weight:
+                </label>
                 <span className="text-foreground">
                   {user.weight > 0 ? `${user.weight} kg` : "Not set"}
                 </span>
               </div>
 
               <div className="flex justify-between items-center py-3 border-b border-border">
-                <label className="font-medium text-foreground">BMI:</label>
+                <label className="font-medium text-foreground text-sm sm:text-base">
+                  BMI:
+                </label>
                 <div className="flex items-center gap-2">
                   <span
                     className={
@@ -589,7 +597,7 @@ export default function HomePage() {
 
       {/* Stats Summary */}
       <div className="mt-8 mb-8">
-        <h3 className="text-2xl font-semibold mb-6 text-center">
+        <h3 className="text-xl sm:text-2xl font-semibold mb-6 text-center">
           Fitness Stats
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -621,7 +629,7 @@ export default function HomePage() {
       {/* Workout Chart */}
       <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-8 mb-8">
         <div>
-          <h2 className="flex items-center text-2xl font-semibold mb-4 text-foreground">
+          <h2 className="flex items-center text-xl sm:text-2xl font-semibold mb-4 text-foreground">
             <IconChartHistogram className="w-6 h-6 mr-2" />
             Weekly Workout Intensity
           </h2>
@@ -629,23 +637,27 @@ export default function HomePage() {
             Intensity is calculated based on calories burned, duration,
             sets/reps, and weight used
           </p>
-          <div className="p-4 min-h-[300px]">
-            {isLoadingChart ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-foreground">Loading your workout data...</p>
-              </div>
-            ) : (
-              <Line data={chartData} options={chartOptions} />
-            )}
+          <div className="p-4 flex items-center overflow-x-auto">
+            <div className="min-h-[200px] md:min-h-[300px] min-w-[500px] md:min-w-full">
+              {isLoadingChart ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-foreground text-sm sm:text-base">
+                    Loading your workout data...
+                  </p>
+                </div>
+              ) : (
+                <Line data={chartData} options={chartOptions} />
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6 text-xs lg:text-sm">
             <div className="flex items-center gap-2">
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#ef4444" }}
               ></span>
-              <span className="text-sm text-foreground">
+              <span>
                 Very High (3.1-4.0)
               </span>
             </div>
@@ -654,14 +666,14 @@ export default function HomePage() {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#f97316" }}
               ></span>
-              <span className="text-sm text-foreground">High (2.1-3.0)</span>
+              <span>High (2.1-3.0)</span>
             </div>
             <div className="flex items-center gap-2">
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#eab308" }}
               ></span>
-              <span className="text-sm text-foreground">
+              <span>
                 Moderate (1.1-2.0)
               </span>
             </div>
@@ -670,14 +682,14 @@ export default function HomePage() {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#22c55e" }}
               ></span>
-              <span className="text-sm text-foreground">Light (0.1-1.0)</span>
+              <span>Light (0.1-1.0)</span>
             </div>
             <div className="flex items-center gap-2">
               <span
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#9ca3af" }}
               ></span>
-              <span className="text-sm text-foreground">No workout (0)</span>
+              <span>No workout (0)</span>
             </div>
           </div>
         </div>

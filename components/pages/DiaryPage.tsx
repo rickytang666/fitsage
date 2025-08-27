@@ -11,6 +11,7 @@ import {
   IconFileText,
   IconChartBar,
   IconSelector,
+  IconBook2,
 } from "@tabler/icons-react";
 import logger from "@/utils/logger";
 
@@ -532,18 +533,19 @@ export default function DiaryPage() {
   }
 
   return (
-    <div className="p-10 px-4 bg-background min-h-screen w-[85%] mx-auto">
+    <div className="p-10 px-4 bg-background min-h-screen w-full lg:w-[85%] mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-4">
-          📝 My Fitness Diary
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">
+          <IconBook2 size={45} className="text-primary" />
+          My Fitness Diary
         </h1>
-        <p className="text-xl text-muted-foreground">
+        <p className="text-lg md:text-xl font-medium">
           Track your fitness journey one entry at a time
         </p>
       </div>
 
       {/* Entry Form */}
-      <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6 mb-8">
+      <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6 mb-20">
         {/* Voice/Type Toggle */}
         <div className="flex justify-center mb-6">
           <div className="flex bg-muted rounded-lg p-1">
@@ -673,8 +675,8 @@ export default function DiaryPage() {
 
       {/* Entries List */}
       <div>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
-          <h1 className="text-3xl font-bold text-foreground mb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-10 gap-4">
+          <h1 className="text-2xl md:text-2xl font-bold text-foreground mb-4">
             Previous Entries ({diaryEntries.length})
           </h1>
 
@@ -714,7 +716,7 @@ export default function DiaryPage() {
             {diaryEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="bg-background border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="bg-background border-2 border-border rounded-lg p-4 drop-shadow-xs drop-shadow-foreground/30 hover:drop-shadow-foreground/70 hover:shadow-xl"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-[650] text-foreground">

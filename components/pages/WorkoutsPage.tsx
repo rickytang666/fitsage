@@ -6,6 +6,8 @@ import DatabaseService from "../../services/DatabaseService";
 import { Workout } from "../../models/User";
 import logger from "@/utils/logger";
 
+import { IconBarbellFilled, IconCalendarFilled, IconCurrentLocationFilled, IconBulbFilled, IconStarFilled } from "@tabler/icons-react";
+
 export default function WorkoutsPage() {
   const { user: authUser } = useAuth();
   // Centralized diary entries state - shared across all components
@@ -156,16 +158,19 @@ export default function WorkoutsPage() {
   }
 
   return (
-    <div className="p-10 px-4 bg-background min-h-screen">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-foreground mb-4">💪 Workouts</h1>
-        <p className="text-xl text-muted-foreground">
+    <div className="p-10 px-4 bg-background min-h-screen w-full">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">
+          <IconBarbellFilled size={45} className="text-primary" />
+          Workouts
+        </h1>
+        <p className="text-lg md:text-xl font-medium">
           Plan out your fitness journey
         </p>
       </div>
 
       <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-8 mb-8">
-        <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
+        <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-10 text-center">
           This Week&apos;s Progress
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -198,8 +203,9 @@ export default function WorkoutsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Past 7 Days Panel */}
         <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            📅 Past 7 Days Workouts
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center justify-center gap-2">
+            <IconCalendarFilled size={25} className="text-primary" />
+            Past 7 Days Workouts
           </h2>
           <div className="space-y-4 max-h-110 overflow-y-auto pr-2">
             <PastSevenDaysWorkouts
@@ -211,8 +217,9 @@ export default function WorkoutsPage() {
 
         {/* Featured Workouts Panel */}
         <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            ⭐ Featured Workouts
+          <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center justify-center gap-2">
+            <IconCurrentLocationFilled size={25} className="text-primary" />
+            Featured Workouts
           </h2>
           <div className="space-y-4 max-h-110 overflow-y-auto pr-2">
             <FeaturedWorkouts
@@ -319,7 +326,7 @@ function PastSevenDaysWorkouts({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 my-5">
       {workouts.map((item, index) => (
         <div
           key={`${item.workout.id}-${index}`}
@@ -739,7 +746,7 @@ function FeaturedWorkouts({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 my-5">
       {/* Error Banner - Red banner for AI errors */}
       {errorType && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
@@ -777,8 +784,9 @@ function FeaturedWorkouts({
       {/* AI Suggestions Section */}
       <div className="bg-accent border-2 border-border rounded-lg p-4 drop-shadow-xs drop-shadow-foreground">
         <div className="mb-3">
-          <h3 className="font-semibold text-foreground">
-            💡 {errorType ? "Curated Suggestions" : "AI Suggestions"}
+          <h3 className="font-semibold text-foreground flex items-center gap-2">
+            <IconBulbFilled size={25} className="text-primary" />
+            {errorType ? "Curated Suggestions" : "AI Suggestions"}
           </h3>
         </div>
         <ul className="space-y-4">
@@ -795,8 +803,9 @@ function FeaturedWorkouts({
 
       {/* Featured Workouts Section */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">
-          ⭐ Recommended Workouts ({featuredWorkouts.length})
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+          <IconStarFilled size={25} className="text-primary" />
+          Recommended Workouts ({featuredWorkouts.length})
         </h3>
         <div className="space-y-4">
           {featuredWorkouts.map((workout) => (
