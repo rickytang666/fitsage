@@ -5,7 +5,6 @@ import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { Workout } from "../../models/User";
 import logger from "@/utils/logger";
-import styles from "./WorkoutsPage.module.css";
 
 export default function WorkoutsPage() {
   const { user: authUser } = useAuth();
@@ -143,56 +142,66 @@ export default function WorkoutsPage() {
 
   if (!authUser) {
     return (
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <h1 className={styles.title}>💪 Workouts</h1>
-          <p className={styles.subtitle}>Please log in to view your workouts</p>
+      <div className="p-10 px-4 bg-background min-h-screen">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            💪 Workouts
+          </h1>
+          <p className="text-xl text-muted-foreground">
+            Please log in to view your workouts
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>💪 Workouts</h1>
-        <p className={styles.subtitle}>Plan out your fitness journey</p>
+    <div className="p-10 px-4 bg-background min-h-screen">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-4">💪 Workouts</h1>
+        <p className="text-xl text-muted-foreground">
+          Plan out your fitness journey
+        </p>
       </div>
 
-      <div className={styles.statsCard}>
-        <h2 className={styles.statsTitle}>This Week&apos;s Progress</h2>
-        <div className={styles.statsGrid}>
-          <div className={styles.statItem}>
-            <div className={styles.statValue}>
+      <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-8 mb-8">
+        <h2 className="text-2xl font-semibold text-foreground mb-6 text-center">
+          This Week&apos;s Progress
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
               {weekStats.isLoading ? "..." : weekStats.totalWorkouts}
             </div>
-            <div className={styles.statLabel}>Workouts</div>
+            <div className="text-sm text-muted-foreground">Workouts</div>
           </div>
-          <div className={styles.statItem}>
-            <div className={styles.statValue}>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
               {weekStats.isLoading
                 ? "..."
                 : formatDuration(weekStats.totalMinutes)}
             </div>
-            <div className={styles.statLabel}>Total Time</div>
+            <div className="text-sm text-muted-foreground">Total Time</div>
           </div>
-          <div className={styles.statItem}>
-            <div className={styles.statValue}>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
               {weekStats.isLoading
                 ? "..."
                 : weekStats.totalCalories.toLocaleString()}
             </div>
-            <div className={styles.statLabel}>Calories</div>
+            <div className="text-sm text-muted-foreground">Calories</div>
           </div>
         </div>
       </div>
 
       {/* Split Panels - Past 7 days and Featured workouts */}
-      <div className={styles.splitPanelsContainer}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Past 7 Days Panel */}
-        <div className={styles.panel}>
-          <h2 className={styles.panelTitle}>📅 Past 7 Days Workouts</h2>
-          <div className={styles.panelContent}>
+        <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            📅 Past 7 Days Workouts
+          </h2>
+          <div className="space-y-4 max-h-110 overflow-y-auto pr-2">
             <PastSevenDaysWorkouts
               diaryEntries={allDiaryEntries}
               isLoading={isLoadingDiary}
@@ -201,9 +210,11 @@ export default function WorkoutsPage() {
         </div>
 
         {/* Featured Workouts Panel */}
-        <div className={styles.panel}>
-          <h2 className={styles.panelTitle}>⭐ Featured Workouts</h2>
-          <div className={styles.panelContent}>
+        <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            ⭐ Featured Workouts
+          </h2>
+          <div className="space-y-4 max-h-110 overflow-y-auto pr-2">
             <FeaturedWorkouts
               userId={authUser.id}
               diaryEntries={allDiaryEntries}
@@ -291,57 +302,63 @@ function PastSevenDaysWorkouts({
   }, [diaryEntries, isLoading]);
 
   if (isLoading) {
-    return <div className={styles.loading}>Loading past workouts...</div>;
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading past workouts...
+      </div>
+    );
   }
 
   if (workouts.length === 0) {
     return (
-      <div className={styles.emptyState}>
-        <p>💭 No workouts in the past 7 days.</p>
+      <div className="text-center py-8 text-muted-foreground">
+        <p className="mb-2">💭 No workouts in the past 7 days.</p>
         <p>Start by adding a diary entry!</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.workoutsList}>
+    <div className="space-y-4">
       {workouts.map((item, index) => (
         <div
           key={`${item.workout.id}-${index}`}
-          className={styles.pastWorkoutCard}
+          className="bg-background border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
         >
-          <div className={styles.workoutDate}>
+          <div className="text-sm text-muted-foreground mb-2">
             {item.date.toLocaleDateString("en-US", {
               weekday: "short",
               month: "short",
               day: "numeric",
             })}
           </div>
-          <div className={styles.workoutInfo}>
-            <h3 className={styles.workoutName}>{item.workout.name}</h3>
-            <div className={styles.workoutStats}>
+          <div>
+            <h3 className="font-semibold text-foreground mb-2">
+              {item.workout.name}
+            </h3>
+            <div className="flex flex-wrap gap-2">
               {item.workout.durationMinutes && (
-                <span className={styles.workoutStat}>
+                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                   ⏱️ {item.workout.durationMinutes}m
                 </span>
               )}
               {item.workout.sets && (
-                <span className={styles.workoutStat}>
+                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                   🔄 {item.workout.sets} sets
                 </span>
               )}
               {item.workout.reps && (
-                <span className={styles.workoutStat}>
+                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                   ↗️ {item.workout.reps} reps
                 </span>
               )}
               {item.workout.weight && (
-                <span className={styles.workoutStat}>
+                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                   🏋️ {item.workout.weight}kg
                 </span>
               )}
               {item.workout.calories && (
-                <span className={styles.workoutStat}>
+                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                   🔥 {item.workout.calories} cal
                 </span>
               )}
@@ -370,6 +387,36 @@ function FeaturedWorkouts({
   }>;
   isLoading: boolean;
 }) {
+  // Get difficulty level colors
+  const getDifficultyColors = (level: string) => {
+    switch (level.toLowerCase()) {
+      case "beginner":
+        return {
+          bg: "bg-green-500/20",
+          text: "text-green-700 dark:text-green-400",
+          border: "border-green-500/30",
+        };
+      case "intermediate":
+        return {
+          bg: "bg-yellow-500/20",
+          text: "text-yellow-700 dark:text-yellow-400",
+          border: "border-yellow-500/30",
+        };
+      case "advanced":
+        return {
+          bg: "bg-red-500/20",
+          text: "text-red-700 dark:text-red-400",
+          border: "border-red-500/30",
+        };
+      default:
+        return {
+          bg: "bg-blue-500/20",
+          text: "text-blue-700 dark:text-blue-400",
+          border: "border-blue-500/30",
+        };
+    }
+  };
+
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [featuredWorkouts, setFeaturedWorkouts] = useState<
     Array<{
@@ -664,56 +711,60 @@ function FeaturedWorkouts({
 
   if (isLoading) {
     return (
-      <div className={styles.featuredLoading}>
-        <div className={styles.loadingSpinner}>📚</div>
-        <p>Loading diary entries...</p>
+      <div className="text-center py-8">
+        <div className="text-4xl mb-4">📚</div>
+        <p className="text-muted-foreground">Loading diary entries...</p>
       </div>
     );
   }
 
   if (isLoadingFromCache) {
     return (
-      <div className={styles.featuredLoading}>
-        <div className={styles.loadingSpinner}>💾</div>
-        <p>Loading your suggestions...</p>
+      <div className="text-center py-8">
+        <div className="text-4xl mb-4">💾</div>
+        <p className="text-muted-foreground">Loading your suggestions...</p>
       </div>
     );
   }
 
   if (isProcessing) {
     return (
-      <div className={styles.featuredLoading}>
-        <div className={styles.loadingSpinner}>🤖</div>
-        <p>AI is generating recommendations...</p>
+      <div className="text-center py-8">
+        <div className="text-4xl mb-4 animate-pulse">🤖</div>
+        <p className="text-muted-foreground">
+          AI is generating recommendations...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={styles.featuredWorkouts}>
+    <div className="space-y-6">
       {/* Error Banner - Red banner for AI errors */}
       {errorType && (
-        <div className={styles.errorBanner}>
-          <div className={styles.errorBannerContent}>
-            <span className={styles.errorIcon}>
-              {errorType === "rate_limit" ? "🚫" : "⚠️"}
-            </span>
-            <div className={styles.errorText}>
-              <div className={styles.errorTitle}>
-                {errorType === "rate_limit"
-                  ? "AI Quota Limit Reached"
-                  : "AI Service Unavailable"}
-              </div>
-              <div className={styles.errorDescription}>
-                {errorType === "rate_limit"
-                  ? "AI recommendations are temporarily limited. Using quality fallback suggestions below."
-                  : "Unable to connect to AI service. Showing curated workout recommendations instead."}
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">
+                {errorType === "rate_limit" ? "🚫" : "⚠️"}
+              </span>
+              <div>
+                <div className="font-semibold text-destructive mb-1">
+                  {errorType === "rate_limit"
+                    ? "AI Quota Limit Reached"
+                    : "AI Service Unavailable"}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {errorType === "rate_limit"
+                    ? "AI recommendations are temporarily limited. Using quality fallback suggestions below."
+                    : "Unable to connect to AI service. Showing curated workout recommendations instead."}
+                </div>
               </div>
             </div>
             {errorType === "rate_limit" && (
               <button
                 onClick={retryFeaturedWorkouts}
-                className={styles.retryButtonSmall}
+                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
                 disabled={isProcessing}
               >
                 {isProcessing ? "⏳" : "🔄 Retry"}
@@ -724,15 +775,18 @@ function FeaturedWorkouts({
       )}
 
       {/* AI Suggestions Section */}
-      <div className={styles.suggestionsSection}>
-        <div className={styles.suggestionsHeader}>
-          <h3 className={styles.suggestionsTitle}>
+      <div className="bg-accent border-2 border-border rounded-lg p-4 drop-shadow-xs drop-shadow-foreground">
+        <div className="mb-3">
+          <h3 className="font-semibold text-foreground">
             💡 {errorType ? "Curated Suggestions" : "AI Suggestions"}
           </h3>
         </div>
-        <ul className={styles.suggestionsList}>
+        <ul className="space-y-4">
           {suggestions.map((suggestion, index) => (
-            <li key={index} className={styles.suggestion}>
+            <li
+              key={index}
+              className="text-sm text-muted-foreground pl-4 border-l-2 border-primary"
+            >
               {suggestion}
             </li>
           ))}
@@ -740,53 +794,64 @@ function FeaturedWorkouts({
       </div>
 
       {/* Featured Workouts Section */}
-      <div className={styles.workoutsSection}>
-        <h3 className="text-white">
+      <div>
+        <h3 className="text-lg font-semibold text-foreground mb-4">
           ⭐ Recommended Workouts ({featuredWorkouts.length})
         </h3>
-        <div className={styles.featuredWorkoutsList}>
+        <div className="space-y-4">
           {featuredWorkouts.map((workout) => (
-            <div key={workout.id} className={styles.featuredWorkoutCard}>
-              <div className={styles.featuredWorkoutHeader}>
-                <h4 className={styles.featuredWorkoutName}>{workout.name}</h4>
+            <div
+              key={workout.id}
+              className="bg-card border-2 border-border rounded-lg p-4 drop-shadow-xs drop-shadow-foreground"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <h4 className="font-semibold text-foreground">
+                  {workout.name}
+                </h4>
                 <span
-                  className={styles.featuredWorkoutLevel}
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    getDifficultyColors(workout.difficultyLevel).bg
+                  } ${
+                    getDifficultyColors(workout.difficultyLevel).text
+                  } border ${
+                    getDifficultyColors(workout.difficultyLevel).border
+                  }`}
                   data-level={workout.difficultyLevel}
                 >
                   {workout.difficultyLevel}
                 </span>
               </div>
 
-              <div className={styles.featuredWorkoutStats}>
+              <div className="flex flex-wrap gap-2 mb-3">
                 {workout.durationMinutes && (
-                  <span className={styles.workoutStat}>
+                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                     ⏱️ {workout.durationMinutes}m
                   </span>
                 )}
                 {workout.sets && (
-                  <span className={styles.workoutStat}>
+                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                     🔄 {workout.sets} sets
                   </span>
                 )}
                 {workout.reps && (
-                  <span className={styles.workoutStat}>
+                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                     ↗️ {workout.reps} reps
                   </span>
                 )}
                 {workout.weight && workout.weight > 0 && (
-                  <span className={styles.workoutStat}>
+                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                     🏋️ {workout.weight}kg
                   </span>
                 )}
                 {workout.estimatedCalories && (
-                  <span className={styles.workoutStat}>
+                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                     🔥 ~{workout.estimatedCalories} cal
                   </span>
                 )}
               </div>
 
               {workout.description && (
-                <p className={styles.featuredWorkoutDescription}>
+                <p className="bg-accent/60 p-2 rounded-md text-sm text-muted-foreground border-l-2 border-primary pl-4">
                   {workout.description}
                 </p>
               )}

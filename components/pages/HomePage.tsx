@@ -5,7 +5,6 @@ import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { User, Workout } from "../../models/User";
 import logger from "@/utils/logger";
-import styles from "./HomePage.module.css";
 import { IconUser, IconPencil, IconChartHistogram } from "@tabler/icons-react";
 import {
   Chart as ChartJS,
@@ -19,6 +18,7 @@ import {
   Filler,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { useTheme } from "next-themes";
 
 ChartJS.register(
   CategoryScale,
@@ -33,6 +33,8 @@ ChartJS.register(
 
 export default function HomePage() {
   const { user: authUser } = useAuth();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -55,6 +57,14 @@ export default function HomePage() {
     else if (hour < 18) setGreeting("Good afternoon");
     else setGreeting("Good evening");
   }, []);
+
+  // Prevent hydration mismatch with theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Safe theme value to prevent hydration mismatch
+  const safeTheme = mounted ? theme : "light";
 
   const loadUserData = useCallback(async () => {
     if (!authUser?.id) {
@@ -148,11 +158,11 @@ export default function HomePage() {
   };
 
   const getBMIStatus = (bmi: number) => {
-    if (bmi === 0) return { status: "Not set", color: "gray" };
-    if (bmi < 18.5) return { status: "Underweight", color: "lightskyblue" };
-    if (bmi < 25) return { status: "Normal", color: "springgreen" };
-    if (bmi < 30) return { status: "Overweight", color: "yellow" };
-    return { status: "Obese", color: "salmon" };
+    if (bmi === 0) return "Not set";
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal";
+    if (bmi < 30) return "Overweight";
+    return "Obese";
   };
 
   // Calculate workout intensity based on multiple factors
@@ -279,7 +289,6 @@ export default function HomePage() {
         borderColor: "rgb(249, 115, 22)",
         backgroundColor: "rgba(249, 115, 22, 0.1)",
         pointBackgroundColor: "rgb(249, 115, 22)",
-        pointBorderColor: "white",
         pointBorderWidth: 2,
         pointRadius: 6,
         pointHoverRadius: 8,
@@ -298,18 +307,19 @@ export default function HomePage() {
       },
       tooltip: {
         intersect: false,
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "white",
-        bodyColor: "white",
+        backgroundColor:
+          safeTheme === "dark"
+            ? "rgba(0, 0, 0, 0.8)"
+            : "rgba(255, 255, 255, 0.8)",
+        titleColor: safeTheme === "dark" ? "white" : "black",
+        bodyColor: safeTheme === "dark" ? "white" : "black",
         borderColor: "rgb(249, 115, 22)",
         borderWidth: 1,
         titleFont: {
-          family:
-            '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          family: "monospace",
         },
         bodyFont: {
-          family:
-            '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+          family: "monospace",
         },
         callbacks: {
           label: function (context: { parsed: { y: number } }) {
@@ -330,30 +340,48 @@ export default function HomePage() {
       y: {
         beginAtZero: true,
         max: 4,
+        display: true,
         grid: {
-          display: false,
-          drawBorder: false,
+          display: true,
+          color:
+            safeTheme === "dark"
+              ? "rgba(255, 255, 255, 0.2)"
+              : "rgba(0, 0, 0, 0.2)",
+          drawBorder: true,
         },
         ticks: {
-          color: "white",
+          color: safeTheme === "dark" ? "white" : "black",
           stepSize: 1,
           font: {
-            family:
-              '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+            family: "monospace",
+            size: 12,
           },
+        },
+        border: {
+          display: true,
+          color: "var(--border)",
         },
       },
       x: {
+        display: true,
         grid: {
-          display: false,
-          drawBorder: false,
+          display: true,
+          color:
+            safeTheme === "dark"
+              ? "rgba(255, 255, 255, 0.2)"
+              : "rgba(0, 0, 0, 0.2)",
+          drawBorder: true,
         },
         ticks: {
-          color: "white",
+          color: safeTheme === "dark" ? "white" : "black",
           font: {
-            family:
-              '"SF Mono", Monaco, Inconsolata, "Roboto Mono", Consolas, "Courier New", monospace',
+            family: "monospace",
+            size: 12,
           },
+        },
+        border: {
+          display: true,
+          color: "var(--border)",
         },
       },
     },
@@ -366,24 +394,28 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading your profile...</div>
+      <div className="p-10 px-4 bg-background min-h-screen">
+        <div className="text-center text-xl text-foreground">
+          Loading your profile...
+        </div>
       </div>
     );
   }
 
   if (!authUser) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>Please log in to view your profile.</div>
+      <div className="p-10 px-4 bg-background min-h-screen">
+        <div className="text-center text-xl text-foreground">
+          Please log in to view your profile.
+        </div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>
+      <div className="p-10 px-4 bg-background min-h-screen">
+        <div className="text-center text-xl text-foreground">
           Profile not found. Try refreshing the page or contact support.
         </div>
       </div>
@@ -391,22 +423,21 @@ export default function HomePage() {
   }
 
   const bmi = calculateBMI(user.weight, user.height);
-  const bmiStatus = getBMIStatus(bmi);
 
   return (
-    <div className={styles.container}>
+    <div className="p-10 px-4 bg-background min-h-screen">
       {/* Greeting Banner with Fitness Decorations */}
-      <div className="bg-orange-400 bg-opacity-60 shadow-lg mb-8 rounded-3xl">
+      <div className="bg-primary/80 shadow-lg mb-8 rounded-3xl">
         <div className="px-6 py-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">
+            <h1 className="text-3xl font-bold">
               {greeting},{" "}
               {user?.name ||
                 authUser?.email?.split("@")[0] ||
                 "Fitness Enthusiast"}
               !
             </h1>
-            <p className="text-purple-200 text-lg mt-2">
+            <p className="text-fuchsia-500 dark:text-fuchsia-300 text-lg mt-2">
               Ready for your daily fitness journey?
             </p>
           </div>
@@ -414,89 +445,131 @@ export default function HomePage() {
       </div>
 
       {/* Profile Information */}
-      <div className={styles.profileCard}>
-        <div className={styles.profileContent}>
-          <h2>
-            <IconUser className="mr-1" /> Profile Information
+      <div className="mx-auto max-w-md bg-card backdrop-blur-xl border border-border rounded-3xl shadow-lg p-8 mb-8">
+        <div className="text-center">
+          <h2 className="flex items-center justify-center text-2xl font-semibold mb-6">
+            <IconUser className="mr-2" /> Profile Information
           </h2>
 
           {!isEditing ? (
             // View Mode
-            <div className={styles.viewMode}>
-              <div className={styles.profileField}>
-                <label>Name:</label>
-                <span>{user.name}</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <label className="font-medium text-foreground">Name:</label>
+                <span className="text-foreground">{user.name}</span>
               </div>
 
-              <div className={styles.profileField}>
-                <label>Height:</label>
-                <span>{user.height > 0 ? `${user.height} cm` : "Not set"}</span>
-              </div>
-
-              <div className={styles.profileField}>
-                <label>Weight:</label>
-                <span>{user.weight > 0 ? `${user.weight} kg` : "Not set"}</span>
-              </div>
-
-              <div className={styles.profileField}>
-                <label>BMI:</label>
-                <span style={{ color: bmiStatus.color }}>
-                  {bmi > 0 ? `${bmi} (${bmiStatus.status})` : "Not available"}
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <label className="font-medium text-foreground">Height:</label>
+                <span className="text-foreground">
+                  {user.height > 0 ? `${user.height} cm` : "Not set"}
                 </span>
               </div>
 
-              <button onClick={handleEdit} className={styles.editButton}>
-                <IconPencil className="mr-1" /> Edit Profile
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <label className="font-medium text-foreground">Weight:</label>
+                <span className="text-foreground">
+                  {user.weight > 0 ? `${user.weight} kg` : "Not set"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center py-3 border-b border-border">
+                <label className="font-medium text-foreground">BMI:</label>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={
+                      bmi > 0
+                        ? bmi < 18.5
+                          ? "text-bmi-underweight"
+                          : bmi < 25
+                          ? "text-bmi-normal"
+                          : bmi < 30
+                          ? "text-bmi-overweight"
+                          : "text-bmi-obese"
+                        : "text-bmi-not-set"
+                    }
+                  >
+                    {bmi > 0 ? `${bmi}` : "Not available"}
+                  </span>
+                  {bmi > 0 && (
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        bmi < 18.5
+                          ? "bg-bmi-underweight/20 text-bmi-underweight border border-bmi-underweight/30"
+                          : bmi < 25
+                          ? "bg-bmi-normal/20 text-bmi-normal border border-bmi-normal/30"
+                          : bmi < 30
+                          ? "bg-bmi-overweight/20 text-bmi-overweight border border-bmi-overweight/30"
+                          : "bg-bmi-obese/20 text-bmi-obese border border-bmi-obese/30"
+                      }`}
+                    >
+                      {getBMIStatus(bmi)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleEdit}
+                className="mt-6 px-6 py-3 bg-primary rounded-full font-medium hover:bg-primary/80 transition-colors flex items-center mx-auto"
+              >
+                <IconPencil className="mr-2" /> Edit Profile
               </button>
             </div>
           ) : (
             // Edit Mode
-            <div className={styles.editMode}>
-              <div className={styles.formField}>
-                <label>Name:</label>
+            <div className="space-y-4">
+              <div className="text-left">
+                <label className="block font-medium text-foreground mb-2">
+                  Name:
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className={styles.input}
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 />
               </div>
 
-              <div className={styles.formField}>
-                <label>Height (cm):</label>
+              <div className="text-left">
+                <label className="block font-medium text-foreground mb-2">
+                  Height (cm):
+                </label>
                 <input
                   type="number"
                   value={formData.height || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, height: Number(e.target.value) })
                   }
-                  className={styles.input}
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   min="0"
                   max="300"
                 />
               </div>
 
-              <div className={styles.formField}>
-                <label>Weight (kg):</label>
+              <div className="text-left">
+                <label className="block font-medium text-foreground mb-2">
+                  Weight (kg):
+                </label>
                 <input
                   type="number"
                   value={formData.weight || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, weight: Number(e.target.value) })
                   }
-                  className={styles.input}
+                  className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   min="0"
                   max="500"
                 />
               </div>
 
-              <div className={styles.buttonGroup}>
+              <div className="flex gap-4 pt-4">
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className={styles.saveButton}
+                  className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? "💾 Saving..." : "💾 Save"}
                 </button>
@@ -504,7 +577,7 @@ export default function HomePage() {
                 <button
                   onClick={handleCancel}
                   disabled={isSaving}
-                  className={styles.cancelButton}
+                  className="flex-1 px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ❌ Cancel
                 </button>
@@ -515,90 +588,104 @@ export default function HomePage() {
       </div>
 
       {/* Stats Summary */}
-      <div className={styles.statsSection}>
-        <h3 className={styles.sectionTitle}>Fitness Stats</h3>
-        <div className={styles.statsGrid}>
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{user.totalLogs}</div>
-            <div className={styles.statLabel}>Total Logs</div>
+      <div className="mt-8 mb-8">
+        <h3 className="text-2xl font-semibold mb-6 text-center">
+          Fitness Stats
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="bg-card backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {user.totalLogs}
+            </div>
+            <div className="text-sm text-muted-foreground">Total Logs</div>
           </div>
 
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{user.totalWorkouts}</div>
-            <div className={styles.statLabel}>Total Workouts</div>
+          <div className="bg-card backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {user.totalWorkouts}
+            </div>
+            <div className="text-sm text-muted-foreground">Total Workouts</div>
           </div>
 
-          <div className={styles.statCard}>
-            <div className={styles.statValue}>{user.totalWorkoutMinutes}</div>
-            <div className={styles.statLabel}>Minutes Exercised</div>
+          <div className="bg-card backdrop-blur-xl border border-border rounded-2xl p-6 shadow-lg text-center">
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {user.totalWorkoutMinutes}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Minutes Exercised
+            </div>
           </div>
         </div>
       </div>
 
       {/* Workout Chart */}
-      <div className={styles.chartSectionWrapper}>
-        <div className={styles.chartSection}>
-          <h2 className={styles.chartTitle}>
+      <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-8 mb-8">
+        <div>
+          <h2 className="flex items-center text-2xl font-semibold mb-4 text-foreground">
             <IconChartHistogram className="w-6 h-6 mr-2" />
             Weekly Workout Intensity
           </h2>
-          <p className={styles.chartSubtitle}>
+          <p className="text-sm text-center mb-6">
             Intensity is calculated based on calories burned, duration,
             sets/reps, and weight used
           </p>
-          <div className={styles.chartContainer}>
+          <div className="p-4 min-h-[300px]">
             {isLoadingChart ? (
-              <div className={styles.chartLoading}>
-                <div className={styles.loadingSpinner}></div>
-                <p>Loading your workout data...</p>
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-foreground">Loading your workout data...</p>
               </div>
             ) : (
               <Line data={chartData} options={chartOptions} />
             )}
           </div>
-          <div className={styles.intensityLegend}>
-            <div className={styles.legendItem}>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
+            <div className="flex items-center gap-2">
               <span
-                className={styles.legendDot}
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#ef4444" }}
               ></span>
-              <span>Very High (3.1-4.0)</span>
+              <span className="text-sm text-foreground">
+                Very High (3.1-4.0)
+              </span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2">
               <span
-                className={styles.legendDot}
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#f97316" }}
               ></span>
-              <span>High (2.1-3.0)</span>
+              <span className="text-sm text-foreground">High (2.1-3.0)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2">
               <span
-                className={styles.legendDot}
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#eab308" }}
               ></span>
-              <span>Moderate (1.1-2.0)</span>
+              <span className="text-sm text-foreground">
+                Moderate (1.1-2.0)
+              </span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2">
               <span
-                className={styles.legendDot}
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#22c55e" }}
               ></span>
-              <span>Light (0.1-1.0)</span>
+              <span className="text-sm text-foreground">Light (0.1-1.0)</span>
             </div>
-            <div className={styles.legendItem}>
+            <div className="flex items-center gap-2">
               <span
-                className={styles.legendDot}
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: "#9ca3af" }}
               ></span>
-              <span>No workout (0)</span>
+              <span className="text-sm text-foreground">No workout (0)</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Motivational Quote */}
-      <div className={styles.motivationalQuote}>
-        <p className={styles.quoteText}>
+      <div className="text-center py-8">
+        <p className="text-xl italic text-muted-foreground bg-muted py-10 rounded-xl border-l-6 border-l-primary">
           &ldquo;The only bad workout is the one that didn&apos;t happen.&rdquo;
         </p>
       </div>

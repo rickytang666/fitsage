@@ -2,73 +2,95 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import styles from "./IntroPage.module.css";
+import { ModeToggle } from "@/components/ModeToggle";
 
 export default function IntroPage() {
   return (
-    <div className={styles.container}>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.logo}>
+      <header className="fixed top-0 left-0 right-0 z-50 px-8 py-4 mb-8 w-full flex justify-between items-center bg-background/50 backdrop-blur-lg">
+        <div className="flex items-center gap-2">
           <Image
             src="/logo.svg"
             alt="FitSage Logo"
-            className={styles.logoIcon}
+            className="text-3xl"
             height={40}
             width={40}
           />
-          <span className={styles.logoText}>FitSage</span>
+          <span className="text-2xl font-bold text-primary">FitSage</span>
         </div>
+        <ModeToggle />
       </header>
 
       {/* Hero Section */}
-      <main className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>
+      <main className="mt-20 flex-1 flex items-center justify-center p-8 text-center">
+        <div className="max-w-[50%] mx-auto animate-[fadeInUp_1s_ease-out]">
+          <h1 className="text-5xl font-semibold text-foreground mb-4 leading-tight animate-[fadeInUp_1s_ease-out_0.2s_both]">
             Your{" "}
             <a
               href="https://deepmind.google/models/gemini/"
               target="_blank"
-              className={styles.tech}
+              className="text-primary font-extrabold underline decoration-dashed decoration-3 underline-offset-2 decoration-primary hover:cursor-pointer hover:no-underline hover:bg-primary hover:text-primary-foreground transition-all duration-300 ease-in-out animate-[fadeInUp_1s_ease-out_0.1s_both]"
             >
               AI-Powered
             </a>{" "}
             Fitness Companion
           </h1>
-          <p className={styles.heroSubtitle}>
+          <p className="text-xl text-foreground mb-8 opacity-90 leading-relaxed animate-[fadeInUp_1s_ease-out_0.4s_both]">
             Transform your fitness journey with intelligent workout tracking,
             voice-based diary entries, personalized insights, and progress
             monitoring all in one place.
           </p>
 
-          <div className={styles.features}>
-            <div className={styles.feature}>
-              <span className={styles.featureIcon}>📊</span>
-              <span className={styles.featureText}>Smart Analytics</span>
+          <div
+            className="grid gap-4 mb-12 max-w-4xl mx-auto animate-[fadeInUp_1s_ease-out_0.8s_both]"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            }}
+          >
+            <div className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border min-w-0">
+              <span className="text-3xl">📊</span>
+              <span className="text-sm font-medium text-foreground text-center">
+                Smart Analytics
+              </span>
             </div>
-            <div className={styles.feature}>
-              <span className={styles.featureIcon}>🎯</span>
-              <span className={styles.featureText}>Health Tracking</span>
+            <div className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border min-w-0">
+              <span className="text-3xl">🎯</span>
+              <span className="text-sm font-medium text-foreground text-center">
+                Health Tracking
+              </span>
             </div>
-            <div className={styles.feature}>
-              <span className={styles.featureIcon}>🎤</span>
-              <span className={styles.featureText}>Voice Recording</span>
+            <div className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border min-w-0">
+              <span className="text-3xl">🎤</span>
+              <span className="text-sm font-medium text-foreground text-center">
+                Voice Recording
+              </span>
             </div>
-            <div className={styles.feature}>
-              <span className={styles.featureIcon}>📝</span>
-              <span className={styles.featureText}>Workout Diary</span>
+            <div className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border min-w-0">
+              <span className="text-3xl">📝</span>
+              <span className="text-sm font-medium text-foreground text-center">
+                Workout Diary
+              </span>
             </div>
-            <div className={styles.feature}>
-              <span className={styles.featureIcon}>🤖</span>
-              <span className={styles.featureText}>AI Insights</span>
+            <div className="flex flex-col items-center gap-2 p-4 bg-card rounded-xl border border-border min-w-0">
+              <span className="text-3xl">🤖</span>
+              <span className="text-sm font-medium text-foreground text-center">
+                AI Insights
+              </span>
             </div>
           </div>
 
-          <div className={styles.ctaButtons}>
-            <Link href="/auth/signup" className={styles.primaryButton}>
+          <div className="flex gap-4 justify-center flex-wrap animate-[fadeInUp_1s_ease-out_0.6s_both]">
+            <Link
+              href="/auth/signup"
+              className="bg-primary text-foreground px-8 py-3 rounded-lg font-semibold text-base no-underline transition-all duration-300 ease-in-out border-2 border-transparent shadow-md hover:scale-105 hover:shadow-lg hover:bg-ring"
+            >
               Get Started Free
             </Link>
-            <Link href="/auth/login" className={styles.secondaryButton}>
+            <Link
+              href="/auth/login"
+              className="bg-transparent px-8 py-3 rounded-lg font-semibold text-base no-underline transition-all duration-300 ease-in-out border-2 border-ring hover:bg-ring"
+            >
               Sign In
             </Link>
           </div>
@@ -76,36 +98,51 @@ export default function IntroPage() {
       </main>
 
       {/* Benefits Section */}
-      <section className={styles.benefits}>
-        <div className={styles.benefitsContainer}>
-          <h2 className={styles.benefitsTitle}>Why Choose FitSage?</h2>
-          <div className={styles.benefitsGrid}>
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>🚀</div>
-              <h3 className={styles.benefitTitle}>Easy to Use</h3>
-              <p className={styles.benefitDescription}>
+      <section className="py-16 px-8">
+        <div className="max-w-[80%] mx-auto">
+          <h2 className="text-4xl font-bold text-center text-foreground mb-12">
+            Why Choose FitSage?
+          </h2>
+          <div
+            className="grid gap-8"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            }}
+          >
+            <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
+              <div className="text-5xl mb-4">🚀</div>
+              <h3 className="text-xl font-bold text-foreground mb-4">
+                Easy to Use
+              </h3>
+              <p className="text-base text-foreground leading-relaxed opacity-80">
                 Simple, intuitive interface that gets you started in minutes
               </p>
             </div>
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>🎤</div>
-              <h3 className={styles.benefitTitle}>Natural Voice Diary</h3>
-              <p className={styles.benefitDescription}>
+            <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
+              <div className="text-5xl mb-4">🎤</div>
+              <h3 className="text-xl font-bold text-foreground mb-4">
+                Natural Voice Diary
+              </h3>
+              <p className="text-base text-foreground leading-relaxed opacity-80">
                 Speak naturally about your workouts with real-time
                 speech-to-text processing
               </p>
             </div>
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>🧠</div>
-              <h3 className={styles.benefitTitle}>AI-Powered</h3>
-              <p className={styles.benefitDescription}>
+            <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
+              <div className="text-5xl mb-4">🧠</div>
+              <h3 className="text-xl font-bold text-foreground mb-4">
+                AI-Powered
+              </h3>
+              <p className="text-base text-foreground leading-relaxed opacity-80">
                 Get personalized recommendations based on your progress
               </p>
             </div>
-            <div className={styles.benefitCard}>
-              <div className={styles.benefitIcon}>📈</div>
-              <h3 className={styles.benefitTitle}>Track Progress</h3>
-              <p className={styles.benefitDescription}>
+            <div className="text-center p-8 bg-card rounded-2xl shadow-md transition-transform duration-300 ease-in-out hover:-translate-y-1 border border-border">
+              <div className="text-5xl mb-4">📈</div>
+              <h3 className="text-xl font-bold text-foreground mb-4">
+                Track Progress
+              </h3>
+              <p className="text-base text-foreground leading-relaxed opacity-80">
                 Monitor your fitness journey with detailed analytics
               </p>
             </div>
@@ -114,10 +151,10 @@ export default function IntroPage() {
       </section>
 
       {/* Footer */}
-      <footer className={styles.footer}>
+      <footer className="bg-accent text-center text-foreground text-base py-6 space-y-4">
         <p>© {new Date().getFullYear()} FitSage. All rights reserved.</p>
         <p>Made with ❤️ and 💪 by the FitSage Team.</p>
-        <div className={styles.techStack}>
+        <div className="flex justify-center gap-2">
           <Image
             src="https://go-skill-icons.vercel.app/api/icons?i=nextjs&theme=dark"
             alt="nextjs"
@@ -137,7 +174,7 @@ export default function IntroPage() {
             height={35}
           />
           <Image
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Google-gemini-icon.svg/1024px-Google-gemini-icon.svg.png?20240826133250"
+            src="https://go-skill-icons.vercel.app/api/icons?i=gemini&theme=dark"
             alt="gemini"
             width={35}
             height={35}

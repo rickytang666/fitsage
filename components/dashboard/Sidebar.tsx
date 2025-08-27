@@ -5,7 +5,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import styles from "./Sidebar.module.css";
 import {
   IconHome,
   IconBarbellFilled,
@@ -13,6 +12,7 @@ import {
   IconLogout2,
   IconLayoutSidebarRightExpandFilled,
 } from "@tabler/icons-react";
+import { ModeToggle } from "@/components/ModeToggle";
 
 // Navigation items definition
 const navigationItems = [
@@ -28,9 +28,10 @@ export default function Sidebar() {
 
   // Check if a link is active
   const isActiveLink = (href: string) => {
-    return (
-      pathname === href || (href !== "/profile" && pathname.startsWith(href))
-    );
+    const isActive =
+      pathname === href || (href !== "/profile" && pathname.startsWith(href));
+    console.log(`Link ${href}: pathname=${pathname}, isActive=${isActive}`);
+    return isActive;
   };
 
   // Close mobile menu when a link is clicked
@@ -41,37 +42,41 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Top Navbar */}
-      <div className={styles.mobileNavbar}>
-        <div className={styles.mobileBrandRow}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-15 bg-sidebar border-b-3 border-border shadow-lg z-50 px-5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
           <Image
             src="/logo.svg"
             alt="FitSage Logo"
-            className={styles.mobileLogoIcon}
+            className="h-8 w-8"
             height={32}
             width={32}
           />
-          <span className={styles.mobileBrandText}>FitSage</span>
+          <span className="text-xl font-bold text-primary tracking-wide">
+            FitSage
+          </span>
         </div>
-        <button
-          className={styles.mobileMenuButton}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          <IconLayoutSidebarRightExpandFilled width={36} height={36} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="p-2 hover:bg-sidebar-accent rounded-lg transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <IconLayoutSidebarRightExpandFilled width={36} height={36} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
         <div
-          className={styles.mobileMenuOverlay}
+          className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-end"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div
-            className={styles.mobileMenu}
+            className="w-70 bg-background h-full shadow-2xl flex flex-col p-5 animate-[slideIn_0.3s_ease-out]"
             onClick={(e) => e.stopPropagation()}
           >
-            <nav className={styles.mobileNav}>
+            <nav className="mb-5 flex-1 space-y-5">
               {navigationItems.map((item) => {
                 const active = isActiveLink(item.href);
                 return (
@@ -79,11 +84,11 @@ export default function Sidebar() {
                     key={item.name}
                     href={item.href}
                     onClick={handleLinkClick}
-                    className={
+                    className={`flex items-center gap-3 p-3 rounded-3xl text-foreground font-semibold no-underline border-none cursor-pointer outline-none transition-all duration-200 ${
                       active
-                        ? `${styles.mobileNavLink} ${styles.mobileNavLinkActive}`
-                        : styles.mobileNavLink
-                    }
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-primary hover:text-primary-foreground"
+                    }`}
                   >
                     <span>
                       {item.name === "Home" ? (
@@ -96,53 +101,63 @@ export default function Sidebar() {
                         ""
                       )}
                     </span>
-                    <span className={styles.mobileNavTitle}>{item.name}</span>
+                    <span className="text-base">{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
-            <div className={styles.mobileSignOutSection}>
+            <div className="border-t border-border pt-4">
+              <div className="flex justify-center mb-4">
+                <ModeToggle />
+              </div>
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   signOut();
                 }}
-                className={styles.mobileSignOutButton}
+                className="w-full p-3 bg-red-500 text-white border-none rounded-xl cursor-pointer text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:bg-red-700 hover:shadow-lg"
               >
                 <IconLogout2 />
                 <span>Sign Out</span>
               </button>
-              {user && <p className={styles.mobileUserEmail}>{user.email}</p>}
+              {user && (
+                <p className="mt-3 text-xs text-foreground text-center font-medium">
+                  {user.email}
+                </p>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* Desktop Sidebar */}
-      <div className={styles.sidebar}>
-        <div className={styles.brandRow}>
+      <div className="hidden lg:flex w-[230px] p-5 bg-sidebar h-full shadow-lg flex-col border-r-3 border-border">
+        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-border">
           <Image
             src="/logo.svg"
             alt="FitSage Logo"
-            className={styles.logoIcon}
+            className="h-9 w-9"
             height={36}
             width={36}
           />
-          <span className={styles.brandText}>FitSage</span>
+          <span className="text-2xl font-bold text-primary tracking-wide">
+            FitSage
+          </span>
         </div>
+
         {/* Navigation Links */}
-        <nav className={styles.nav}>
+        <nav className="mb-5 flex-1">
           {navigationItems.map((item) => {
             const active = isActiveLink(item.href);
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={
+                className={`flex items-center gap-3 p-3 mb-2 text-foreground rounded-full no-underline font-semibold cursor-pointer transition-all duration-200 ${
                   active
-                    ? `${styles.navLink} ${styles.navLinkActive}`
-                    : styles.navLink
-                }
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-primary hover:text-primary-foreground"
+                }`}
               >
                 <span>
                   {item.name === "Home" ? (
@@ -155,23 +170,31 @@ export default function Sidebar() {
                     ""
                   )}
                 </span>
-                <span className={styles.navTitle}>{item.name}</span>
+                <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
+
         {/* Logout Button */}
-        <div className={styles.signOutSection}>
+        <div className="mb-5 border-t border-border pt-4">
+          <div className="flex justify-center mb-4">
+            <ModeToggle />
+          </div>
           <button
             onClick={() => {
               signOut();
             }}
-            className={styles.signOutButton}
+            className="w-full p-1.5 bg-red-500 text-white border-none rounded-full cursor-pointer text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:bg-red-700 hover:shadow-lg"
           >
             <IconLogout2 />
             <span>Sign Out</span>
           </button>
-          {user && <p className={styles.userEmail}>{user.email}</p>}
+          {user && (
+            <p className="mt-3 text-xs text-foreground text-center font-medium mb-10">
+              {user.email}
+            </p>
+          )}
         </div>
       </div>
     </>

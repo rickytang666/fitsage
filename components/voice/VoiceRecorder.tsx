@@ -286,11 +286,11 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
             <>
               {/* Wave rings */}
               <div
-                className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
+                className="absolute inset-0 w-8 h-8 rounded-full border-3 animate-ping"
                 style={{ borderColor: "var(--primary)" }}
               />
               <div
-                className="absolute inset-0 w-8 h-8 rounded-full border-2 animate-ping"
+                className="absolute inset-0 w-8 h-8 rounded-full border-3 animate-ping"
                 style={{
                   borderColor: "var(--primary)",
                   animationDelay: "1s",
@@ -300,12 +300,9 @@ export default function VoiceRecorder({ onSubmit }: VoiceRecorderProps) {
           )}
           {/* Core ring - always visible */}
           <div
-            className="w-8 h-8 rounded-full border-2 bg-transparent"
-            style={{
-              borderColor: isRecording
-                ? "var(--primary)"
-                : "var(--muted-foreground)",
-            }}
+            className={`w-8 h-8 rounded-full border-3 bg-transparent ${
+              isRecording ? "border-primary" : "border-foreground/30"
+            }`}
           />
         </div>
 

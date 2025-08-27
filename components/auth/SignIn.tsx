@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
-import styles from "./Auth.module.css";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -88,12 +87,17 @@ export default function SignIn() {
   };
 
   return (
-    <div className={styles.authContainer}>
-      <h2 className={styles.title}>Sign In to FitSage</h2>
+    <div className="max-w-md w-full mx-auto p-6 bg-card rounded-lg shadow-md text-foreground">
+      <h2 className="text-2xl font-bold text-center mb-6">
+        Sign In to FitSage
+      </h2>
 
       {confirmationSuccess && (
-        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
-          <span className={styles.alertText}>
+        <div
+          className="p-4 mb-4 bg-green-50 border border-green-200 rounded-lg"
+          role="alert"
+        >
+          <span className="block text-green-800">
             ✅ Email confirmed successfully! You can now sign in to your
             account.
           </span>
@@ -101,13 +105,19 @@ export default function SignIn() {
       )}
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`} role="alert">
-          <span className={styles.alertText}>{error}</span>
+        <div
+          className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg"
+          role="alert"
+        >
+          <span className="block text-red-800">{error}</span>
         </div>
       )}
 
       {loginSuccess && (
-        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
+        <div
+          className="p-4 mb-4 bg-green-50 border border-green-200 rounded-lg"
+          role="alert"
+        >
           <div className="flex items-center">
             <svg
               className="animate-spin -ml-1 mr-3 h-5 w-5 text-green-700"
@@ -129,7 +139,7 @@ export default function SignIn() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span className={styles.alertText}>
+            <span className="block text-green-800">
               Sign in successful! Redirecting to home...
             </span>
           </div>
@@ -144,9 +154,13 @@ export default function SignIn() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
-        <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.label}>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
+        autoComplete="off"
+      >
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-2">
             Email Address
           </label>
           <input
@@ -157,13 +171,13 @@ export default function SignIn() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={styles.input}
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm bg-input text-foreground placeholder:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             placeholder="you@example.com"
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="password" className={styles.label}>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-2">
             Password
           </label>
           <input
@@ -174,7 +188,7 @@ export default function SignIn() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={styles.input}
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm bg-input text-foreground placeholder:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             placeholder="••••••••"
           />
         </div>
@@ -183,8 +197,10 @@ export default function SignIn() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`${styles.button} ${
-              isLoading ? styles.buttonLoading : ""
+            className={`w-full px-4 py-2 rounded-md font-medium text-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+              isLoading
+                ? "bg-primary/75 cursor-not-allowed"
+                : "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 shadow-md hover:shadow-lg"
             }`}
           >
             {isLoading ? "Signing in..." : "Sign In"}
@@ -192,10 +208,13 @@ export default function SignIn() {
         </div>
       </form>
 
-      <div className={styles.linkSection}>
-        <p className={styles.linkText}>
+      <div className="mt-6 text-center">
+        <p className="text-sm text-foreground">
           Don&apos;t have an account?{" "}
-          <Link href="/auth/signup" className={styles.link}>
+          <Link
+            href="/auth/signup"
+            className="font-medium text-primary hover:text-primary/80 underline"
+          >
             Sign up
           </Link>
         </p>

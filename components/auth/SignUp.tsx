@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
-import styles from "./Auth.module.css";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -64,27 +63,39 @@ export default function SignUp() {
   };
 
   return (
-    <div className={styles.authContainer}>
-      <h2 className={styles.title}>Create your FitSage account</h2>
+    <div className="max-w-md w-full mx-auto p-6 bg-card rounded-lg shadow-md text-foreground">
+      <h2 className="text-2xl font-bold text-center mb-6">
+        Create your FitSage account
+      </h2>
 
       {error && (
-        <div className={`${styles.alert} ${styles.alertError}`} role="alert">
-          <span className={styles.alertText}>{error}</span>
+        <div
+          className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg"
+          role="alert"
+        >
+          <span className="block text-red-800">{error}</span>
         </div>
       )}
 
       {success && (
-        <div className={`${styles.alert} ${styles.alertSuccess}`} role="alert">
-          <span className={styles.alertText}>
+        <div
+          className="p-4 mb-4 bg-green-50 border border-green-200 rounded-lg"
+          role="alert"
+        >
+          <span className="block text-green-800">
             Account created successfully! Please check your email for a
             confirmation link.
           </span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
-        <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.label}>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4"
+        autoComplete="off"
+      >
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-2">
             Email Address
           </label>
           <input
@@ -95,13 +106,13 @@ export default function SignUp() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={styles.input}
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm bg-input text-foreground placeholder:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             placeholder="you@example.com"
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="password" className={styles.label}>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-2">
             Password
           </label>
           <input
@@ -112,13 +123,16 @@ export default function SignUp() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={styles.input}
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm bg-input text-foreground placeholder:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             placeholder="••••••••"
           />
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="confirmPassword" className={styles.label}>
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium mb-2"
+          >
             Confirm Password
           </label>
           <input
@@ -129,7 +143,7 @@ export default function SignUp() {
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={styles.input}
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm bg-input text-foreground placeholder:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             placeholder="••••••••"
           />
         </div>
@@ -138,8 +152,10 @@ export default function SignUp() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`${styles.button} ${
-              isLoading ? styles.buttonLoading : ""
+            className={`w-full px-4 py-2 rounded-md font-medium text-white transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+              isLoading
+                ? "bg-primary/75 cursor-not-allowed"
+                : "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 shadow-md hover:shadow-lg"
             }`}
           >
             {isLoading ? "Creating Account..." : "Create Account"}
@@ -147,10 +163,13 @@ export default function SignUp() {
         </div>
       </form>
 
-      <div className={styles.signupLink}>
-        <p>
+      <div className="mt-6 text-center">
+        <p className="text-sm text-foreground">
           Already have an account?{" "}
-          <Link href="/auth/login" className={styles.link}>
+          <Link
+            href="/auth/login"
+            className="font-medium text-primary hover:text-primary/80 underline"
+          >
             Sign in
           </Link>
         </p>

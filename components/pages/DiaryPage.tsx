@@ -4,13 +4,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import DatabaseService from "../../services/DatabaseService";
 import { Log, Workout } from "../../models/User";
-import styles from "./DiaryPage.module.css";
 import VoiceRecorder from "../voice/VoiceRecorder";
 import {
   IconKeyboard,
   IconMicrophone,
   IconFileText,
   IconChartBar,
+  IconSelector,
 } from "@tabler/icons-react";
 import logger from "@/utils/logger";
 
@@ -523,30 +523,36 @@ export default function DiaryPage() {
 
   if (!authUser) {
     return (
-      <div className={styles.container}>
-        <div className={styles.error}>Please log in to access your diary.</div>
+      <div className="p-10 px-4 bg-background min-h-screen">
+        <div className="text-center py-8 text-destructive">
+          Please log in to access your diary.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>📝 My Fitness Diary</h1>
-        <p className={styles.subtitle}>
+    <div className="p-10 px-4 bg-background min-h-screen w-[85%] mx-auto">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
+          📝 My Fitness Diary
+        </h1>
+        <p className="text-xl text-muted-foreground">
           Track your fitness journey one entry at a time
         </p>
       </div>
 
       {/* Entry Form */}
-      <div className={styles.entryForm}>
+      <div className="bg-card backdrop-blur-xl border border-border rounded-2xl shadow-lg p-6 mb-8">
         {/* Voice/Type Toggle */}
-        <div className="flex justify-center mb-4">
-          <div className={styles.viewToggle}>
+        <div className="flex justify-center mb-6">
+          <div className="flex bg-muted rounded-lg p-1">
             <button
               onClick={() => setIsVoiceMode(false)}
-              className={`${styles.toggleButton} ${
-                !isVoiceMode ? styles.toggleButtonActive : ""
+              className={`flex items-center px-4 py-2 rounded-md text-sm transition-colors ${
+                !isVoiceMode
+                  ? "bg-background text-foreground font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               disabled={!!currentEntry}
             >
@@ -555,8 +561,10 @@ export default function DiaryPage() {
             </button>
             <button
               onClick={() => setIsVoiceMode(true)}
-              className={`${styles.toggleButton} ${
-                isVoiceMode ? styles.toggleButtonActive : ""
+              className={`flex items-center px-4 py-2 rounded-md text-sm transition-colors ${
+                isVoiceMode
+                  ? "bg-background text-foreground font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               disabled={!!currentEntry}
             >
@@ -566,18 +574,26 @@ export default function DiaryPage() {
           </div>
         </div>
 
-        <div className={styles.formHeader}>
-          <h2>{currentEntry ? "Edit Diary Entry" : "New Diary Entry"}</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-foreground">
+            {currentEntry ? "Edit Diary Entry" : "New Diary Entry"}
+          </h2>
           {currentEntry && (
-            <button onClick={cancelEdit} className={styles.cancelButton}>
+            <button
+              onClick={cancelEdit}
+              className="px-4 py-2 text-sm font-medium bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg transition-colors"
+            >
               Cancel Edit
             </button>
           )}
         </div>
 
         {/* Date Picker */}
-        <div className={styles.dateSection}>
-          <label htmlFor="entry-date" className={styles.dateLabel}>
+        <div className="mb-6">
+          <label
+            htmlFor="entry-date"
+            className="block text-sm font-medium text-foreground mb-2"
+          >
             Date:
           </label>
           <input
@@ -592,18 +608,24 @@ export default function DiaryPage() {
               const day = String(today.getDate()).padStart(2, "0");
               return `${year}-${month}-${day}`;
             })()}
-            className={`${styles.dateInput} ${
-              !isDateValid ? styles.dateInputError : ""
+            className={`max-w-36 text-sm px-3 py-4 rounded-lg font-semibold bg-foreground/7 focus:outline-none focus:ring-2 focus:border-transparent ${
+              !isDateValid ? "focus:ring-destructive" : "focus:ring-primary"
             }`}
           />
         </div>
 
         {/* Error Message */}
-        {error && <div className={styles.error}>{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Status Message */}
         {statusMessage && (
-          <div className={styles.statusMessage}>{statusMessage}</div>
+          <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg text-primary text-sm">
+            {statusMessage}
+          </div>
         )}
 
         {/* Voice Recorder or Text Area */}
@@ -612,17 +634,17 @@ export default function DiaryPage() {
             <VoiceRecorder onSubmit={handleVoiceSubmission} />
           ) : (
             <>
-              <div className={styles.textSection}>
+              <div className="mb-6">
                 <textarea
                   placeholder="Write about your fitness activities, how you felt, any insights..."
                   value={entryText}
                   onChange={(e) => setEntryText(e.target.value)}
-                  className={styles.textArea}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-foreground bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                   rows={8}
                 />
 
-                <div className={styles.textMeta}>
-                  <span className={styles.charCount}>
+                <div className="flex justify-end mt-2">
+                  <span className="text-sm text-muted-foreground">
                     {entryText.length} characters
                   </span>
                 </div>
@@ -632,8 +654,10 @@ export default function DiaryPage() {
               <button
                 onClick={saveEntry}
                 disabled={!entryText.trim() || isSaving}
-                className={`${styles.saveButton} ${
-                  !entryText.trim() || isSaving ? styles.saveButtonDisabled : ""
+                className={`w-40 px-6 py-3 rounded-lg font-medium transition-colors ${
+                  !entryText.trim() || isSaving
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
                 }`}
               >
                 {isSaving
@@ -648,18 +672,20 @@ export default function DiaryPage() {
       </div>
 
       {/* Entries List */}
-      <div className={styles.entriesList}>
-        <div className={styles.entriesHeader}>
-          <h2 className={styles.entriesTitle}>
+      <div>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+          <h1 className="text-3xl font-bold text-foreground mb-4">
             Previous Entries ({diaryEntries.length})
-          </h2>
+          </h1>
 
           {/* View Toggle */}
-          <div className={styles.viewToggle}>
+          <div className="flex bg-muted rounded-lg p-1">
             <button
               onClick={() => setViewMode("diary")}
-              className={`${styles.toggleButton} ${
-                viewMode === "diary" ? styles.toggleButtonActive : ""
+              className={`flex items-center px-4 py-2 rounded-md text-sm transition-colors ${
+                viewMode === "diary"
+                  ? "bg-background text-foreground font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <IconFileText size={16} className="mr-2" />
@@ -667,8 +693,10 @@ export default function DiaryPage() {
             </button>
             <button
               onClick={() => setViewMode("summary")}
-              className={`${styles.toggleButton} ${
-                viewMode === "summary" ? styles.toggleButtonActive : ""
+              className={`flex items-center px-4 py-2 rounded-md text-sm transition-colors ${
+                viewMode === "summary"
+                  ? "bg-background text-foreground font-bold shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <IconChartBar size={16} className="mr-2" />
@@ -678,23 +706,30 @@ export default function DiaryPage() {
         </div>
 
         {isLoading ? (
-          <div className={styles.loading}>Loading your diary entries...</div>
+          <div className="text-center py-8 text-muted-foreground">
+            Loading your diary entries...
+          </div>
         ) : diaryEntries.length > 0 ? (
-          <div className={styles.entriesContainer}>
+          <div className="space-y-6">
             {diaryEntries.map((entry) => (
-              <div key={entry.id} className={styles.entryCard}>
-                <div className={styles.entryHeader}>
-                  <h3 className={styles.entryDate}>{formatDate(entry.date)}</h3>
-                  <div className={styles.entryActions}>
+              <div
+                key={entry.id}
+                className="bg-background border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-[650] text-foreground">
+                    {formatDate(entry.date)}
+                  </h2>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => editEntry(entry)}
-                      className={styles.editButton}
+                      className="px-3 py-1 text-sm font-semibold text-primary bg-primary/30 hover:bg-primary/45 rounded-lg transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => deleteEntry(entry.id)}
-                      className={styles.deleteButton}
+                      className="px-3 py-1 text-sm font-semibold text-red-700 dark:text-red-200 bg-red-400/20 hover:bg-red-400/35 rounded-lg transition-colors"
                     >
                       Delete
                     </button>
@@ -703,29 +738,32 @@ export default function DiaryPage() {
 
                 {/* Diary View - Show original text */}
                 {viewMode === "diary" && (
-                  <div className={styles.entryContent}>
-                    <div className={styles.diaryText}>
-                      <div className={styles.diaryHeader}>
-                        <h4>📝 Original Entry:</h4>
+                  <div className="mb-4">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between w-full">
+                        <h4 className="font-bold text-foreground">
+                          📝 Original Diary:
+                        </h4>
                         {entry.diaryEntry.length > 200 && (
                           <button
                             onClick={() => toggleEntryExpansion(entry.id)}
-                            className={styles.expandButton}
+                            className="text-sm font-semibold bg-primary/20 hover:text-primary rounded-md px-3 py-1 flex items-center gap-2"
                           >
+                            <IconSelector size={16} />
                             {expandedEntries.has(entry.id)
                               ? "Show Less"
                               : "View Full Entry"}
                           </button>
                         )}
                       </div>
-                      <div className={styles.diaryContent}>
+                      <div>
                         {expandedEntries.has(entry.id) ||
                         entry.diaryEntry.length <= 200 ? (
-                          <p className={styles.diaryFullText}>
+                          <p className="px-8 mt-2 text-foreground/90 leading-relaxed font-normal">
                             {entry.diaryEntry}
                           </p>
                         ) : (
-                          <p className={styles.diaryTruncated}>
+                          <p className="px-8 mt-2 text-foreground/80 leading-relaxed font-normal">
                             {entry.diaryEntry.substring(0, 200)}...
                           </p>
                         )}
@@ -736,44 +774,44 @@ export default function DiaryPage() {
 
                 {/* Summary View - Show AI-processed data */}
                 {viewMode === "summary" && (
-                  <div className={styles.summaryContent}>
+                  <div className="space-y-6">
                     {/* Workouts Section */}
                     {entry.workouts && entry.workouts.length > 0 && (
-                      <div className={styles.workoutsSection}>
-                        <h4 className={styles.sectionTitle}>💪 Workouts</h4>
-                        <div className={styles.workoutsGrid}>
+                      <div className="space-y-3">
+                        <h3 className="font-semibold text-lg">Workouts</h3>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                           {entry.workouts.map((workout) => (
                             <div
                               key={workout.id}
-                              className={styles.workoutCard}
+                              className="bg-muted/30 border border-border rounded-lg p-3 shadow-sm"
                             >
-                              <div className={styles.workoutName}>
+                              <div className="font-medium text-foreground mb-2">
                                 {workout.name}
                               </div>
-                              <div className={styles.workoutDetails}>
+                              <div className="flex flex-wrap gap-2">
                                 {workout.isDurationBased && (
-                                  <span className={styles.workoutStat}>
+                                  <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                                     ⏱️ {workout.durationMinutes} min
                                   </span>
                                 )}
                                 {workout.isSetsBased && (
                                   <>
-                                    <span className={styles.workoutStat}>
+                                    <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                                       🔄 {workout.sets} sets
                                     </span>
                                     {workout.reps && (
-                                      <span className={styles.workoutStat}>
+                                      <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                                         ↗️ {workout.reps} reps
                                       </span>
                                     )}
                                     {workout.weight && (
-                                      <span className={styles.workoutStat}>
+                                      <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                                         🏋️ {workout.weight}kg
                                       </span>
                                     )}
                                   </>
                                 )}
-                                <span className={styles.workoutStat}>
+                                <span className="text-xs font-bold bg-blue-100 text-blue-900 px-2 py-1 rounded-full">
                                   🔥{" "}
                                   {(() => {
                                     const cal = workout.calories;
@@ -796,40 +834,44 @@ export default function DiaryPage() {
                     )}
 
                     {/* Injuries Section */}
-                    <div className={styles.injuriesSection}>
-                      <h4 className={styles.sectionTitle}>
-                        🩹 Injuries & Pain
-                      </h4>
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-lg">Injuries & Pain</h3>
                       {entry.injuries && entry.injuries.length > 0 ? (
-                        <ul className={styles.injuriesList}>
+                        <ul className="space-y-2">
                           {entry.injuries.map((injury, index) => (
-                            <li key={index} className={styles.injuryItem}>
+                            <li
+                              key={index}
+                              className="pl-4 border-l-4 border-red-400 bg-red-400/20 p-2"
+                            >
                               {injury}
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className={styles.noInjuries}>
+                        <p className="bg-green-400/20 border-l-4 border-green-500 pl-4 p-2">
                           ✅ No injuries reported
                         </p>
                       )}
                     </div>
 
                     {/* Suggestions Section */}
-                    <div className={styles.suggestionsSection}>
-                      <h4 className={styles.sectionTitle}>💡 AI Suggestions</h4>
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-lg">AI Suggestions</h3>
                       {entry.suggestions &&
                       Array.isArray(entry.suggestions) &&
                       entry.suggestions.length > 0 ? (
-                        <div className={styles.suggestionsList}>
+                        <div className="space-y-2">
                           {entry.suggestions.map((suggestion, index) => (
-                            <div key={index} className={styles.suggestionItem}>
+                            <div
+                              key={index}
+                              className="bg-primary/20 border-l-4 border-primary pl-4 p-2"
+                            >
                               {suggestion}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className={styles.noSuggestions}>
+                        <p className="bg-blue-400/20 border-l-4 border-blue-500 p-2">
                           💭 No suggestions available
                         </p>
                       )}
@@ -840,7 +882,7 @@ export default function DiaryPage() {
             ))}
           </div>
         ) : (
-          <div className={styles.emptyState}>
+          <div className="text-center py-8 text-muted-foreground">
             <p>
               No diary entries yet. Start by writing your first entry above!
             </p>
